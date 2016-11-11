@@ -1,0 +1,3 @@
+[submodule "ext/Alloy"]
+	path = ext/Alloy
+	url = https://github.com/bclucas/Alloy-Graphics-Library.git
