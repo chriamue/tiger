@@ -23,27 +23,36 @@
 #include <AlloyMath.h>
 #include "Neuron.h"
 #include <vector>
+#include <set>
 namespace tgr {
 	class NeuronLayer {
 		protected:
 			std::vector<Neuron> neurons;
+			std::vector<size_t> active;
+			int id;
 		public:
 			int width;
 			int height;
 			int bins;
-			int id;
+			void setId(int i) {
+				id = i;
+			}
+			int getId()const {
+				return id;
+			}
 			void resize(int r, int c, int s);
 			const Neuron& operator[](const size_t i) const;
 			Neuron& operator[](const size_t i);
 			Neuron& operator()(const int i, const int j, const int k);
 			Neuron& operator()(const size_t i, const size_t j, const size_t k);
 			Neuron& operator()(const aly::int3 ijk);
-			Neuron& operator()(const NeuronIndex ijk);
+			Neuron& operator()(const Terminal ijk);
 			const Neuron& operator()(const int i, const int j, const int k) const;
 			const Neuron& operator()(const size_t i, const size_t j, const size_t k) const;
 			const Neuron& operator()(const aly::int3 ijk) const;
-			const Neuron& operator()(const NeuronIndex ijk) const;
+			const Neuron& operator()(const Terminal ijk) const;
 			NeuronLayer(int width,int height,int bins=1,int id = 0);
 	};
+	typedef std::shared_ptr<NeuronLayer> NeuronLayerPtr;
 }
 #endif

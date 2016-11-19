@@ -22,43 +22,7 @@
 
 
 int main(int argc, char *argv[]) {
-	/*
-	std::string filePath;
-	int index = -1;
-	try {
-		if(argc==1){
-			std::cout << "Usage: " << argv[0]<< " [example index]\nToy Examples:"<< std::endl;
-			std::cout << "[0] Original Level Set" << std::endl;
-			std::cout << "[1] Spring Level Set" << std::endl;
-			std::cout << "[2] Second Order Spring Level Set" << std::endl;
-			std::cout << "[3] Multi-Object Level Set" << std::endl;
-			std::cout << "[4] Multi-Object Spring Level Set" << std::endl;
-			std::cout << "[5] Second Order Multi-Object Spring Level Set" << std::endl;
-			std::cout << "[6] Super-Pixel Level Set" << std::endl;
-			std::cout << ">> Enter Example Number: ";
-			std::cin >> index;
-		} else {
-			index = std::atoi(argv[1]);
-		}
-		if (index < 3) {
-			LevelSetToy app(index);
-			app.run();
-		}
-		else if (index <6) {
-			MultiLevelSetToy app(index-3);
-			app.run();
-		}
-		else if (index == 6) {
-			SuperPixelToy app(0);
-			app.run();
-		}
-		return 0;
-	} catch (std::exception& e) {
-		std::cout << "Main Error: " << e.what() << std::endl;
-		std::getchar();
-		return 1;
-	}
-	*/
+	
 	return 0;
 
 }

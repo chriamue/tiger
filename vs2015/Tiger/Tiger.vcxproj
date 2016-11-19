@@ -131,11 +131,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\MNIST.h" />
+    <ClInclude Include="..\..\include\NeuralSystem.h" />
     <ClInclude Include="..\..\include\NeuronLayer.h" />
     <ClInclude Include="..\..\include\Neuron.h" />
     <ClInclude Include="..\..\include\NeuronFunction.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\NeuralSystem.cpp" />
     <ClCompile Include="..\..\src\NeuronLayer.cpp" />
     <ClCompile Include="..\..\src\main.cpp" />
     <ClCompile Include="..\..\src\Neuron.cpp" />

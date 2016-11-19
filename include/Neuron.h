@@ -24,32 +24,50 @@
 #include "NeuronFunction.h"
 
 namespace tgr {
-	struct NeuronIndex:aly::int2 {
+	struct Terminal {
+		int x;
+		int y;
 		int layer;
 		int bin;
-		NeuronIndex(int x=0, int y=0, int b=0, int l=-1) :aly::int2(x, y), bin(b), layer(l) {
+
+		Terminal(int x=0, int y=0, int b=0, int l=-1) :x(x), y(y), bin(b), layer(l) {
 
 		}
+		bool operator ==(const Terminal & r) const {
+			return (x == r.x && y == r.y && layer == r.layer && bin == r.bin);
+		}
+		bool operator !=(const Terminal & r) const {
+			return (x != r.x || y != r.y || layer!=r.layer||bin!=r.bin);
+		}
+		bool operator <(const Terminal & r) const {
+			return (std::make_tuple(x, y,layer,bin) < std::make_tuple(r.x, r.y, r.layer, r.bin));
+		}
+		bool operator >(const Terminal & r) const {
+			return (std::make_tuple(x, y, layer, bin) < std::make_tuple(r.x, r.y, r.layer, r.bin));
+		}
 	};
-	struct Axon {
-		NeuronIndex index;
+	struct Signal {
+		Terminal source,target;
 		float weight;
 		float delta;
-		Axon() :index(0, 0), weight(0.0f), delta(0.0f) {
+
+		Signal() :source(0, 0),target(0,0), weight(0.0f), delta(0.0f) {
+
+		}
+		Signal(Terminal source, Terminal target,float weight=0.0f) :source(source), target(target), weight(weight), delta(0.0f) {
 
 		}
 	};
-	typedef std::shared_ptr<Axon> AxonPtr;
+	typedef std::shared_ptr<Signal> SignalPtr;
 	class Neuron {
 	protected:
-		NeuronFunction neuronFunction;
-		std::vector<AxonPtr> inputs;
-		AxonPtr output;
+		NeuronFunction transform;
 	public:
 		float value;
-		Neuron(float val=0.0f);
-		void setResponseFunction(const NeuronFunction& func) {
-			neuronFunction = func;
+		float delta;
+		Neuron(const NeuronFunction& func = ReLU(),float val=0.0f);
+		void setFunction(const NeuronFunction& func) {
+			transform = func;
 		}
 	};
 }

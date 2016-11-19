@@ -49,7 +49,7 @@ namespace tgr {
 		return neurons[aly::clamp(ijk.x, 0, width - 1) + aly::clamp(ijk.y, 0, height - 1) * width
 			+ aly::clamp(ijk.z, 0, bins - 1) * width * height];
 	}
-	Neuron& NeuronLayer::operator()(const NeuronIndex ijk) {
+	Neuron& NeuronLayer::operator()(const Terminal ijk) {
 		return neurons[aly::clamp(ijk.x, 0, width - 1) + aly::clamp(ijk.y, 0, height - 1) * width
 			+ aly::clamp(ijk.bin, 0, bins - 1) * width * height];
 	}
@@ -65,7 +65,7 @@ namespace tgr {
 		return neurons[aly::clamp(ijk.x, 0, width - 1) + aly::clamp(ijk.y, 0, height - 1) * width
 			+ aly::clamp(ijk.z, 0, bins - 1) * width * height];
 	}
-	const Neuron& NeuronLayer::operator()(const NeuronIndex ijk) const {
+	const Neuron& NeuronLayer::operator()(const Terminal ijk) const {
 		return neurons[aly::clamp(ijk.x, 0, width - 1) + aly::clamp(ijk.y, 0, height - 1) * width
 			+ aly::clamp(ijk.bin, 0, bins - 1) * width * height];
 	}

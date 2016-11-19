@@ -20,7 +20,7 @@
 */
 #include "Neuron.h"
 namespace tgr {
-	Neuron::Neuron(float val) :value(val) {
+	Neuron::Neuron(const NeuronFunction& func,float val) :transform(func),value(val) {
 
 	}
 
