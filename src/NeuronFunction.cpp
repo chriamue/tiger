@@ -30,6 +30,10 @@ namespace tgr {
 			return ReLU(*this);
 		case NeuronFunctionType::LeakyReLU:
 			return LeakyReLU(*this);
+		case NeuronFunctionType::Linear:
+			return Linear(*this);
+		case NeuronFunctionType::Constant:
+			return Constant(*this);
 		}
 	}
 }

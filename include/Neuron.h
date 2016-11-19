@@ -22,10 +22,22 @@
 #define NEURON_H_
 #include <AlloyMath.h>
 #include "NeuronFunction.h"
+
 namespace tgr {
+	struct NeuronIndex:aly::int2 {
+		int layer;
+		int bin;
+		NeuronIndex(int x=0, int y=0, int b=0, int l=-1) :aly::int2(x, y), bin(b), layer(l) {
+
+		}
+	};
 	struct Axon {
+		NeuronIndex index;
 		float weight;
 		float delta;
+		Axon() :index(0, 0), weight(0.0f), delta(0.0f) {
+
+		}
 	};
 	typedef std::shared_ptr<Axon> AxonPtr;
 	class Neuron {
@@ -34,8 +46,11 @@ namespace tgr {
 		std::vector<AxonPtr> inputs;
 		AxonPtr output;
 	public:
-		
-
+		float value;
+		Neuron(float val=0.0f);
+		void setResponseFunction(const NeuronFunction& func) {
+			neuronFunction = func;
+		}
 	};
 }
 #endif

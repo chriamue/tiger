@@ -130,14 +130,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\include\Alpha.h" />
-    <ClInclude Include="..\..\include\LearningLayer.h" />
+    <ClInclude Include="..\..\include\MNIST.h" />
+    <ClInclude Include="..\..\include\NeuronLayer.h" />
     <ClInclude Include="..\..\include\Neuron.h" />
     <ClInclude Include="..\..\include\NeuronFunction.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\Alpha.cpp" />
-    <ClCompile Include="..\..\src\LearningLayer.cpp" />
+    <ClCompile Include="..\..\src\NeuronLayer.cpp" />
     <ClCompile Include="..\..\src\main.cpp" />
     <ClCompile Include="..\..\src\Neuron.cpp" />
     <ClCompile Include="..\..\src\NeuronFunction.cpp" />

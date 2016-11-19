@@ -18,12 +18,12 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 * THE SOFTWARE.
 */
-#ifndef NeuronFunction_H_
-#define NeuronFunction_H_
+#ifndef NEURONFUNCTION_H_
+#define NEURONFUNCTION_H_
 #include <AlloyMath.h>
 namespace tgr {
 	enum class NeuronFunctionType {
-		Sigmoid, Tanh, ReLU, LeakyReLU
+		Sigmoid, Tanh, ReLU, LeakyReLU, Linear, Constant
 	};
 
 
@@ -194,6 +194,56 @@ namespace tgr {
 		virtual ~ReLU() {
 		}
 	};
+	struct Linear {
+	public:
+		Linear() {}
+		NeuronFunctionType virtual type() const {
+			return NeuronFunctionType::Linear;
+		}
+		float forward(float t) const {
+			return t;
+		}
+		float forwardChange(float t) const {
+			return 1.0f;
+		}
+		float backward(float t) const {
+			return t;
+		}
+		float backwardChange(float t) const {
+			return 1.0f;
+		}
+		Linear(const NeuronFunction& r) {
+		}
+		virtual ~Linear() {
+		}
+	};
+	struct Constant {
+	protected:
+		float value;
+	public:
+		Constant() {}
+		NeuronFunctionType virtual type() const {
+			return NeuronFunctionType::Constant;
+		}
+		float forward(float t) const {
+			return value;
+		}
+		float forwardChange(float t) const {
+			return 0.0f;
+		}
+		float backward(float t) const {
+			return value;
+		}
+		float backwardChange(float t) const {
+			return 0.0f;
+		}
+		Constant(float val):value(val) {
+		}
+		Constant(const NeuronFunction& func):value(static_cast<Constant>(func).value){
+		}
+		virtual ~Constant() {
+		}
+	};
 	struct LeakyReLU {
 	private:
 		const float eps;
@@ -215,7 +265,7 @@ namespace tgr {
 		float backwardChange(float t) const {
 			return (t > 0.0f) ? 1.0f : 1.0f / eps;
 		}
-		LeakyReLU(const NeuronFunction& r, float eps = 0.01f) :eps(eps) {
+		LeakyReLU(const NeuronFunction& func) :eps(static_cast<LeakyReLU>(func).eps) {
 		}
 		virtual ~LeakyReLU() {
 		}

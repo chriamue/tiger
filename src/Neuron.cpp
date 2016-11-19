@@ -18,7 +18,10 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 * THE SOFTWARE.
 */
-#include "NeuronFunction.h"
+#include "Neuron.h"
 namespace tgr {
+	Neuron::Neuron(float val) :value(val) {
+
+	}
 
 }
