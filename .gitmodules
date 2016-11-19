@@ -1,3 +1,6 @@
 [submodule "ext/Alloy"]
 	path = ext/Alloy
 	url = https://github.com/bclucas/Alloy-Graphics-Library.git
+[submodule "ext/alloy"]
+	path = ext/alloy
+	url = https://github.com/rgb2hsv/alloy.git

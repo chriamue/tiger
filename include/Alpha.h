@@ -1,6 +1,6 @@
 
 #include "Neuron.h"
-namespace jc {
+namespace tgr {
 	class Signal;
 	class Alpha {
 		float value=0;

@@ -19,6 +19,6 @@
 * THE SOFTWARE.
 */
 #include "NeuronFunction.h"
-namespace jc {
+namespace tgr {
 
 }

@@ -19,7 +19,7 @@
 * THE SOFTWARE.
 */
 #include "NeuronFunction.h"
-namespace jc {
+namespace tgr {
 	NeuronFunction NeuronFunction::clone() const {
 		switch (type()) {
 		case NeuronFunctionType::Sigmoid:

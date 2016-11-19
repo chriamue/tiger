@@ -21,7 +21,7 @@
 #ifndef NeuronFunction_H_
 #define NeuronFunction_H_
 #include <AlloyMath.h>
-namespace jc {
+namespace tgr {
 	enum class NeuronFunctionType {
 		Sigmoid, Tanh, ReLU, LeakyReLU
 	};

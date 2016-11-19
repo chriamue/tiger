@@ -22,7 +22,7 @@
 #define NEURON_H_
 #include <AlloyMath.h>
 #include "NeuronFunction.h"
-namespace jc {
+namespace tgr {
 	struct Axon {
 		float weight;
 		float delta;
