@@ -28,9 +28,7 @@
 namespace tgr {
 	class NeuronLayer {
 		protected:
-
 			std::vector<Neuron> neurons;
-			std::vector<size_t> active;
 			int id;
 		public:
 			int width;
@@ -53,23 +51,29 @@ namespace tgr {
 			int getId()const {
 				return id;
 			}
+			int getBin(size_t index) const;
+			int getBin(const Neuron& n) const;
+
 			aly::int2 dimensions() const {
 				return aly::int2(width, height);
 			}
 			float getAspect() const {
 				return width / (float)height;
 			}
+			Neuron& get(int i, int j);
+			const Neuron& get(int i, int j) const;
+
 			void resize(int r, int c, int s);
 			const Neuron& operator[](const size_t i) const;
 			Neuron& operator[](const size_t i);
-			Neuron& operator()(const int i, const int j, const int k);
-			Neuron& operator()(const size_t i, const size_t j, const size_t k);
-			Neuron& operator()(const aly::int3 ijk);
-			Neuron& operator()(const Terminal ijk);
-			const Neuron& operator()(const int i, const int j, const int k) const;
-			const Neuron& operator()(const size_t i, const size_t j, const size_t k) const;
-			const Neuron& operator()(const aly::int3 ijk) const;
-			const Neuron& operator()(const Terminal ijk) const;
+			Neuron& operator()(const int i, const int j);
+			Neuron& operator()(const size_t i, const size_t j);
+			Neuron& operator()(const aly::int2 ij);
+			Neuron& operator()(const Terminal ij);
+			const Neuron& operator()(const int i, const int j) const;
+			const Neuron& operator()(const size_t i, const size_t j) const;
+			const Neuron& operator()(const aly::int2 ij) const;
+			const Neuron& operator()(const Terminal ij) const;
 			void draw(aly::AlloyContext* context, const aly::box2px& bounds);
 			NeuronLayer(int width,int height,int bins=1,int id = 0);
 	};

@@ -133,11 +133,32 @@ bool TigerApp::init(Composite& rootNode) {
 	return true;
 }
 void TigerApp::initialize() {
-	currentLayer = NeuronLayerPtr(new NeuronLayer(32, 16, 8, 0));
+	int w = 32;
+	int h = 16;
+	int kw = 3;
+	int kh = 3;
+	currentLayer = NeuronLayerPtr(new NeuronLayer(w,h, 8));
+	NeuronLayerPtr inputLayer = NeuronLayerPtr(new NeuronLayer(w, h,1));
+	sys.add(currentLayer);
+	sys.add(inputLayer);
 	for (Neuron& n : *currentLayer) {
+		n.value =  RandomUniform(0.0f, 1.0f);
+	}
+	for (Neuron& n : *inputLayer) {
 		n.value = RandomUniform(0.0f, 1.0f);
-
-
+	}
+	for (int j = kw/2; j<inputLayer->height-kh/2; j++) {
+		for (int i = kw/2; i<inputLayer->width-kw/2; i++) {
+			int ilow = i - kw / 2;
+			int jlow =  j - kh / 2;
+			int ihi =  i + kw / 2;
+			int jhi = j + kh / 2;
+			for (int ii = ilow; ii <= ihi; ii++) {
+				for (int jj = jlow; jj <= jhi; jj++) {
+					sys.connect(ii, jj, inputLayer, i, j,  currentLayer,RandomUniform(0.0f,1.0f));
+				}
+			}
+		}
 	}
 }
 void TigerApp::draw(AlloyContext* context) {

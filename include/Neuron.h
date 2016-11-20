@@ -24,6 +24,7 @@
 #include "NeuronFunction.h"
 
 namespace tgr {
+	class NeuronLayer;
 	struct Terminal {
 		int x;
 		int y;
@@ -48,13 +49,12 @@ namespace tgr {
 	};
 	struct Signal {
 		Terminal source,target;
-		float weight;
+		float value;
 		float delta;
-
-		Signal() :source(0, 0),target(0,0), weight(0.0f), delta(0.0f) {
+		Signal() :source(0, 0),target(0,0), value(0.0f), delta(0.0f) {
 
 		}
-		Signal(Terminal source, Terminal target,float weight=0.0f) :source(source), target(target), weight(weight), delta(0.0f) {
+		Signal(Terminal source, Terminal target,float value=0.0f) :source(source), target(target), value(value), delta(0.0f) {
 
 		}
 	};
@@ -62,9 +62,31 @@ namespace tgr {
 	class Neuron {
 	protected:
 		NeuronFunction transform;
+		std::vector<SignalPtr> input;
+		std::vector<SignalPtr> output;
+
 	public:
 		float value;
 		float delta;
+		friend class NeuronLayer;
+		void addInput(const SignalPtr& s) {
+			input.push_back(s);
+		}
+		void addOutput(const SignalPtr& s) {
+			output.push_back(s);
+		}
+		float& getInputWeight(size_t idx) {
+			return input[idx]->value;
+		}
+		const float& getInputWeight(size_t idx) const {
+			return input[idx]->value;
+		}
+		float& getOututWeight(size_t idx) {
+			return output[idx]->value;
+		}
+		const float& getOutputWeight(size_t idx) const {
+			return output[idx]->value;
+		}
 		Neuron(const NeuronFunction& func = ReLU(),float val=0.0f);
 		void setFunction(const NeuronFunction& func) {
 			transform = func;

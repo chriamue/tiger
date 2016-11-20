@@ -22,7 +22,7 @@
 #include "AlloyUnits.h"
 using namespace aly;
 namespace tgr {
-	NeuronLayer::NeuronLayer(int width, int height, int bins, int id):width(width),height(height),bins(bins),id(id) {
+	NeuronLayer::NeuronLayer(int width, int height, int bins, int id) :width(width), height(height), bins(bins), id(id) {
 		neurons.resize(width*height*bins);
 	}
 	void NeuronLayer::resize(int w, int h, int b) {
@@ -32,37 +32,93 @@ namespace tgr {
 		height = h;
 		bins = b;
 	}
+	int NeuronLayer::getBin(size_t index) const {
+		return clamp((int)std::floor(neurons[index].value*bins), 0, bins-1);
+	}
+	int NeuronLayer::getBin(const Neuron& n) const {
+		return clamp((int)std::floor(n.value*bins), 0, bins-1);
+	}
 	void NeuronLayer::draw(aly::AlloyContext* context, const aly::box2px& bounds) {
 
-		float scale= bounds.dimensions.x/width;
+		float scale = bounds.dimensions.x / width;
 		NVGcontext* nvg = context->nvgContext;
 		float rOuter = 0.5f*scale;
-		float rInner = 0.1f*scale;
+		float rInner = 0.25f*scale;
 		float lineWidth = scale*0.01f;
 		nvgStrokeWidth(nvg, lineWidth);
-		nvgStrokeColor(nvg, Color(64, 64, 64));
+
 		for (int j = 0; j < height; j++) {
 			for (int i = 0; i < width; i++) {
-				nvgFillColor(nvg, Color(64, 64, 64));
 				float2 center = float2(bounds.position.x + (i + 0.5f)*scale, bounds.position.y + (j + 0.5f)*scale);
+
+				nvgFillColor(nvg, Color(92, 92, 92));
 				nvgBeginPath(nvg);
 				nvgCircle(nvg, center.x, center.y, scale*0.5f);
 				nvgFill(nvg);
-				for (int k = 0; k < bins; k++) {
-					Neuron& n = operator()(i, j, k);
-					float aeps = 0.5f / rOuter;
-					float a0 = (float)(k-0.5f) / bins * NVG_PI * 2.0f - aeps;
-					float a1 = (float)(k+0.5f) / bins * NVG_PI * 2.0f + aeps;
-					nvgFillColor(nvg,Color( ColorMapToRGB(1.0f-n.value, ColorMap::RedToBlue)));
-					nvgBeginPath(nvg);
-					nvgArc(nvg, center.x, center.y, rInner, a0, a1, NVG_CW);
-					nvgArc(nvg, center.x, center.y, mix(rInner,rOuter,n.value), a1, a0, NVG_CCW);
-					nvgClosePath(nvg);
-					nvgFill(nvg);
-					if (lineWidth > 0.5f&&bins>1) {
+				Neuron& n = operator()(i, j);
+				int b = getBin(n);
+				float aeps = 0.5f / rOuter;
+				float a0 = (float)(b - 0.5f) / bins * NVG_PI * 2.0f- NVG_PI*0.5f;
+				float a1 = (float)(b + 0.5f) / bins * NVG_PI * 2.0f - NVG_PI*0.5f;
+
+				/*
+				if (lineWidth > 0.5f&&bins > 1) {
+					nvgStrokeColor(nvg, Color(64, 64, 64));
+					nvgStrokeWidth(nvg, lineWidth);
+					nvgStroke(nvg);
+				}
+				*/
+				nvgFillColor(nvg, Color(160,160,160));
+				nvgBeginPath(nvg);
+				nvgArc(nvg, center.x, center.y, rInner, a0, a1, NVG_CW);
+				nvgArc(nvg, center.x, center.y, rOuter, a1, a0, NVG_CCW);
+				nvgClosePath(nvg);
+				nvgFill(nvg);
+
+				if (lineWidth > 0.5f) {
+					int N = (int)n.input.size();
+					nvgLineCap(nvg,NVG_SQUARE);
+					for (int i = 0; i < N; i++) {
+						SignalPtr& sig = n.input[i];
+						float a = 2.0f*i*NVG_PI / N;
+						float cosa = std::cos(a);
+						float sina = std::sin(a);
+						float sx = center.x + rInner*cosa;
+						float sy = center.y + rInner*sina;
+						float tw = mix(rInner, rOuter-lineWidth, sig->value);
+						float wx = center.x + tw*cosa;
+						float wy = center.y + tw*sina;
+						float ex = center.x + (rOuter - lineWidth)*cosa;
+						float ey = center.y + (rOuter - lineWidth)*sina;
+						nvgStrokeColor(nvg, Color(128,128,128));
+						nvgStrokeWidth(nvg, lineWidth);
+						nvgBeginPath(nvg);
+						nvgMoveTo(nvg, sx, sy);
+						nvgLineTo(nvg, ex, ey);
 						nvgStroke(nvg);
+
+						nvgStrokeColor(nvg, Color(220,220,220));
+						nvgBeginPath(nvg);
+						nvgMoveTo(nvg, sx, sy);
+						nvgLineTo(nvg, wx, wy);
+						nvgStrokeWidth(nvg, 3*lineWidth);
+						nvgStroke(nvg);
+
 					}
 				}
+				nvgStrokeColor(nvg, Color(220, 220, 220));
+				nvgStrokeWidth(nvg, lineWidth);
+				nvgFillColor(nvg, Color(ColorMapToRGB(n.value, ColorMap::RedToBlue)));
+				nvgBeginPath(nvg);
+				nvgCircle(nvg, center.x, center.y, rInner);
+				nvgFill(nvg);
+				nvgStroke(nvg);
+
+
+				nvgStrokeColor(nvg, Color(92, 92, 92));
+				nvgBeginPath(nvg);
+				nvgCircle(nvg, center.x, center.y, scale*0.5f);
+				nvgStroke(nvg);
 			}
 		}
 	}
@@ -72,36 +128,34 @@ namespace tgr {
 	Neuron& NeuronLayer::operator[](const size_t i) {
 		return neurons[i];
 	}
-	Neuron& NeuronLayer::operator()(const int i, const int j, const int k) {
-		return neurons[aly::clamp(i, 0, width - 1) + aly::clamp(j, 0, height - 1) * width
-			+ aly::clamp(k, 0, bins - 1) * width * height];
+	Neuron& NeuronLayer::get(const int i, const int j) {
+		return neurons[aly::clamp(i, 0, width - 1) + aly::clamp(j, 0, height - 1) * width];
 	}
-	Neuron& NeuronLayer::operator()(const size_t i, const size_t j, const size_t k) {
-		return neurons[aly::clamp((int)i, 0, width - 1) + aly::clamp((int)j, 0, height - 1) * width
-			+ aly::clamp((int)k, 0, bins - 1) * width * height];
+	const Neuron& NeuronLayer::get(const int i, const int j) const {
+		return neurons[aly::clamp(i, 0, width - 1) + aly::clamp(j, 0, height - 1) * width];
 	}
-	Neuron& NeuronLayer::operator()(const aly::int3 ijk) {
-		return neurons[aly::clamp(ijk.x, 0, width - 1) + aly::clamp(ijk.y, 0, height - 1) * width
-			+ aly::clamp(ijk.z, 0, bins - 1) * width * height];
+	Neuron& NeuronLayer::operator()(const int i, const int j) {
+		return neurons[aly::clamp(i, 0, width - 1) + aly::clamp(j, 0, height - 1) * width];
 	}
-	Neuron& NeuronLayer::operator()(const Terminal ijk) {
-		return neurons[aly::clamp(ijk.x, 0, width - 1) + aly::clamp(ijk.y, 0, height - 1) * width
-			+ aly::clamp(ijk.bin, 0, bins - 1) * width * height];
+	Neuron& NeuronLayer::operator()(const size_t i, const size_t j) {
+		return neurons[aly::clamp((int)i, 0, width - 1) + aly::clamp((int)j, 0, height - 1) * width];
 	}
-	const Neuron& NeuronLayer::operator()(const int i, const int j, const int k) const {
-		return neurons[aly::clamp(i, 0, width - 1) + aly::clamp(j, 0, height - 1) * width
-			+ aly::clamp(k, 0, bins - 1) * width * height];
+	Neuron& NeuronLayer::operator()(const aly::int2 ij) {
+		return neurons[aly::clamp(ij.x, 0, width - 1) + aly::clamp(ij.y, 0, height - 1) * width];
 	}
-	const Neuron& NeuronLayer::operator()(const size_t i, const size_t j, const size_t k) const {
-		return neurons[aly::clamp((int)i, 0, width - 1) + aly::clamp((int)j, 0, height - 1) * width
-			+ aly::clamp((int)k, 0, bins - 1) * width * height];
+	Neuron& NeuronLayer::operator()(const Terminal ij) {
+		return neurons[aly::clamp(ij.x, 0, width - 1) + aly::clamp(ij.y, 0, height - 1) * width];
 	}
-	const Neuron& NeuronLayer::operator()(const aly::int3 ijk) const {
-		return neurons[aly::clamp(ijk.x, 0, width - 1) + aly::clamp(ijk.y, 0, height - 1) * width
-			+ aly::clamp(ijk.z, 0, bins - 1) * width * height];
+	const Neuron& NeuronLayer::operator()(const int i, const int j) const {
+		return neurons[aly::clamp(i, 0, width - 1) + aly::clamp(j, 0, height - 1) * width];
 	}
-	const Neuron& NeuronLayer::operator()(const Terminal ijk) const {
-		return neurons[aly::clamp(ijk.x, 0, width - 1) + aly::clamp(ijk.y, 0, height - 1) * width
-			+ aly::clamp(ijk.bin, 0, bins - 1) * width * height];
+	const Neuron& NeuronLayer::operator()(const size_t i, const size_t j) const {
+		return neurons[aly::clamp((int)i, 0, width - 1) + aly::clamp((int)j, 0, height - 1) * width];
+	}
+	const Neuron& NeuronLayer::operator()(const aly::int2 ij) const {
+		return neurons[aly::clamp(ij.x, 0, width - 1) + aly::clamp(ij.y, 0, height - 1) * width];
+	}
+	const Neuron& NeuronLayer::operator()(const Terminal ij) const {
+		return neurons[aly::clamp(ij.x, 0, width - 1) + aly::clamp(ij.y, 0, height - 1) * width];
 	}
 }

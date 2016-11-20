@@ -2,15 +2,15 @@
 namespace tgr {
 	void NeuralSystem::add(const NeuronLayerPtr& layer) {
 		layer->setId((int)layers.size());
-		layers.push_back(layer);
+		layers[layer->getId()]=(layer);
 	}
 	void NeuralSystem::evaluate() {
-		int N = (int)std::min(inputTerminals.size(), inputs.size());
+		int N = (int)std::min(inputTerminals.size(), input.size());
 #pragma omp parallel for;
 		for (int i = 0; i < N; i++) {
 			Terminal t=inputTerminals[i];
 			NeuronLayerPtr layer = layers[t.layer];
-			(*layer)(t.x, t.y, t.bin).value = inputs[i];
+			(*layer)(t.x, t.y).value = input[i];
 		}
 	}
 	void NeuralSystem::initialize() {
@@ -54,13 +54,35 @@ namespace tgr {
 			}
 		} while(hasMore);
 	}
+	NeuronLayerPtr NeuralSystem::getLayer(int id) const {
+		auto pos = layers.find(id);
+		if (pos != layers.end()) {
+			return pos->second;
+		}
+		else {
+			return NeuronLayerPtr();
+		}
+	}
 	void NeuralSystem::add(const SignalPtr& signal) {
+		getNeuron(signal->target)->addInput(signal);
+		getNeuron(signal->source)->addOutput(signal);
 		signals.push_back(signal);
 	}
+	Neuron* NeuralSystem::getNeuron(const Terminal& t) const {
+		return &getLayer(t.layer)->get(t.x, t.y);
+	}
+	SignalPtr NeuralSystem::connect(int si, int sj, const NeuronLayerPtr& sl, int ti, int tj, const NeuronLayerPtr& tl, float weight) {
+		return add(Terminal(si, sj, 0, sl->getId()), Terminal(ti, tj, 0, tl->getId()),weight);
+	}
+	SignalPtr NeuralSystem::connect(int si, int sj,int sb, const NeuronLayerPtr& sl, int ti, int tj, int tb, const NeuronLayerPtr& tl, float weight) {
+		return add(Terminal(si, sj, tb, sl->getId()), Terminal(ti, tj, tb, tl->getId()), weight);
+	}
 	SignalPtr NeuralSystem::add(Terminal source, Terminal target,float weight) {
-		SignalPtr sig = std::shared_ptr<Signal>(new Signal(source,target,weight));
-		signals.push_back(sig);
-		return sig;
+		SignalPtr signal = std::shared_ptr<Signal>(new Signal(source,target,weight));
+		getNeuron(target)->addInput(signal);
+		getNeuron(source)->addOutput(signal);
+		signals.push_back(signal);
+		return signal;
 	}
 	void NeuralSystem::train(float learningRate) {
 
