@@ -18,15 +18,15 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 * THE SOFTWARE.
 */
-#ifndef NEURONLAYER_H_
-#define NEURONLAYER_H_
+#ifndef NeuralLayer_H_
+#define NeuralLayer_H_
 #include <AlloyMath.h>
 #include <AlloyContext.h>
 #include "Neuron.h"
 #include <vector>
 #include <set>
 namespace tgr {
-	class NeuronLayer {
+	class NeuralLayer {
 		protected:
 			std::vector<Neuron> neurons;
 			int id;
@@ -51,6 +51,7 @@ namespace tgr {
 			int getId()const {
 				return id;
 			}
+			void setFunction(const NeuronFunction& func);
 			int getBin(size_t index) const;
 			int getBin(const Neuron& n) const;
 
@@ -63,7 +64,7 @@ namespace tgr {
 			Neuron& get(int i, int j);
 			const Neuron& get(int i, int j) const;
 
-			void resize(int r, int c, int s);
+			void resize(int width, int height, int b=1);
 			const Neuron& operator[](const size_t i) const;
 			Neuron& operator[](const size_t i);
 			Neuron& operator()(const int i, const int j);
@@ -75,8 +76,8 @@ namespace tgr {
 			const Neuron& operator()(const aly::int2 ij) const;
 			const Neuron& operator()(const Terminal ij) const;
 			void draw(aly::AlloyContext* context, const aly::box2px& bounds);
-			NeuronLayer(int width,int height,int bins=1,int id = 0);
+			NeuralLayer(int width=0,int height=0,int bins=1,int id = 0);
 	};
-	typedef std::shared_ptr<NeuronLayer> NeuronLayerPtr;
+	typedef std::shared_ptr<NeuralLayer> NeuralLayerPtr;
 }
 #endif

@@ -139,15 +139,17 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\include\MNIST.h" />
+    <ClInclude Include="..\..\include\NeuralFilter.h" />
     <ClInclude Include="..\..\include\NeuralSystem.h" />
-    <ClInclude Include="..\..\include\NeuronLayer.h" />
+    <ClInclude Include="..\..\include\NeuralLayer.h" />
     <ClInclude Include="..\..\include\Neuron.h" />
     <ClInclude Include="..\..\include\NeuronFunction.h" />
     <ClInclude Include="..\..\include\TigerApp.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\NeuralFilter.cpp" />
     <ClCompile Include="..\..\src\NeuralSystem.cpp" />
-    <ClCompile Include="..\..\src\NeuronLayer.cpp" />
+    <ClCompile Include="..\..\src\NeuralLayer.cpp" />
     <ClCompile Include="..\..\src\main.cpp" />
     <ClCompile Include="..\..\src\Neuron.cpp" />
     <ClCompile Include="..\..\src\NeuronFunction.cpp" />

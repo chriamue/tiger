@@ -18,27 +18,32 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 * THE SOFTWARE.
 */
-#include "NeuronLayer.h"
+#include "NeuralLayer.h"
 #include "AlloyUnits.h"
 using namespace aly;
 namespace tgr {
-	NeuronLayer::NeuronLayer(int width, int height, int bins, int id) :width(width), height(height), bins(bins), id(id) {
+	NeuralLayer::NeuralLayer(int width, int height, int bins, int id) :width(width), height(height), bins(bins), id(id) {
 		neurons.resize(width*height*bins);
 	}
-	void NeuronLayer::resize(int w, int h, int b) {
+	void NeuralLayer::resize(int w, int h, int b) {
 		neurons.resize(w * h * b);
 		neurons.shrink_to_fit();
 		width = w;
 		height = h;
 		bins = b;
 	}
-	int NeuronLayer::getBin(size_t index) const {
+	void NeuralLayer::setFunction(const NeuronFunction& func) {
+		for (Neuron& n : neurons) {
+			n.setFunction(func);
+		}
+	}
+	int NeuralLayer::getBin(size_t index) const {
 		return clamp((int)std::floor(neurons[index].value*bins), 0, bins-1);
 	}
-	int NeuronLayer::getBin(const Neuron& n) const {
+	int NeuralLayer::getBin(const Neuron& n) const {
 		return clamp((int)std::floor(n.value*bins), 0, bins-1);
 	}
-	void NeuronLayer::draw(aly::AlloyContext* context, const aly::box2px& bounds) {
+	void NeuralLayer::draw(aly::AlloyContext* context, const aly::box2px& bounds) {
 
 		float scale = bounds.dimensions.x / width;
 		NVGcontext* nvg = context->nvgContext;
@@ -122,40 +127,40 @@ namespace tgr {
 			}
 		}
 	}
-	const Neuron& NeuronLayer::operator[](const size_t i) const {
+	const Neuron& NeuralLayer::operator[](const size_t i) const {
 		return neurons[i];
 	}
-	Neuron& NeuronLayer::operator[](const size_t i) {
+	Neuron& NeuralLayer::operator[](const size_t i) {
 		return neurons[i];
 	}
-	Neuron& NeuronLayer::get(const int i, const int j) {
+	Neuron& NeuralLayer::get(const int i, const int j) {
 		return neurons[aly::clamp(i, 0, width - 1) + aly::clamp(j, 0, height - 1) * width];
 	}
-	const Neuron& NeuronLayer::get(const int i, const int j) const {
+	const Neuron& NeuralLayer::get(const int i, const int j) const {
 		return neurons[aly::clamp(i, 0, width - 1) + aly::clamp(j, 0, height - 1) * width];
 	}
-	Neuron& NeuronLayer::operator()(const int i, const int j) {
+	Neuron& NeuralLayer::operator()(const int i, const int j) {
 		return neurons[aly::clamp(i, 0, width - 1) + aly::clamp(j, 0, height - 1) * width];
 	}
-	Neuron& NeuronLayer::operator()(const size_t i, const size_t j) {
+	Neuron& NeuralLayer::operator()(const size_t i, const size_t j) {
 		return neurons[aly::clamp((int)i, 0, width - 1) + aly::clamp((int)j, 0, height - 1) * width];
 	}
-	Neuron& NeuronLayer::operator()(const aly::int2 ij) {
+	Neuron& NeuralLayer::operator()(const aly::int2 ij) {
 		return neurons[aly::clamp(ij.x, 0, width - 1) + aly::clamp(ij.y, 0, height - 1) * width];
 	}
-	Neuron& NeuronLayer::operator()(const Terminal ij) {
+	Neuron& NeuralLayer::operator()(const Terminal ij) {
 		return neurons[aly::clamp(ij.x, 0, width - 1) + aly::clamp(ij.y, 0, height - 1) * width];
 	}
-	const Neuron& NeuronLayer::operator()(const int i, const int j) const {
+	const Neuron& NeuralLayer::operator()(const int i, const int j) const {
 		return neurons[aly::clamp(i, 0, width - 1) + aly::clamp(j, 0, height - 1) * width];
 	}
-	const Neuron& NeuronLayer::operator()(const size_t i, const size_t j) const {
+	const Neuron& NeuralLayer::operator()(const size_t i, const size_t j) const {
 		return neurons[aly::clamp((int)i, 0, width - 1) + aly::clamp((int)j, 0, height - 1) * width];
 	}
-	const Neuron& NeuronLayer::operator()(const aly::int2 ij) const {
+	const Neuron& NeuralLayer::operator()(const aly::int2 ij) const {
 		return neurons[aly::clamp(ij.x, 0, width - 1) + aly::clamp(ij.y, 0, height - 1) * width];
 	}
-	const Neuron& NeuronLayer::operator()(const Terminal ij) const {
+	const Neuron& NeuralLayer::operator()(const Terminal ij) const {
 		return neurons[aly::clamp(ij.x, 0, width - 1) + aly::clamp(ij.y, 0, height - 1) * width];
 	}
 }

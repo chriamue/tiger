@@ -13,7 +13,7 @@ protected:
 	bool frameBuffersDirty;
 	bool running = false;
 	tgr::NeuralSystem sys;
-	tgr::NeuronLayerPtr currentLayer;
+	tgr::NeuralLayerPtr currentLayer;
 	aly::AdjustableCompositePtr resizeableRegion;
 	aly::IconButtonPtr playButton, stopButton;
 	void initialize();

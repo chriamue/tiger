@@ -137,8 +137,8 @@ void TigerApp::initialize() {
 	int h = 16;
 	int kw = 3;
 	int kh = 3;
-	currentLayer = NeuronLayerPtr(new NeuronLayer(w,h, 8));
-	NeuronLayerPtr inputLayer = NeuronLayerPtr(new NeuronLayer(w, h,1));
+	currentLayer = NeuralLayerPtr(new NeuralLayer(w,h, 8));
+	NeuralLayerPtr inputLayer = NeuralLayerPtr(new NeuralLayer(w, h,1));
 	sys.add(currentLayer);
 	sys.add(inputLayer);
 	for (Neuron& n : *currentLayer) {

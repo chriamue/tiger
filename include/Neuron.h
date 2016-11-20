@@ -24,7 +24,7 @@
 #include "NeuronFunction.h"
 
 namespace tgr {
-	class NeuronLayer;
+	class NeuralLayer;
 	struct Terminal {
 		int x;
 		int y;
@@ -48,13 +48,12 @@ namespace tgr {
 		}
 	};
 	struct Signal {
-		Terminal source,target;
 		float value;
 		float delta;
-		Signal() :source(0, 0),target(0,0), value(0.0f), delta(0.0f) {
+		Signal() :value(0.0f), delta(0.0f) {
 
 		}
-		Signal(Terminal source, Terminal target,float value=0.0f) :source(source), target(target), value(value), delta(0.0f) {
+		Signal(float value) : value(value), delta(0.0f) {
 
 		}
 	};
@@ -68,7 +67,7 @@ namespace tgr {
 	public:
 		float value;
 		float delta;
-		friend class NeuronLayer;
+		friend class NeuralLayer;
 		void addInput(const SignalPtr& s) {
 			input.push_back(s);
 		}

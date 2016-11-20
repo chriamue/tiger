@@ -1,12 +1,12 @@
 #ifndef _NEURAL_SYSTEM_H_
 #define _NEURAL_SYSTEM_H_
-#include "NeuronLayer.h"
+#include "NeuralLayer.h"
 #include <map>
 namespace tgr {
 	class NeuralSystem {
 	protected:
-		std::map<int,NeuronLayerPtr> layers;
-		std::vector<SignalPtr> signals;
+		std::map<int,NeuralLayerPtr> layers;
+		std::set<SignalPtr> signals;
 		std::vector<float> input;
 		std::vector<Terminal> inputTerminals;
 		std::vector<float> output;
@@ -17,7 +17,7 @@ namespace tgr {
 		void initialize();
 		void train(float learningRate);
 		Neuron* getNeuron(const Terminal& t) const;
-		NeuronLayerPtr getLayer(int id) const;
+		NeuralLayerPtr getLayer(int id) const;
 		const std::vector<float>& getOutput() const {
 			return output;
 		}
@@ -29,10 +29,10 @@ namespace tgr {
 		}
 		void add(const SignalPtr& signal);
 		SignalPtr add(Terminal source,Terminal target,float weight=0.0f);
-		SignalPtr connect(int si,int sj,const NeuronLayerPtr& sl, int ti, int tj, const NeuronLayerPtr& tl, float weight = 0.0f);
-		SignalPtr connect(int si, int sj,int sb, const NeuronLayerPtr& sl, int ti, int tj,int tb, const NeuronLayerPtr& tl, float weight = 0.0f);
+		SignalPtr connect(int si,int sj,const NeuralLayerPtr& sl, int ti, int tj, const NeuralLayerPtr& tl, float weight = 0.0f);
+		SignalPtr connect(int si, int sj,int sb, const NeuralLayerPtr& sl, int ti, int tj,int tb, const NeuralLayerPtr& tl, float weight = 0.0f);
 
-		void add(const NeuronLayerPtr& layer);
+		void add(const NeuralLayerPtr& layer);
 	};
 }
 #endif
