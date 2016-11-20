@@ -21,12 +21,14 @@
 #ifndef NEURONLAYER_H_
 #define NEURONLAYER_H_
 #include <AlloyMath.h>
+#include <AlloyContext.h>
 #include "Neuron.h"
 #include <vector>
 #include <set>
 namespace tgr {
 	class NeuronLayer {
 		protected:
+
 			std::vector<Neuron> neurons;
 			std::vector<size_t> active;
 			int id;
@@ -34,11 +36,28 @@ namespace tgr {
 			int width;
 			int height;
 			int bins;
+
+			typedef Neuron ValueType;
+			typedef typename std::vector<ValueType>::iterator iterator;
+			typedef typename std::vector<ValueType>::const_iterator const_iterator;
+			typedef typename std::vector<ValueType>::reverse_iterator reverse_iterator;
+			iterator begin() {
+				return neurons.begin();
+			}
+			iterator end() {
+				return neurons.end();
+			}
 			void setId(int i) {
 				id = i;
 			}
 			int getId()const {
 				return id;
+			}
+			aly::int2 dimensions() const {
+				return aly::int2(width, height);
+			}
+			float getAspect() const {
+				return width / (float)height;
 			}
 			void resize(int r, int c, int s);
 			const Neuron& operator[](const size_t i) const;
@@ -51,6 +70,7 @@ namespace tgr {
 			const Neuron& operator()(const size_t i, const size_t j, const size_t k) const;
 			const Neuron& operator()(const aly::int3 ijk) const;
 			const Neuron& operator()(const Terminal ijk) const;
+			void draw(aly::AlloyContext* context, const aly::box2px& bounds);
 			NeuronLayer(int width,int height,int bins=1,int id = 0);
 	};
 	typedef std::shared_ptr<NeuronLayer> NeuronLayerPtr;
