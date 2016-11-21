@@ -134,9 +134,18 @@ bool TigerApp::init(Composite& rootNode) {
 	return true;
 }
 void TigerApp::initialize() {
-	ConvolutionFilter conv(64, 32, 5, 5, 6);
-	conv.attach(sys);
-	currentLayer = conv.getOutputLayers()[0];
+	ConvolutionFilterPtr conv1(new ConvolutionFilter(32, 16, 5, 5, 6));
+	sys.add(conv1);
+	for (int i = 0; i < conv1->getOutputSize(); i++) {
+		ConvolutionFilterPtr conv2(new ConvolutionFilter(conv1->getOutputLayer(i), 5, 5, 6));
+		sys.add(conv2);
+		for (int j = 0; j < conv2->getOutputSize(); j++) {
+			ConvolutionFilterPtr conv3(new ConvolutionFilter(conv2->getOutputLayer(j), 5, 5, 16));
+			sys.add(conv3);
+		}
+	}
+	
+	currentLayer = conv1->getOutputLayer(0);
 	/*
 	int w = 32;
 	int h = 16;

@@ -28,10 +28,13 @@ namespace tgr {
 	struct Terminal {
 		int x;
 		int y;
-		int layer;
+		NeuralLayer* layer;
 		int bin;
 
-		Terminal(int x=0, int y=0, int b=0, int l=-1) :x(x), y(y), bin(b), layer(l) {
+		Terminal(int x=0, int y=0, int b=0, NeuralLayer* l=nullptr) :x(x), y(y), bin(b), layer(l) {
+
+		}
+		Terminal(int x = 0, int y = 0, int b = 0, const std::shared_ptr<NeuralLayer>& l = nullptr) :x(x), y(y), bin(b), layer(l.get()) {
 
 		}
 		bool operator ==(const Terminal & r) const {

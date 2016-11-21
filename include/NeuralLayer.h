@@ -26,10 +26,14 @@
 #include <vector>
 #include <set>
 namespace tgr {
+	std::string MakeID(int len=8);
 	class NeuralLayer {
 		protected:
 			std::vector<Neuron> neurons;
-			int id;
+			std::vector<std::shared_ptr<NeuralLayer>> children;
+			std::vector<std::shared_ptr<NeuralLayer>> dependencies;
+			std::string name;
+			std::string id;
 		public:
 			int width;
 			int height;
@@ -45,10 +49,17 @@ namespace tgr {
 			iterator end() {
 				return neurons.end();
 			}
-			void setId(int i) {
-				id = i;
+			void addChild(const std::shared_ptr<NeuralLayer>& layer);
+			void setName(const std::string& n) {
+				name = n;
 			}
-			int getId()const {
+			std::string getName()const {
+				return name;
+			}
+			void setId(const std::string& n) {
+				id = n;
+			}
+			std::string getId()const {
 				return id;
 			}
 			void setFunction(const NeuronFunction& func);
@@ -76,7 +87,8 @@ namespace tgr {
 			const Neuron& operator()(const aly::int2 ij) const;
 			const Neuron& operator()(const Terminal ij) const;
 			void draw(aly::AlloyContext* context, const aly::box2px& bounds);
-			NeuralLayer(int width=0,int height=0,int bins=1,int id = 0);
+			NeuralLayer(int width=0,int height=0,int bins=1);
+			NeuralLayer(const std::string& name,int width = 0, int height = 0, int bins = 1);
 	};
 	typedef std::shared_ptr<NeuralLayer> NeuralLayerPtr;
 }

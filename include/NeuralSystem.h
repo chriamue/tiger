@@ -3,9 +3,9 @@
 #include "NeuralLayer.h"
 #include <map>
 namespace tgr {
+	class NeuralFilter;
 	class NeuralSystem {
 	protected:
-		std::map<int,NeuralLayerPtr> layers;
 		std::set<SignalPtr> signals;
 		std::vector<float> input;
 		std::vector<Terminal> inputTerminals;
@@ -17,7 +17,7 @@ namespace tgr {
 		void initialize();
 		void train(float learningRate);
 		Neuron* getNeuron(const Terminal& t) const;
-		NeuralLayerPtr getLayer(int id) const;
+
 		const std::vector<float>& getOutput() const {
 			return output;
 		}
@@ -31,8 +31,8 @@ namespace tgr {
 		SignalPtr add(Terminal source,Terminal target,float weight=0.0f);
 		SignalPtr connect(int si,int sj,const NeuralLayerPtr& sl, int ti, int tj, const NeuralLayerPtr& tl, float weight = 0.0f);
 		SignalPtr connect(int si, int sj,int sb, const NeuralLayerPtr& sl, int ti, int tj,int tb, const NeuralLayerPtr& tl, float weight = 0.0f);
-
-		void add(const NeuralLayerPtr& layer);
+		void add(const std::shared_ptr<NeuralFilter>& filter);
+	
 	};
 }
 #endif

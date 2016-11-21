@@ -41,11 +41,15 @@ namespace tgr {
 			const std::vector<NeuralLayerPtr>& getOutputLayers() const {
 				return outputLayers;
 			}
-			NeuralLayerPtr& getOutputLayers(size_t idx) {
+			NeuralLayerPtr& getOutputLayer(size_t idx) {
 				return outputLayers[idx];
 			}
-			const NeuralLayerPtr& getOutputLayers(size_t idx) const {
+			const NeuralLayerPtr& getOutputLayer(size_t idx) const {
 				return outputLayers[idx];
+			}
+
+			size_t getOutputSize() const {
+				return outputLayers.size();
 			}
 			NeuralFilter() {}
 			virtual ~NeuralFilter() {}
@@ -56,7 +60,11 @@ namespace tgr {
 		int kernelX, kernelY;
 	public:
 		ConvolutionFilter(int width, int height, int kernelX, int kernelY, int features);
+		ConvolutionFilter(const NeuralLayerPtr& inputLayer, int kernelX, int kernelY, int features);
+
 		virtual void attach(NeuralSystem& sys) override;
 	};
+	typedef std::shared_ptr<NeuralFilter> NeuralFilterPtr;
+	typedef std::shared_ptr<ConvolutionFilter> ConvolutionFilterPtr;
 }
 #endif

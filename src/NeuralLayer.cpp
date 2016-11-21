@@ -22,8 +22,21 @@
 #include "AlloyUnits.h"
 using namespace aly;
 namespace tgr {
-	NeuralLayer::NeuralLayer(int width, int height, int bins, int id) :width(width), height(height), bins(bins), id(id) {
+	std::string MakeID(int len) {
+		std::stringstream ss;
+		static const char lookUp[33] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ012345";
+		for (int i = 0; i < len; i++) {
+			ss << lookUp[RandomUniform(0, 31)];
+		}
+		return ss.str();
+	}
+	NeuralLayer::NeuralLayer(int width, int height, int bins) :width(width), height(height), bins(bins) {
 		neurons.resize(width*height*bins);
+		id = MakeID();
+	}
+	NeuralLayer::NeuralLayer(const std::string& name,int width, int height, int bins) :name(name), width(width), height(height), bins(bins) {
+		neurons.resize(width*height*bins);
+		id = MakeID();
 	}
 	void NeuralLayer::resize(int w, int h, int b) {
 		neurons.resize(w * h * b);
@@ -31,6 +44,10 @@ namespace tgr {
 		width = w;
 		height = h;
 		bins = b;
+	}
+	void NeuralLayer::addChild(const std::shared_ptr<NeuralLayer>& layer) {
+		children.push_back(layer);
+		layer->dependencies.push_back(layer);
 	}
 	void NeuralLayer::setFunction(const NeuronFunction& func) {
 		for (Neuron& n : neurons) {
