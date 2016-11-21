@@ -49,6 +49,21 @@ namespace tgr {
 			iterator end() {
 				return neurons.end();
 			}
+			std::vector<std::shared_ptr<NeuralLayer>>& getChildren() {
+				return children;
+			}
+			std::vector<std::shared_ptr<NeuralLayer>>& getDependencies() {
+				return dependencies;
+			}
+			const std::vector<std::shared_ptr<NeuralLayer>>& getChildren() const {
+				return children;
+			}
+			const std::vector<std::shared_ptr<NeuralLayer>>& getDependencies() const {
+				return dependencies;
+			}
+			bool isRoot() const {
+				return (dependencies.size() == 0);
+			}
 			void addChild(const std::shared_ptr<NeuralLayer>& layer);
 			void setName(const std::string& n) {
 				name = n;

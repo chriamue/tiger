@@ -25,14 +25,20 @@
 namespace tgr {
 	class NeuralFilter {
 		protected:
-			NeuralLayerPtr inputLayer;
+			std::vector<NeuralLayerPtr> inputLayers;
 			std::vector<NeuralLayerPtr> outputLayers;
 		public:
-			NeuralLayerPtr& getInputLayer() {
-				return inputLayer;
+			std::vector<NeuralLayerPtr>& getInputLayers() {
+				return inputLayers;
 			}
-			const NeuralLayerPtr& getInputLayer() const {
-				return inputLayer;
+			const std::vector<NeuralLayerPtr>& getInputLayers() const {
+				return inputLayers;
+			}
+			NeuralLayerPtr& getInputLayer(size_t idx) {
+				return inputLayers[idx];
+			}
+			const NeuralLayerPtr& getInputLayer(size_t idx) const {
+				return inputLayers[idx];
 			}
 			std::vector<NeuralLayerPtr>& getOutputLayers() {
 				return outputLayers;
@@ -53,18 +59,9 @@ namespace tgr {
 			}
 			NeuralFilter() {}
 			virtual ~NeuralFilter() {}
-			virtual void attach(NeuralSystem& sys) = 0;
+			virtual void initialize(NeuralSystem& sys) = 0;
 	};
-	class ConvolutionFilter:public NeuralFilter {
-	protected:
-		int kernelX, kernelY;
-	public:
-		ConvolutionFilter(int width, int height, int kernelX, int kernelY, int features);
-		ConvolutionFilter(const NeuralLayerPtr& inputLayer, int kernelX, int kernelY, int features);
 
-		virtual void attach(NeuralSystem& sys) override;
-	};
 	typedef std::shared_ptr<NeuralFilter> NeuralFilterPtr;
-	typedef std::shared_ptr<ConvolutionFilter> ConvolutionFilterPtr;
 }
 #endif

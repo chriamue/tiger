@@ -18,15 +18,14 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 * THE SOFTWARE.
 */
-#include "Neuron.h"
+#include "NeuralFilter.h"
 namespace tgr {
-	Neuron::Neuron(const NeuronFunction& func,bool _bias,float val) :transform(func),value(val) {
-		if (_bias) {
-			bias.reset(new Bias());
-			SignalPtr bsignal=SignalPtr(new Signal());
-			addInput(bsignal);
-			bias->addOutput(bsignal);
-		}
-	}
-
+	class AveragePoolFilter :public NeuralFilter {
+	protected:
+		int kernelSize;
+	public:
+		AveragePoolFilter(const std::vector<NeuralLayerPtr>& inputLayers, int kernelSize);
+		virtual void initialize(NeuralSystem& sys) override;
+	};
+	typedef std::shared_ptr<AveragePoolFilter> AveragePoolFilterPtr;
 }

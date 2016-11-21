@@ -14,50 +14,19 @@ namespace tgr {
 		*/
 	}
 	void NeuralSystem::initialize() {
-		/*
-		int N = (int)inputTerminals.size();
-		std::map<Terminal, std::vector<SignalPtr>> sourceMap;
-		std::map<Terminal, std::vector<SignalPtr>> targetMap;
-
-		for (SignalPtr signal : signals) {
-			sourceMap[signal->source].push_back(signal);
-		}
-		for (SignalPtr signal : signals) {
-			targetMap[signal->target].push_back(signal);
-		}
-		forwardNetwork.clear();
-		forwardNetwork.reserve(layers.size() + 1);
-		forwardNetwork.resize(1);
-		for (int i = 0; i < N; i++) {
-			Terminal t = inputTerminals[i];
-			auto pos = sourceMap.find(t);
-			if (pos != sourceMap.end()) {
-				std::vector<SignalPtr>& pass = forwardNetwork[0];
-				pass.insert(pass.end(), pos->second.begin(), pos->second.end());
+		roots.clear();
+		for (NeuralLayerPtr layer : layers) {
+			if (layer->isRoot()) {
+				roots.push_back(layer);
 			}
 		}
-		int previousLayer = 0;
-		bool hasMore = false;
-		do {
-			std::vector<SignalPtr>& lastPass = forwardNetwork[previousLayer];
-			std::set<Terminal> terms;
-			for (SignalPtr signal : lastPass) {
-				terms.insert(signal->target);
-			}
-			for (Terminal t:terms) {
-				auto pos = sourceMap.find(t);
-				if (pos != sourceMap.end()) {
-					if (forwardNetwork.size() <= previousLayer + 1)forwardNetwork.push_back(std::vector<SignalPtr>());
-					std::vector<SignalPtr>& pass = forwardNetwork[previousLayer+1];
-					pass.insert(pass.end(), pos->second.begin(), pos->second.end());
-					hasMore = true;
-				}
-			}
-		} while(hasMore);
-		*/
 	}
 	void NeuralSystem::add(const std::shared_ptr<NeuralFilter>& filter) {
-		filter->attach(*this);
+		filter->initialize(*this);
+		auto inputs= filter->getInputLayers();
+		auto output = filter->getOutputLayers();
+		layers.insert(layers.end(), inputs.begin(), inputs.end());
+		layers.insert(layers.end(), output.begin(), output.end());
 	}
 	void NeuralSystem::add(const SignalPtr& signal) {
 		signals.insert(signal);

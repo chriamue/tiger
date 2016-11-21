@@ -6,6 +6,9 @@ namespace tgr {
 	class NeuralFilter;
 	class NeuralSystem {
 	protected:
+		std::vector<NeuralLayerPtr> layers;
+		std::vector<NeuralLayerPtr> roots;
+
 		std::set<SignalPtr> signals;
 		std::vector<float> input;
 		std::vector<Terminal> inputTerminals;

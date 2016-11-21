@@ -50,9 +50,12 @@ namespace tgr {
 			return (std::make_tuple(x, y, layer, bin) < std::make_tuple(r.x, r.y, r.layer, r.bin));
 		}
 	};
+	class Neuron;
 	struct Signal {
 		float value;
 		float delta;
+		std::vector<Neuron*> input;
+		std::vector<Neuron*> output;
 		Signal() :value(0.0f), delta(0.0f) {
 
 		}
@@ -64,6 +67,7 @@ namespace tgr {
 	class Neuron {
 	protected:
 		NeuronFunction transform;
+		std::shared_ptr<Neuron> bias;
 		std::vector<SignalPtr> input;
 		std::vector<SignalPtr> output;
 
@@ -71,11 +75,24 @@ namespace tgr {
 		float value;
 		float delta;
 		friend class NeuralLayer;
+		bool hasBias() const {
+			return (bias.get() != nullptr);
+		}
+		float getBias() const {
+			if (hasBias()) {
+				return bias->output.front()->value;
+			}
+			else {
+				return 0;
+			}
+		}
 		void addInput(const SignalPtr& s) {
 			input.push_back(s);
+			s->output.push_back(this);
 		}
 		void addOutput(const SignalPtr& s) {
 			output.push_back(s);
+			s->input.push_back(this);
 		}
 		float& getInputWeight(size_t idx) {
 			return input[idx]->value;
@@ -83,16 +100,22 @@ namespace tgr {
 		const float& getInputWeight(size_t idx) const {
 			return input[idx]->value;
 		}
-		float& getOututWeight(size_t idx) {
+		float& getOutputWeight(size_t idx) {
 			return output[idx]->value;
 		}
 		const float& getOutputWeight(size_t idx) const {
 			return output[idx]->value;
 		}
-		Neuron(const NeuronFunction& func = ReLU(),float val=0.0f);
+		Neuron(const NeuronFunction& func = ReLU(),bool bias=false,float val=0.0f);
 		void setFunction(const NeuronFunction& func) {
 			transform = func;
 		}
+	};
+	class Bias : public Neuron {
+		public:		
+			Bias() :Neuron(Constant(), false, 1.0f) {
+
+			}
 	};
 }
 #endif
