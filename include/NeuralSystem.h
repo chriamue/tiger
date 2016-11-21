@@ -8,8 +8,7 @@ namespace tgr {
 	protected:
 		std::vector<NeuralLayerPtr> layers;
 		std::vector<NeuralLayerPtr> roots;
-
-		std::set<SignalPtr> signals;
+		std::vector<SignalPtr> signals;
 		std::vector<float> input;
 		std::vector<Terminal> inputTerminals;
 		std::vector<float> output;
@@ -31,6 +30,7 @@ namespace tgr {
 			input = in;
 		}
 		void add(const SignalPtr& signal);
+		void add(const std::vector<SignalPtr>& signals);
 		SignalPtr add(Terminal source,Terminal target,float weight=0.0f);
 		SignalPtr connect(int si,int sj,const NeuralLayerPtr& sl, int ti, int tj, const NeuralLayerPtr& tl, float weight = 0.0f);
 		SignalPtr connect(int si, int sj,int sb, const NeuralLayerPtr& sl, int ti, int tj,int tb, const NeuralLayerPtr& tl, float weight = 0.0f);

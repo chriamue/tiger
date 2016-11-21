@@ -78,6 +78,14 @@ namespace tgr {
 		bool hasBias() const {
 			return (bias.get() != nullptr);
 		}
+		SignalPtr getBiasSignal() const {
+			if (hasBias()) {
+				return bias->bias->output.front();
+			}
+			else {
+				return SignalPtr();
+			}
+		}
 		float getBias() const {
 			if (hasBias()) {
 				return bias->output.front()->value;

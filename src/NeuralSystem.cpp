@@ -29,7 +29,10 @@ namespace tgr {
 		layers.insert(layers.end(), output.begin(), output.end());
 	}
 	void NeuralSystem::add(const SignalPtr& signal) {
-		signals.insert(signal);
+		signals.push_back(signal);
+	}
+	void NeuralSystem::add(const std::vector<SignalPtr>& sigs) {
+		signals.insert(signals.end(), sigs.begin(), sigs.end());
 	}
 	Neuron* NeuralSystem::getNeuron(const Terminal& t) const {
 		return &t.layer->get(t.x, t.y);
@@ -44,7 +47,7 @@ namespace tgr {
 		SignalPtr signal = std::shared_ptr<Signal>(new Signal(weight));
 		getNeuron(target)->addInput(signal);
 		getNeuron(source)->addOutput(signal);
-		signals.insert(signal);
+		signals.push_back(signal);
 		return signal;
 	}
 	void NeuralSystem::train(float learningRate) {

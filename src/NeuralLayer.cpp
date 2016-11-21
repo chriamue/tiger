@@ -30,12 +30,15 @@ namespace tgr {
 		}
 		return ss.str();
 	}
-	NeuralLayer::NeuralLayer(int width, int height, int bins) :width(width), height(height), bins(bins) {
-		neurons.resize(width*height*bins);
+	NeuralLayer::NeuralLayer(int width, int height, int bins, bool bias, const NeuronFunction& func) :width(width), height(height), bins(bins) {
+		neurons.resize(width*height*bins, Neuron(func, bias));
+		if (bias) {
+
+		}
 		id = MakeID();
 	}
-	NeuralLayer::NeuralLayer(const std::string& name,int width, int height, int bins) :name(name), width(width), height(height), bins(bins) {
-		neurons.resize(width*height*bins);
+	NeuralLayer::NeuralLayer(const std::string& name,int width, int height, int bins,bool bias, const NeuronFunction& func) :name(name), width(width), height(height), bins(bins) {
+		neurons.resize(width*height*bins,Neuron(func,bias));
 		id = MakeID();
 	}
 	void NeuralLayer::resize(int w, int h, int b) {
@@ -44,6 +47,16 @@ namespace tgr {
 		width = w;
 		height = h;
 		bins = b;
+	}
+	std::vector<SignalPtr> NeuralLayer::getBiasSignals() const {
+		std::vector<SignalPtr> signals;
+		for (const Neuron& n : neurons) {
+			SignalPtr sig = n.getBiasSignal();
+			if (sig.get()!=nullptr) {
+				signals.push_back(sig);
+			}
+		}
+		return signals;
 	}
 	void NeuralLayer::addChild(const std::shared_ptr<NeuralLayer>& layer) {
 		children.push_back(layer);

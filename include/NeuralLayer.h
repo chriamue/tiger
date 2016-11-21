@@ -49,6 +49,7 @@ namespace tgr {
 			iterator end() {
 				return neurons.end();
 			}
+			std::vector<SignalPtr> getBiasSignals() const;
 			std::vector<std::shared_ptr<NeuralLayer>>& getChildren() {
 				return children;
 			}
@@ -102,8 +103,8 @@ namespace tgr {
 			const Neuron& operator()(const aly::int2 ij) const;
 			const Neuron& operator()(const Terminal ij) const;
 			void draw(aly::AlloyContext* context, const aly::box2px& bounds);
-			NeuralLayer(int width=0,int height=0,int bins=1);
-			NeuralLayer(const std::string& name,int width = 0, int height = 0, int bins = 1);
+			NeuralLayer(int width=0,int height=0,int bins=1,bool bias=false, const NeuronFunction& func = ReLU());
+			NeuralLayer(const std::string& name,int width = 0, int height = 0, int bins = 1, bool bias = false, const NeuronFunction& func=ReLU());
 	};
 	typedef std::shared_ptr<NeuralLayer> NeuralLayerPtr;
 }

@@ -43,10 +43,10 @@ namespace tgr {
 					for (int jj = 0; jj < kernelSize; jj++) {
 						for (int ii = 0; ii < kernelSize; ii++) {
 							Neuron& src = inputLayer->get(i + ii, j + jj);
-							Neuron& tar = outputLayer->get(i, j);
+							Neuron& dest = outputLayer->get(i, j);
 							SignalPtr sig = signals[index++];
 							src.addOutput(sig);
-							tar.addInput(sig);
+							dest.addInput(sig);
 						}
 					}
 				}

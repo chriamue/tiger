@@ -3,6 +3,7 @@
 #include "AlloyExpandTree.h"
 #include "NeuralFilter.h"
 #include "ConvolutionFilter.h"
+#include "AveragePoolFilter.h"
 using namespace aly;
 using namespace tgr;
 TigerApp::TigerApp() :
@@ -137,16 +138,13 @@ bool TigerApp::init(Composite& rootNode) {
 void TigerApp::initialize() {
 	ConvolutionFilterPtr conv1(new ConvolutionFilter(32, 16, 5, 6));
 	sys.add(conv1);
+	AveragePoolFilterPtr avg1(new AveragePoolFilter(conv1->getInputLayers(), 2));
+	sys.add(avg1);
 	for (int i = 0; i < conv1->getOutputSize(); i++) {
-		ConvolutionFilterPtr conv2(new ConvolutionFilter(conv1->getOutputLayer(i),  5, 6));
+		ConvolutionFilterPtr conv2(new ConvolutionFilter(avg1->getOutputLayer(i),  5, 16));
 		sys.add(conv2);
-		for (int j = 0; j < conv2->getOutputSize(); j++) {
-			ConvolutionFilterPtr conv3(new ConvolutionFilter(conv2->getOutputLayer(j),  5, 16));
-			sys.add(conv3);
-		}
 	}
-	
-	currentLayer = conv1->getOutputLayer(0);
+
 	/*
 	int w = 32;
 	int h = 16;
