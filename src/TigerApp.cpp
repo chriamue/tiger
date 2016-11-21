@@ -1,6 +1,7 @@
 #include "TigerApp.h"
 #include "AlloyParameterPane.h"
 #include "AlloyExpandTree.h"
+#include "NeuralFilter.h"
 using namespace aly;
 using namespace tgr;
 TigerApp::TigerApp() :
@@ -133,6 +134,10 @@ bool TigerApp::init(Composite& rootNode) {
 	return true;
 }
 void TigerApp::initialize() {
+	ConvolutionFilter conv(64, 32, 5, 5, 6);
+	conv.attach(sys);
+	currentLayer = conv.getOutputLayers()[0];
+	/*
 	int w = 32;
 	int h = 16;
 	int kw = 3;
@@ -160,6 +165,7 @@ void TigerApp::initialize() {
 			}
 		}
 	}
+	*/
 }
 void TigerApp::draw(AlloyContext* context) {
 }

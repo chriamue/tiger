@@ -51,35 +51,27 @@ namespace tgr {
 		float rInner = 0.25f*scale;
 		float lineWidth = scale*0.01f;
 		nvgStrokeWidth(nvg, lineWidth);
-
 		for (int j = 0; j < height; j++) {
 			for (int i = 0; i < width; i++) {
 				float2 center = float2(bounds.position.x + (i + 0.5f)*scale, bounds.position.y + (j + 0.5f)*scale);
-
 				nvgFillColor(nvg, Color(92, 92, 92));
 				nvgBeginPath(nvg);
 				nvgCircle(nvg, center.x, center.y, scale*0.5f);
 				nvgFill(nvg);
 				Neuron& n = operator()(i, j);
-				int b = getBin(n);
-				float aeps = 0.5f / rOuter;
-				float a0 = (float)(b - 0.5f) / bins * NVG_PI * 2.0f- NVG_PI*0.5f;
-				float a1 = (float)(b + 0.5f) / bins * NVG_PI * 2.0f - NVG_PI*0.5f;
+				if (bins > 1) {
+					int b = getBin(n);
+					float aeps = 0.5f / rOuter;
+					float a0 = (float)(b - 0.5f) / bins * NVG_PI * 2.0f - NVG_PI*0.5f;
+					float a1 = (float)(b + 0.5f) / bins * NVG_PI * 2.0f - NVG_PI*0.5f;
 
-				/*
-				if (lineWidth > 0.5f&&bins > 1) {
-					nvgStrokeColor(nvg, Color(64, 64, 64));
-					nvgStrokeWidth(nvg, lineWidth);
-					nvgStroke(nvg);
+					nvgFillColor(nvg, Color(160, 160, 160));
+					nvgBeginPath(nvg);
+					nvgArc(nvg, center.x, center.y, rInner, a0, a1, NVG_CW);
+					nvgArc(nvg, center.x, center.y, rOuter, a1, a0, NVG_CCW);
+					nvgClosePath(nvg);
+					nvgFill(nvg);
 				}
-				*/
-				nvgFillColor(nvg, Color(160,160,160));
-				nvgBeginPath(nvg);
-				nvgArc(nvg, center.x, center.y, rInner, a0, a1, NVG_CW);
-				nvgArc(nvg, center.x, center.y, rOuter, a1, a0, NVG_CCW);
-				nvgClosePath(nvg);
-				nvgFill(nvg);
-
 				if (lineWidth > 0.5f) {
 					int N = (int)n.input.size();
 					nvgLineCap(nvg,NVG_SQUARE);
@@ -118,7 +110,6 @@ namespace tgr {
 				nvgCircle(nvg, center.x, center.y, rInner);
 				nvgFill(nvg);
 				nvgStroke(nvg);
-
 
 				nvgStrokeColor(nvg, Color(92, 92, 92));
 				nvgBeginPath(nvg);

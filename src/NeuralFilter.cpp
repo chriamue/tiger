@@ -10,7 +10,6 @@ namespace tgr {
 		outputLayers.resize(features);
 	}
 	void ConvolutionFilter::attach(NeuralSystem& system) {
-
 		int padX = kernelX / 2;
 		int padY = kernelY / 2;
 		int width = inputLayer->width;
@@ -24,7 +23,27 @@ namespace tgr {
 			std::vector<SignalPtr> signals;
 			for (int jj = 0; jj < kernelY; jj++) {
 				for (int ii = 0; ii < kernelX; ii++) {
-					signals.push_back(SignalPtr(new Signal(RandomUniform(0.0f,1.0f))));
+					SignalPtr sig = SignalPtr(new Signal(RandomUniform(0.0f, 1.0f)));
+					signals.push_back(sig);
+					system.add(sig);
+				}
+			}
+			for (int f = 0; f < outputLayers.size();f++) {
+				outputLayers[f]= NeuralLayerPtr(new NeuralLayer(ow,oh));
+				NeuralLayerPtr outputLayer = outputLayers[f];
+				for (int j =0; j < oh; j++) {
+					for (int i = 0; i <ow; i++) {
+						int index = 0;
+						for (int jj = 0; jj < kernelY; jj++) {
+							for (int ii = 0; ii < kernelX; ii++) {
+								Neuron& src = inputLayer->get(i + ii, j + jj);
+								Neuron& tar = outputLayer->get(i, j);
+								SignalPtr sig = signals[index++];
+								src.addOutput(sig);
+								tar.addInput(sig);
+							}
+						}
+					}
 				}
 			}
 		}

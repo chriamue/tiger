@@ -37,8 +37,15 @@ namespace tgr {
 			std::vector<NeuralLayerPtr>& getOutputLayers() {
 				return outputLayers;
 			}
+
 			const std::vector<NeuralLayerPtr>& getOutputLayers() const {
 				return outputLayers;
+			}
+			NeuralLayerPtr& getOutputLayers(size_t idx) {
+				return outputLayers[idx];
+			}
+			const NeuralLayerPtr& getOutputLayers(size_t idx) const {
+				return outputLayers[idx];
 			}
 			NeuralFilter() {}
 			virtual ~NeuralFilter() {}
