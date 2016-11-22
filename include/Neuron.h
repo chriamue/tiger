@@ -80,7 +80,7 @@ namespace tgr {
 		}
 		SignalPtr getBiasSignal() const {
 			if (hasBias()) {
-				return bias->bias->output.front();
+				return bias->output.front();
 			}
 			else {
 				return SignalPtr();

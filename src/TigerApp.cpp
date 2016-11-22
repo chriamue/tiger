@@ -140,40 +140,13 @@ void TigerApp::initialize() {
 	sys.add(conv1);
 	AveragePoolFilterPtr avg1(new AveragePoolFilter(conv1->getInputLayers(), 2));
 	sys.add(avg1);
-	for (int i = 0; i < conv1->getOutputSize(); i++) {
+	currentLayer = avg1->getOutputLayers().back();
+
+	for (int i = 0; i < avg1->getOutputSize(); i++) {
 		ConvolutionFilterPtr conv2(new ConvolutionFilter(avg1->getOutputLayer(i),  5, 16));
 		sys.add(conv2);
 	}
-
-	/*
-	int w = 32;
-	int h = 16;
-	int kw = 3;
-	int kh = 3;
-	currentLayer = NeuralLayerPtr(new NeuralLayer(w,h, 8));
-	NeuralLayerPtr inputLayer = NeuralLayerPtr(new NeuralLayer(w, h,1));
-	sys.add(currentLayer);
-	sys.add(inputLayer);
-	for (Neuron& n : *currentLayer) {
-		n.value =  RandomUniform(0.0f, 1.0f);
-	}
-	for (Neuron& n : *inputLayer) {
-		n.value = RandomUniform(0.0f, 1.0f);
-	}
-	for (int j = kw/2; j<inputLayer->height-kh/2; j++) {
-		for (int i = kw/2; i<inputLayer->width-kw/2; i++) {
-			int ilow = i - kw / 2;
-			int jlow =  j - kh / 2;
-			int ihi =  i + kw / 2;
-			int jhi = j + kh / 2;
-			for (int ii = ilow; ii <= ihi; ii++) {
-				for (int jj = jlow; jj <= jhi; jj++) {
-					sys.connect(ii, jj, inputLayer, i, j,  currentLayer,RandomUniform(0.0f,1.0f));
-				}
-			}
-		}
-	}
-	*/
+	
 }
 void TigerApp::draw(AlloyContext* context) {
 }

@@ -3,6 +3,7 @@
 using namespace aly;
 namespace tgr {
 	AveragePoolFilter::AveragePoolFilter(const std::vector<NeuralLayerPtr>& inputLayers, int kernelSize):kernelSize(kernelSize) {
+		NeuralFilter::inputLayers = inputLayers;
 		for (NeuralLayerPtr layer : inputLayers) {
 			if (layer->width%kernelSize != 0 || layer->height%kernelSize != 0) {
 				throw std::runtime_error("Map size must be divisible by kernel size.");

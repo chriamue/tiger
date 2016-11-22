@@ -24,6 +24,7 @@ namespace tgr {
 		if (_bias) {
 			bias.reset(new Bias());
 			SignalPtr bsignal=SignalPtr(new Signal());
+			bsignal->value = 0.5f;
 			addInput(bsignal);
 			bias->addOutput(bsignal);
 		}

@@ -81,6 +81,7 @@ namespace tgr {
 		float rInner = 0.25f*scale;
 		float lineWidth = scale*0.01f;
 		nvgStrokeWidth(nvg, lineWidth);
+		
 		for (int j = 0; j < height; j++) {
 			for (int i = 0; i < width; i++) {
 				float2 center = float2(bounds.position.x + (i + 0.5f)*scale, bounds.position.y + (j + 0.5f)*scale);
@@ -107,7 +108,7 @@ namespace tgr {
 					nvgLineCap(nvg,NVG_SQUARE);
 					for (int i = 0; i < N; i++) {
 						SignalPtr& sig = n.input[i];
-						float a = 2.0f*i*NVG_PI / N;
+						float a = 2.0f*i*NVG_PI / N-0.5f*NVG_PI;
 						float cosa = std::cos(a);
 						float sina = std::sin(a);
 						float sx = center.x + rInner*cosa;

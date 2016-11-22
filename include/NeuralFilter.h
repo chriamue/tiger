@@ -57,6 +57,9 @@ namespace tgr {
 			size_t getOutputSize() const {
 				return outputLayers.size();
 			}
+			size_t getInputSize() const {
+				return inputLayers.size();
+			}
 			NeuralFilter() {}
 			virtual ~NeuralFilter() {}
 			virtual void initialize(NeuralSystem& sys) = 0;

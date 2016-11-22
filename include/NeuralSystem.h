@@ -29,6 +29,18 @@ namespace tgr {
 		void setInput(const std::vector<float>& in) {
 			input = in;
 		}
+		const std::vector<NeuralLayerPtr>& getRoots() const {
+			return roots;
+		}
+		std::vector<NeuralLayerPtr>& getRoots() {
+			return roots;
+		}
+		const std::vector<NeuralLayerPtr>& getLayers() const {
+			return layers;
+		}
+		std::vector<NeuralLayerPtr>& getLayers() {
+			return layers;
+		}
 		void add(const SignalPtr& signal);
 		void add(const std::vector<SignalPtr>& signals);
 		SignalPtr add(Terminal source,Terminal target,float weight=0.0f);
