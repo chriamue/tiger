@@ -2,7 +2,7 @@
 #include "AlloyMath.h"
 using namespace aly;
 namespace tgr {
-	AveragePoolFilter::AveragePoolFilter(const std::vector<NeuralLayerPtr>& inputLayers, int kernelSize):kernelSize(kernelSize) {
+	AveragePoolFilter::AveragePoolFilter(TigerApp* app,const std::vector<NeuralLayerPtr>& inputLayers, int kernelSize):NeuralFilter(app),kernelSize(kernelSize) {
 		NeuralFilter::inputLayers = inputLayers;
 		for (NeuralLayerPtr layer : inputLayers) {
 			if (layer->width%kernelSize != 0 || layer->height%kernelSize != 0) {
@@ -15,8 +15,9 @@ namespace tgr {
 		outputLayers.resize(inputLayers.size());
 		for (int k = 0; k < inputLayers.size(); k++) {
 			NeuralLayerPtr inputLayer = inputLayers[k];
-			outputLayers[k] = NeuralLayerPtr(new NeuralLayer(MakeString()<<"subsample",inputLayer->width/kernelSize,inputLayer->height/kernelSize,1,true));
+			outputLayers[k] = NeuralLayerPtr(new NeuralLayer(app,MakeString()<<"subsample ["<<kernelSize<<"]",inputLayer->width/kernelSize,inputLayer->height/kernelSize,1,true));
 			NeuralLayerPtr outputLayer = outputLayers[k];
+			inputLayer->addChild(outputLayer);
 			sys.add(outputLayer->getBiasSignals());
 			for (int j = 0; j < outputLayer->height; j++) {
 				for (int i = 0; i < outputLayer->width; i++) {

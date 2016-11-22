@@ -3,14 +3,14 @@
 
 using namespace aly;
 namespace tgr {
-	ConvolutionFilter::ConvolutionFilter(int width, int height, int kernelSize, int features) :NeuralFilter(), kernelSize(kernelSize) {
+	ConvolutionFilter::ConvolutionFilter(TigerApp* app, int width, int height, int kernelSize, int features) :NeuralFilter(app), kernelSize(kernelSize) {
 		if (kernelSize % 2 == 0) {
 			throw std::runtime_error("Kernel size must be odd.");
 		}
-		inputLayers.push_back(NeuralLayerPtr(new NeuralLayer(MakeString() << "convolution [" << kernelSize << "]", width, height)));
+		inputLayers.push_back(NeuralLayerPtr(new NeuralLayer(app, MakeString() << "convolution [" << kernelSize << "]", width, height)));
 		outputLayers.resize(features);
 	}
-	ConvolutionFilter::ConvolutionFilter(const NeuralLayerPtr& layer, int kernelSize, int features) :NeuralFilter(), kernelSize(kernelSize) {
+	ConvolutionFilter::ConvolutionFilter(TigerApp* app, const NeuralLayerPtr& layer, int kernelSize, int features) :NeuralFilter(app), kernelSize(kernelSize) {
 		if (kernelSize % 2 == 0) {
 			throw std::runtime_error("Kernel size must be odd.");
 		}
@@ -33,7 +33,7 @@ namespace tgr {
 			}
 		}
 		for (int f = 0; f < outputLayers.size(); f++) {
-			outputLayers[f] = NeuralLayerPtr(new NeuralLayer(MakeString() << "feature [" << f << "]", ow, oh));
+			outputLayers[f] = NeuralLayerPtr(new NeuralLayer(app, MakeString() << "feature [" << f << "]", ow, oh));
 			NeuralLayerPtr outputLayer = outputLayers[f];
 			outputLayer->setFunction(Tanh());
 			inputLayer->addChild(outputLayer);

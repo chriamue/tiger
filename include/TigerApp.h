@@ -6,22 +6,28 @@
 #include "AlloyWorker.h"
 #include "AlloyImage.h"
 #include "NeuralSystem.h"
+#include "AlloyExpandTree.h"
 class TigerApp : public aly::Application {
 protected:
-	const float GLYPH_SCALE;
+	tgr::NeuralLayer* selectedLayer;
 	bool parametersDirty;
 	bool frameBuffersDirty;
 	bool running = false;
 	tgr::NeuralSystem sys;
-	tgr::NeuralLayerPtr currentLayer;
-	aly::AdjustableCompositePtr resizeableRegion;
 	aly::IconButtonPtr playButton, stopButton;
+	aly::ExpandTreePtr expandTree;
+	aly::DrawPtr dragIconPane;
+	aly::CompositePtr renderRegion;
+	
 	void initialize();
 public:
+
+	bool overTarget = false;
 	TigerApp();
 	virtual void draw(aly::AlloyContext* context) override;
 	bool init(aly::Composite& rootNode);
-
+	bool onEventHandler(aly::AlloyContext* context, const aly::InputEvent& e);
+	void setSelectedLayer(tgr::NeuralLayer* layer);
 };
 
 #endif

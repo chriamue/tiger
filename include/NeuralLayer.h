@@ -22,18 +22,24 @@
 #define NeuralLayer_H_
 #include <AlloyMath.h>
 #include <AlloyContext.h>
+#include <AlloyExpandTree.h>
+#include <AlloyWidget.h>
 #include "Neuron.h"
 #include <vector>
 #include <set>
+class TigerApp;
+
 namespace tgr {
 	std::string MakeID(int len=8);
 	class NeuralLayer {
 		protected:
 			std::vector<Neuron> neurons;
 			std::vector<std::shared_ptr<NeuralLayer>> children;
-			std::vector<std::shared_ptr<NeuralLayer>> dependencies;
+			std::vector<NeuralLayer*> dependencies;
 			std::string name;
 			std::string id;
+			aly::AdjustableCompositePtr resizeableRegion;
+			TigerApp* app;
 		public:
 			int width;
 			int height;
@@ -49,17 +55,20 @@ namespace tgr {
 			iterator end() {
 				return neurons.end();
 			}
+			aly::AdjustableCompositePtr getRegion() const {
+				return resizeableRegion;
+			}
 			std::vector<SignalPtr> getBiasSignals() const;
 			std::vector<std::shared_ptr<NeuralLayer>>& getChildren() {
 				return children;
 			}
-			std::vector<std::shared_ptr<NeuralLayer>>& getDependencies() {
+			std::vector<NeuralLayer*>& getDependencies() {
 				return dependencies;
 			}
 			const std::vector<std::shared_ptr<NeuralLayer>>& getChildren() const {
 				return children;
 			}
-			const std::vector<std::shared_ptr<NeuralLayer>>& getDependencies() const {
+			const std::vector<NeuralLayer*>& getDependencies() const {
 				return dependencies;
 			}
 			bool isRoot() const {
@@ -78,6 +87,7 @@ namespace tgr {
 			std::string getId()const {
 				return id;
 			}
+			void initialize(const aly::ExpandTreePtr& tree,const aly::TreeItemPtr& treeItem);
 			void setFunction(const NeuronFunction& func);
 			int getBin(size_t index) const;
 			int getBin(const Neuron& n) const;
@@ -103,8 +113,8 @@ namespace tgr {
 			const Neuron& operator()(const aly::int2 ij) const;
 			const Neuron& operator()(const Terminal ij) const;
 			void draw(aly::AlloyContext* context, const aly::box2px& bounds);
-			NeuralLayer(int width=0,int height=0,int bins=1,bool bias=false, const NeuronFunction& func = ReLU());
-			NeuralLayer(const std::string& name,int width = 0, int height = 0, int bins = 1, bool bias = false, const NeuronFunction& func=ReLU());
+			NeuralLayer(TigerApp* app,int width=0,int height=0,int bins=1,bool bias=false, const NeuronFunction& func = ReLU());
+			NeuralLayer(TigerApp* app,const std::string& name,int width = 0, int height = 0, int bins = 1, bool bias = false, const NeuronFunction& func=ReLU());
 	};
 	typedef std::shared_ptr<NeuralLayer> NeuralLayerPtr;
 }

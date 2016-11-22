@@ -1,6 +1,7 @@
 #ifndef _NEURAL_SYSTEM_H_
 #define _NEURAL_SYSTEM_H_
 #include "NeuralLayer.h"
+#include "AlloyExpandTree.h"
 #include <map>
 namespace tgr {
 	class NeuralFilter;
@@ -19,7 +20,7 @@ namespace tgr {
 		void initialize();
 		void train(float learningRate);
 		Neuron* getNeuron(const Terminal& t) const;
-
+		void initialize(const aly::ExpandTreePtr& tree);
 		const std::vector<float>& getOutput() const {
 			return output;
 		}

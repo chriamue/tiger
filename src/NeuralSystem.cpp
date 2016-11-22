@@ -1,5 +1,6 @@
 #include "NeuralSystem.h"
 #include "NeuralFilter.h"
+using namespace aly;
 namespace tgr {
 
 	void NeuralSystem::evaluate() {
@@ -27,6 +28,15 @@ namespace tgr {
 		auto output = filter->getOutputLayers();
 		layers.insert(layers.end(), inputs.begin(), inputs.end());
 		layers.insert(layers.end(), output.begin(), output.end());
+	}
+	void NeuralSystem::initialize(const aly::ExpandTreePtr& tree) {
+		initialize();
+		TreeItemPtr root=TreeItemPtr(new TreeItem("Neural Layers"));
+		tree->addItem(root);
+		root->setExpanded(true);
+		for (NeuralLayerPtr n : roots) {
+			n->initialize(tree, root);
+		}
 	}
 	void NeuralSystem::add(const SignalPtr& signal) {
 		signals.push_back(signal);

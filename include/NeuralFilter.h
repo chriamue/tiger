@@ -22,11 +22,13 @@
 #define NEURALFILTER_H_
 #include "NeuralLayer.h"
 #include "NeuralSystem.h"
+class TigerApp;
 namespace tgr {
 	class NeuralFilter {
 		protected:
 			std::vector<NeuralLayerPtr> inputLayers;
 			std::vector<NeuralLayerPtr> outputLayers;
+			TigerApp* app;
 		public:
 			std::vector<NeuralLayerPtr>& getInputLayers() {
 				return inputLayers;
@@ -60,7 +62,7 @@ namespace tgr {
 			size_t getInputSize() const {
 				return inputLayers.size();
 			}
-			NeuralFilter() {}
+			NeuralFilter(TigerApp* app):app(app) {}
 			virtual ~NeuralFilter() {}
 			virtual void initialize(NeuralSystem& sys) = 0;
 	};
