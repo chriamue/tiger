@@ -77,23 +77,6 @@ bool TigerApp::init(Composite& rootNode) {
 	infoComposite->add(stopButton);
 	controlLayout->setSouth(infoComposite, UnitPX(80.0f));
 	rootNode.add(layout);
-
-	/*
-	CompositePtr viewRegion = CompositePtr(new Composite("View", CoordPX(0.0f, 0.0f), CoordPerPX(1.0f, 1.0f, 0.0f, -80.0f)));
-
-	float downScale = std::min((getContext()->getScreenWidth() - 350.0f) / img.width, (getContext()->getScreenHeight() - 80.0f) / img.height);
-
-	
-	ImageGlyphPtr imageGlyph = AlloyApplicationContext()->createImageGlyph(img, false);
-	
-	GlyphRegionPtr glyphRegion = GlyphRegionPtr(new GlyphRegion("Image Region", imageGlyph, CoordPX(0.0f, 0.0f), CoordPercent(1.0f, 1.0f)));
-	glyphRegion->setAspectRule(AspectRule::Unspecified);
-	glyphRegion->foregroundColor = MakeColor(COLOR_NONE);
-	glyphRegion->backgroundColor = MakeColor(COLOR_NONE);
-	glyphRegion->borderColor = MakeColor(COLOR_NONE);
-
-
-	*/
 	
 	dragIconPane =
 		DrawPtr(
@@ -158,7 +141,7 @@ bool TigerApp::init(Composite& rootNode) {
 	glass->add(dragIconPane);
 	glass->backgroundColor = MakeColor(0, 0, 0, 0);
 
-	renderRegion->backgroundColor = MakeColor(getContext()->theme.DARKER);
+	renderRegion->backgroundColor = MakeColor(getContext()->theme.DARK);
 	renderRegion->borderColor = MakeColor(getContext()->theme.DARK);
 	renderRegion->borderWidth = UnitPX(1.0f);
 	Application::addListener(&rootNode);
@@ -191,6 +174,7 @@ bool TigerApp::onEventHandler(AlloyContext* context, const aly::InputEvent& e) {
 			AlloyApplicationContext()->getGlassPane()->setVisible(false);
 			if (overTarget) {
 				selectedLayer->appendTo(renderRegion,e.cursor);
+				AlloyApplicationContext()->requestPack();
 			}
 		}
 		selectedLayer=nullptr;

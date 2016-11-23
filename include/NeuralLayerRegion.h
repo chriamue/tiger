@@ -8,29 +8,18 @@ namespace aly {
 	
 	class NeuralLayerRegion : public Composite {
 	protected:
-		pixel2 cursorDownPosition;
-		box2px windowInitialBounds;
-		bool resizing;
-		WindowPosition winPos;
-		bool resizeable;
+		static const float fontSize;
 		tgr::NeuralLayer* layer;
-		void drawNeurons(AlloyContext* context);
+		TextLabelPtr textLabel;
+		int selectionRadius;
+		pixel2 cursorPosition;
 	public:
-		bool isResizing() const {
-			return resizing;
+		static float2 getPadding() {
+			return float2(0.0f, 4.0f + fontSize);
 		}
-		bool isResizeable() const {
-			return resizeable;
+		void setSelectionRadius(int radius) {
+			selectionRadius = radius;
 		}
-		virtual bool isDragEnabled() const override {
-			if (resizeable) {
-				return ((dragButton != -1) && winPos == WindowPosition::Center);
-			}
-			else {
-				return (dragButton != -1);
-			}
-		}
-		std::function<void(NeuralLayerRegion* composite, const box2px& bounds)> onResize;
 		NeuralLayerRegion(const std::string& name, tgr::NeuralLayer* layer, const AUnit2D& pos,
 			const AUnit2D& dims, bool resizeable = true);
 		virtual bool onEventHandler(AlloyContext* context, const InputEvent& event)
