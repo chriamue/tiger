@@ -4,23 +4,45 @@ using namespace aly;
 namespace tgr {
 
 	void NeuralSystem::evaluate() {
-		int N = (int)std::min(inputTerminals.size(), input.size());
-		/*
-#pragma omp parallel for;
-		for (int i = 0; i < N; i++) {
-			Terminal t=inputTerminals[i];
-			NeuralLayerPtr layer = layers[t.layer];
-			(*layer)(t.x, t.y).value = input[i];
+		for (const std::pair<Terminal, float>& pr : input) {
+			Terminal t = pr.first;
+			NeuralLayer* layer= t.layer;
+			(*layer)(t.x, t.y).value = pr.second;
 		}
-		*/
+		for (NeuralLayerPtr layer:layers) {
+			layer->evaluate();
+		}
+		for (auto iter = output.begin(); iter != output.end();iter++) {
+			Terminal t = iter->first;
+			NeuralLayer* layer = t.layer;
+			iter->second=(*layer)(t.x, t.y).value;
+		}
 	}
 	void NeuralSystem::initialize() {
 		roots.clear();
+		std::list<NeuralLayerPtr> q;
 		for (NeuralLayerPtr layer : layers) {
+			layer->setVisited(false);
 			if (layer->isRoot()) {
 				roots.push_back(layer);
+				q.push_back(layer);
 			}
 		}
+		std::vector<NeuralLayerPtr> order;
+		int index = 0;
+		while (!q.empty()) {
+			NeuralLayerPtr layer = q.front();
+			q.pop_front();
+			layer->id = index++;
+			layer->setVisited(true);
+			order.push_back(layer);
+			for (NeuralLayerPtr child:layer->getChildren()) {
+				if (child->ready()) {
+					q.push_back(child);
+				}
+			}
+		}
+		layers = order;
 	}
 	void NeuralSystem::add(const std::shared_ptr<NeuralFilter>& filter) {
 		filter->initialize(*this);
@@ -38,6 +60,24 @@ namespace tgr {
 			n->initialize(tree, root);
 		}
 	}
+	void NeuralSystem::setInput(const Terminal& t, float value) {
+		input[t] = value;
+	}
+	float NeuralSystem::getOutput(const Terminal& t) {
+		return output[t];
+	}
+	Terminal NeuralSystem::addInput(int i, int j, const NeuralLayerPtr& layer, float value) {
+		Terminal t(i, j,  layer.get());
+		input[t] = value;
+		(*layer)(t.x, t.y).setFunction(Constant());
+		return t;
+	}
+	Terminal NeuralSystem::addOutput(int i, int j, const NeuralLayerPtr& layer, float value){
+		Terminal t(i, j, layer.get());
+		output[t] = value;
+		return t;
+	}
+
 	void NeuralSystem::add(const SignalPtr& signal) {
 		signals.push_back(signal);
 	}
@@ -46,12 +86,6 @@ namespace tgr {
 	}
 	Neuron* NeuralSystem::getNeuron(const Terminal& t) const {
 		return &t.layer->get(t.x, t.y);
-	}
-	SignalPtr NeuralSystem::connect(int si, int sj, const NeuralLayerPtr& sl, int ti, int tj, const NeuralLayerPtr& tl, float weight) {
-		return add(Terminal(si, sj, 0, sl), Terminal(ti, tj, 0, tl),weight);
-	}
-	SignalPtr NeuralSystem::connect(int si, int sj,int sb, const NeuralLayerPtr& sl, int ti, int tj, int tb, const NeuralLayerPtr& tl, float weight) {
-		return add(Terminal(si, sj, tb, sl), Terminal(ti, tj, tb, tl), weight);
 	}
 	SignalPtr NeuralSystem::add(Terminal source, Terminal target,float weight) {
 		SignalPtr signal = std::shared_ptr<Signal>(new Signal(weight));

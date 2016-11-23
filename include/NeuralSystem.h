@@ -10,26 +10,14 @@ namespace tgr {
 		std::vector<NeuralLayerPtr> layers;
 		std::vector<NeuralLayerPtr> roots;
 		std::vector<SignalPtr> signals;
-		std::vector<float> input;
-		std::vector<Terminal> inputTerminals;
-		std::vector<float> output;
-		std::vector<Terminal> outputTerminals;
-		std::vector<std::vector<SignalPtr>> forwardNetwork;
+		std::map<Terminal,float> input;
+		std::map<Terminal,float> output;
 	public:
 		void evaluate();
 		void initialize();
 		void train(float learningRate);
 		Neuron* getNeuron(const Terminal& t) const;
 		void initialize(const aly::ExpandTreePtr& tree);
-		const std::vector<float>& getOutput() const {
-			return output;
-		}
-		const std::vector<float>& getInput() const {
-			return input;
-		}
-		void setInput(const std::vector<float>& in) {
-			input = in;
-		}
 		const std::vector<NeuralLayerPtr>& getRoots() const {
 			return roots;
 		}
@@ -42,11 +30,14 @@ namespace tgr {
 		std::vector<NeuralLayerPtr>& getLayers() {
 			return layers;
 		}
+		void setInput(const Terminal& t, float value);
+		float getOutput(const Terminal& t);
+		Terminal addInput(int i,int j,const NeuralLayerPtr& layer, float value=0.0f);
+		Terminal addOutput(int i, int j, const NeuralLayerPtr& layer, float value=0.0f);
+
 		void add(const SignalPtr& signal);
 		void add(const std::vector<SignalPtr>& signals);
 		SignalPtr add(Terminal source,Terminal target,float weight=0.0f);
-		SignalPtr connect(int si,int sj,const NeuralLayerPtr& sl, int ti, int tj, const NeuralLayerPtr& tl, float weight = 0.0f);
-		SignalPtr connect(int si, int sj,int sb, const NeuralLayerPtr& sl, int ti, int tj,int tb, const NeuralLayerPtr& tl, float weight = 0.0f);
 		void add(const std::shared_ptr<NeuralFilter>& filter);
 	
 	};

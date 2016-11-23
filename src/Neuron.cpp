@@ -19,7 +19,20 @@
 * THE SOFTWARE.
 */
 #include "Neuron.h"
+#include "NeuralLayer.h"
 namespace tgr {
+	bool Terminal::operator ==(const Terminal & r) const {
+		return (x == r.x && y == r.y && layer == r.layer);
+	}
+	bool Terminal::operator !=(const Terminal & r) const {
+		return (x != r.x || y != r.y || layer != r.layer);
+	}
+	bool Terminal::operator <(const Terminal & r) const {
+		return (std::make_tuple(x, y, (layer) ? layer->id : -1) < std::make_tuple(r.x, r.y, (layer) ? layer->id : -1));
+	}
+	bool Terminal::operator >(const Terminal & r) const {
+		return (std::make_tuple(x, y, (layer) ? layer->id : -1) < std::make_tuple(r.x, r.y, (layer) ? layer->id : -1));
+	}
 	Neuron::Neuron(const NeuronFunction& func,bool _bias,float val) :transform(func),value(val) {
 		if (_bias) {
 			bias.reset(new Bias());
@@ -29,5 +42,18 @@ namespace tgr {
 			bias->addOutput(bsignal);
 		}
 	}
-
+	float Neuron::evaluate() {
+		float sum1 = 0.0f, sum2=0.0f;
+		if (transform.type() != NeuronFunctionType::Constant) {
+			for (SignalPtr sig : input) {
+				sum2 = 0.0f;
+				for (Neuron* inner : sig->input) {
+					sum2 += inner->value;
+				}
+				sum1 += sig->value*sum2;
+			}
+			value = transform.forward(sum1);
+		}
+		return value;
+	}
 }

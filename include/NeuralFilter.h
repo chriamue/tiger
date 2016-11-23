@@ -30,6 +30,9 @@ namespace tgr {
 			std::vector<NeuralLayerPtr> outputLayers;
 			TigerApp* app;
 		public:
+			virtual bool isTrainable() const {
+				return true;
+			}
 			std::vector<NeuralLayerPtr>& getInputLayers() {
 				return inputLayers;
 			}

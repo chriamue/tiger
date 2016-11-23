@@ -29,26 +29,16 @@ namespace tgr {
 		int x;
 		int y;
 		NeuralLayer* layer;
-		int bin;
-
-		Terminal(int x=0, int y=0, int b=0, NeuralLayer* l=nullptr) :x(x), y(y), bin(b), layer(l) {
+		Terminal(int x=0, int y=0,  NeuralLayer* l=nullptr) :x(x), y(y), layer(l) {
 
 		}
-		Terminal(int x = 0, int y = 0, int b = 0, const std::shared_ptr<NeuralLayer>& l = nullptr) :x(x), y(y), bin(b), layer(l.get()) {
+		Terminal(int x = 0, int y = 0,  const std::shared_ptr<NeuralLayer>& l = nullptr) :x(x), y(y),  layer(l.get()) {
 
 		}
-		bool operator ==(const Terminal & r) const {
-			return (x == r.x && y == r.y && layer == r.layer && bin == r.bin);
-		}
-		bool operator !=(const Terminal & r) const {
-			return (x != r.x || y != r.y || layer!=r.layer||bin!=r.bin);
-		}
-		bool operator <(const Terminal & r) const {
-			return (std::make_tuple(x, y,layer,bin) < std::make_tuple(r.x, r.y, r.layer, r.bin));
-		}
-		bool operator >(const Terminal & r) const {
-			return (std::make_tuple(x, y, layer, bin) < std::make_tuple(r.x, r.y, r.layer, r.bin));
-		}
+		bool operator ==(const Terminal & r) const;
+		bool operator !=(const Terminal & r) const;
+		bool operator <(const Terminal & r) const;
+		bool operator >(const Terminal & r) const;
 	};
 	class Neuron;
 	struct Signal {
@@ -81,6 +71,7 @@ namespace tgr {
 		size_t getOutputSize() const {
 			return output.size();
 		}
+		float evaluate();
 		const SignalPtr& getInput(size_t idx) const {
 			return input[idx];
 		}

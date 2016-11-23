@@ -5,6 +5,7 @@
 #include "ConvolutionFilter.h"
 #include "AveragePoolFilter.h"
 #include "AlloyDrawUtil.h"
+#include "MNIST.h"
 using namespace aly;
 using namespace tgr;
 TigerApp::TigerApp() :
@@ -87,17 +88,13 @@ bool TigerApp::init(Composite& rootNode) {
 		if (selectedLayer == nullptr)return;
 		NVGcontext* nvg = context->nvgContext;
 		nvgFontFaceId(nvg, context->getFontHandle(FontType::Icon));
-		nvgFontSize(nvg, 50.0f);
+		nvgFontSize(nvg, 40.0f);
 		const float th = 20.0f;
 		std::string modName = selectedLayer->getName();
 
 		nvgTextAlign(nvg, NVG_ALIGN_TOP | NVG_ALIGN_LEFT);
 		if (this->overTarget) {
-			nvgFillColor(nvg, context->theme.DARKER);
-			nvgBeginPath(nvg);
-			nvgEllipse(nvg, bounds.position.x + bounds.dimensions.x*0.5f, bounds.position.y + bounds.dimensions.y*0.5f, bounds.dimensions.x*0.5f, bounds.dimensions.y*0.5f);
-			nvgFill(nvg);
-			drawText(nvg, bounds.position, nodeStr, FontStyle::Normal, context->theme.LIGHTER, context->theme.DARKER);
+			drawText(nvg, bounds.position+float2(2.0f,6.0f), nodeStr, FontStyle::Glow, context->theme.LIGHTER, context->theme.DARKEST);
 			nvgFontSize(nvg, 18.0f);
 			nvgBeginPath(nvg);
 			nvgFillColor(nvg, context->theme.DARKER);
@@ -120,10 +117,7 @@ bool TigerApp::init(Composite& rootNode) {
 		}
 		else {
 			nvgFillColor(nvg, context->theme.DARKER.toSemiTransparent(0.5f));
-			nvgBeginPath(nvg);
-			nvgEllipse(nvg, bounds.position.x + bounds.dimensions.x*0.5f, bounds.position.y + bounds.dimensions.y*0.5f, bounds.dimensions.x*0.5f, bounds.dimensions.y*0.5f);
-			nvgFill(nvg);
-			drawText(nvg, bounds.position, nodeStr, FontStyle::Normal, context->theme.LIGHTER.toSemiTransparent(0.5f), context->theme.DARKEST);
+			drawText(nvg, bounds.position + float2(2.0f, 6.0f), nodeStr, FontStyle::Glow, context->theme.LIGHTER, context->theme.DARKEST);
 			nvgFontFaceId(nvg, context->getFontHandle(FontType::Normal));
 			nvgFontSize(nvg, th);
 			float tw = nvgTextBounds(nvg, 0, 0, modName.c_str(), nullptr, nullptr) + 4.0f;
@@ -183,15 +177,27 @@ bool TigerApp::onEventHandler(AlloyContext* context, const aly::InputEvent& e) {
 	return false;
 }
 void TigerApp::initialize() {
-	ConvolutionFilterPtr conv1(new ConvolutionFilter(this, 32, 16, 5, 6));
-	sys.add(conv1);
-	AveragePoolFilterPtr avg1(new AveragePoolFilter(this, conv1->getOutputLayers(), 2));
-	sys.add(avg1);
-	for (int i = 0; i < avg1->getOutputSize(); i++) {
-		ConvolutionFilterPtr conv2(new ConvolutionFilter(this,avg1->getOutputLayer(i),  5, 16));
-		sys.add(conv2);
+	std::string trainFile=getFullPath("data/train-images.idx3-ubyte");
+	std::vector<aly::Image1f> images;
+	parse_mnist_images(trainFile,images);
+	if (images.size() > 0) {
+		const aly::Image1f& ref = images[RandomUniform(0,images.size()-1)];
+		ConvolutionFilterPtr conv1(new ConvolutionFilter(this, ref.width, ref.height, 5, 6));
+		sys.add(conv1);
+		AveragePoolFilterPtr avg1(new AveragePoolFilter(this, conv1->getOutputLayers(), 2));
+		sys.add(avg1);
+		for (int i = 0; i < avg1->getOutputSize(); i++) {
+			ConvolutionFilterPtr conv2(new ConvolutionFilter(this, avg1->getOutputLayer(i), 5, 16));
+			sys.add(conv2);
+		}
+		for (int i = 0; i < ref.width; i++) {
+			for (int j = 0; j < ref.height; j++) {
+				sys.addInput(i, j, conv1->getInputLayer(0), ref(i, j).x);
+			}
+		}
+		sys.initialize(expandTree);
+		sys.evaluate();
 	}
-	sys.initialize(expandTree);
 }
 void TigerApp::draw(AlloyContext* context) {
 }

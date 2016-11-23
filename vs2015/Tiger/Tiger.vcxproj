@@ -152,6 +152,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\AveragePoolFilter.cpp" />
     <ClCompile Include="..\..\src\ConvolutionFilter.cpp" />
+    <ClCompile Include="..\..\src\MNIST.cpp" />
     <ClCompile Include="..\..\src\NeuralFilter.cpp" />
     <ClCompile Include="..\..\src\NeuralLayerRegion.cpp" />
     <ClCompile Include="..\..\src\NeuralSystem.cpp" />

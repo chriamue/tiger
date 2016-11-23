@@ -38,14 +38,15 @@ namespace tgr {
 			std::vector<std::shared_ptr<NeuralLayer>> children;
 			std::vector<NeuralLayer*> dependencies;
 			std::string name;
-			std::string id;
+
+			bool visited;
 			aly::NeuralLayerRegionPtr layerRegion;
 			TigerApp* app;
 		public:
 			int width;
 			int height;
 			int bins;
-
+			int id;
 			typedef Neuron ValueType;
 			typedef typename std::vector<ValueType>::iterator iterator;
 			typedef typename std::vector<ValueType>::const_iterator const_iterator;
@@ -56,6 +57,13 @@ namespace tgr {
 			iterator end() {
 				return neurons.end();
 			}
+			bool isVisited() const {
+				return visited;
+			}
+			void setVisited(bool v) {
+				visited = v;
+			}
+			void evaluate();
 			void appendTo(const std::shared_ptr<aly::Composite>& comp, aly::pixel2 cursor);
 			aly::NeuralLayerRegionPtr getRegion();
 			std::vector<SignalPtr> getBiasSignals() const;
@@ -65,6 +73,7 @@ namespace tgr {
 			std::vector<NeuralLayer*>& getDependencies() {
 				return dependencies;
 			}
+			bool ready() const;
 			const std::vector<std::shared_ptr<NeuralLayer>>& getChildren() const {
 				return children;
 			}
@@ -81,12 +90,7 @@ namespace tgr {
 			std::string getName()const {
 				return name;
 			}
-			void setId(const std::string& n) {
-				id = n;
-			}
-			std::string getId()const {
-				return id;
-			}
+
 			void initialize(const aly::ExpandTreePtr& tree,const aly::TreeItemPtr& treeItem);
 			void setFunction(const NeuronFunction& func);
 			int getBin(size_t index) const;

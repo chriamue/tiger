@@ -32,16 +32,14 @@ namespace tgr {
 		}
 		return ss.str();
 	}
-	NeuralLayer::NeuralLayer(TigerApp* app,int width, int height, int bins, bool bias, const NeuronFunction& func) :app(app),width(width), height(height), bins(bins) {
+	NeuralLayer::NeuralLayer(TigerApp* app,int width, int height, int bins, bool bias, const NeuronFunction& func) :app(app),width(width), height(height), bins(bins),id(-1),visited(false) {
 		neurons.resize(width*height*bins, Neuron(func, bias));
 		if (bias) {
 
 		}
-		id = MakeID();
 	}
-	NeuralLayer::NeuralLayer(TigerApp* app, const std::string& name,int width, int height, int bins,bool bias, const NeuronFunction& func) :app(app), name(name), width(width), height(height), bins(bins) {
+	NeuralLayer::NeuralLayer(TigerApp* app, const std::string& name,int width, int height, int bins,bool bias, const NeuronFunction& func) :app(app), name(name), width(width), height(height), bins(bins), id(-1) {
 		neurons.resize(width*height*bins,Neuron(func,bias));
-		id = MakeID();
 	}
 	void NeuralLayer::resize(int w, int h, int b) {
 		neurons.resize(w * h * b);
@@ -59,6 +57,13 @@ namespace tgr {
 			}
 		}
 		return signals;
+	}
+	void NeuralLayer::evaluate() {
+		int N = (int)neurons.size();
+		for (int n = 0; n < N; n++) {
+			Neuron& neuron = neurons[n];
+			neuron.evaluate();
+		}
 	}
 	void NeuralLayer::addChild(const std::shared_ptr<NeuralLayer>& layer) {
 		children.push_back(layer);
@@ -186,6 +191,12 @@ namespace tgr {
 	}
 	const Neuron& NeuralLayer::operator()(const Terminal ij) const {
 		return neurons[aly::clamp(ij.x, 0, width - 1) + aly::clamp(ij.y, 0, height - 1) * width];
+	}
+	bool NeuralLayer::ready() const {
+		for (NeuralLayer* layer : dependencies) {
+			if (!layer->isVisited())return false;
+		}
+		return true;
 	}
 	aly::NeuralLayerRegionPtr NeuralLayer::getRegion() {
 		if (layerRegion.get() == nullptr) {
