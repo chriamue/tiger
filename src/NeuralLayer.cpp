@@ -187,11 +187,33 @@ namespace tgr {
 	const Neuron& NeuralLayer::operator()(const Terminal ij) const {
 		return neurons[aly::clamp(ij.x, 0, width - 1) + aly::clamp(ij.y, 0, height - 1) * width];
 	}
+	aly::NeuralLayerRegionPtr NeuralLayer::getRegion() {
+		if (layerRegion.get() == nullptr) {
+			float2 dims(480.0f*getAspect(),480.0f);
+			layerRegion = NeuralLayerRegionPtr(new NeuralLayerRegion(name,this, CoordPerPX(0.5f, 0.5f, -dims.x*0.5f, -dims.y*0.5f), CoordPX(dims.x, dims.y)));
+		}
+		return layerRegion;
+	}
+	void NeuralLayer::appendTo(const std::shared_ptr<Composite>& renderRegion,pixel2 cursor) {
+		if (layerRegion.get() == nullptr) {
+			AlloyContext* context = AlloyApplicationContext().get();
+			pixel2 offset = renderRegion->getDrawOffset() + renderRegion->getBoundsPosition();
+			RegionPtr region = getRegion();
+			float2 dims = region->dimensions.toPixels(float2(context->screenDimensions()), context->dpmm, context->pixelRatio);
+			region->position = CoordPX(cursor - offset - 0.5f*dims);
+			renderRegion->add(region);
+		}
+		else {
+			AlloyContext* context = AlloyApplicationContext().get();
+			pixel2 offset = renderRegion->getDrawOffset() + renderRegion->getBoundsPosition();
+			float2 dims = layerRegion->dimensions.toPixels(float2(context->screenDimensions()), context->dpmm, context->pixelRatio);
+			layerRegion->position = CoordPX(cursor - offset - 0.5f*dims);
+		}
+	}
 	void NeuralLayer::initialize(const aly::ExpandTreePtr& tree, const aly::TreeItemPtr& parent)  {
 		TreeItemPtr item;
 		parent->addItem(item=TreeItemPtr(new TreeItem(getName(), 0x0f20e)));
 		const float fontSize = 24;
-		const float GLYPH_SCALE = 8.0f;
 		item->addItem(LeafItemPtr(new LeafItem([this,fontSize](AlloyContext* context, const box2px& bounds) {
 			NVGcontext* nvg = context->nvgContext;
 			float yoff = 2 + bounds.position.y;
@@ -210,41 +232,6 @@ namespace tgr {
 		for (auto child : children) {
 			child->initialize(tree, item);
 		}
-		DrawPtr drawContour = DrawPtr(new Draw("Contour Draw", CoordPX(0.0f, 0.0f), CoordPercent(1.0f, 1.0f),
-			[this](AlloyContext* context, const box2px& bounds) {
-				this->draw(context, bounds);
-		}));
-
-
-		float2 dims = GLYPH_SCALE*float2(dimensions());
-		float scale = (AlloyDefaultContext()->getScreenWidth() - 840) / dims.x;
-		resizeableRegion = AdjustableCompositePtr(new AdjustableComposite("Image", CoordPerPX(0.5, 0.5, -dims.x*0.5f*scale, -dims.y*0.5f*scale), CoordPX(dims.x*scale, dims.y*scale)));
-
-		drawContour->onScroll = [this, GLYPH_SCALE](AlloyContext* context, const InputEvent& event)
-		{
-			box2px bounds = resizeableRegion->getBounds(false);
-			pixel scaling = (pixel)(1 - 0.1f*event.scroll.y);
-			pixel2 newBounds = bounds.dimensions*scaling;
-			pixel2 cursor = context->cursorPosition;
-			pixel2 relPos = (cursor - bounds.position) / bounds.dimensions;
-			pixel2 newPos = cursor - relPos*newBounds;
-			bounds.position = newPos;
-			bounds.dimensions = newBounds;
-			resizeableRegion->setDragOffset(pixel2(0, 0));
-			resizeableRegion->position = CoordPX(bounds.position - resizeableRegion->parent->getBoundsPosition());
-			resizeableRegion->dimensions = CoordPX(bounds.dimensions);
-			float2 dims = GLYPH_SCALE*float2(dimensions());
-			cursor = aly::clamp(dims*(event.cursor - bounds.position) / bounds.dimensions, float2(0.0f), dims);
-			context->requestPack();
-			return true;
-		};
-		resizeableRegion->setAspectRatio(getAspect());
-		resizeableRegion->setAspectRule(AspectRule::FixedHeight);
-		resizeableRegion->setDragEnabled(true);
-		resizeableRegion->setClampDragToParentBounds(false);
-		resizeableRegion->borderWidth = UnitPX(2.0f);
-		resizeableRegion->borderColor = MakeColor(AlloyDefaultContext()->theme.LIGHTER);
-		resizeableRegion->add(drawContour);
 	}
 
 }

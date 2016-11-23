@@ -25,6 +25,7 @@
 #include <AlloyExpandTree.h>
 #include <AlloyWidget.h>
 #include "Neuron.h"
+#include "NeuralLayerRegion.h"
 #include <vector>
 #include <set>
 class TigerApp;
@@ -38,7 +39,7 @@ namespace tgr {
 			std::vector<NeuralLayer*> dependencies;
 			std::string name;
 			std::string id;
-			aly::AdjustableCompositePtr resizeableRegion;
+			aly::NeuralLayerRegionPtr layerRegion;
 			TigerApp* app;
 		public:
 			int width;
@@ -55,9 +56,8 @@ namespace tgr {
 			iterator end() {
 				return neurons.end();
 			}
-			aly::AdjustableCompositePtr getRegion() const {
-				return resizeableRegion;
-			}
+			void appendTo(const std::shared_ptr<aly::Composite>& comp, aly::pixel2 cursor);
+			aly::NeuralLayerRegionPtr getRegion();
 			std::vector<SignalPtr> getBiasSignals() const;
 			std::vector<std::shared_ptr<NeuralLayer>>& getChildren() {
 				return children;

@@ -190,8 +190,7 @@ bool TigerApp::onEventHandler(AlloyContext* context, const aly::InputEvent& e) {
 			dragIconPane->setVisible(false);
 			AlloyApplicationContext()->getGlassPane()->setVisible(false);
 			if (overTarget) {
-				std::cout << "Drop!" << std::endl;
-				//onDrop(selectedLayer, e.cursor);
+				selectedLayer->appendTo(renderRegion,e.cursor);
 			}
 		}
 		selectedLayer=nullptr;
@@ -202,7 +201,7 @@ bool TigerApp::onEventHandler(AlloyContext* context, const aly::InputEvent& e) {
 void TigerApp::initialize() {
 	ConvolutionFilterPtr conv1(new ConvolutionFilter(this, 32, 16, 5, 6));
 	sys.add(conv1);
-	AveragePoolFilterPtr avg1(new AveragePoolFilter(this, conv1->getInputLayers(), 2));
+	AveragePoolFilterPtr avg1(new AveragePoolFilter(this, conv1->getOutputLayers(), 2));
 	sys.add(avg1);
 	for (int i = 0; i < avg1->getOutputSize(); i++) {
 		ConvolutionFilterPtr conv2(new ConvolutionFilter(this,avg1->getOutputLayer(i),  5, 16));

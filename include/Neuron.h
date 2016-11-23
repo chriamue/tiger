@@ -75,6 +75,24 @@ namespace tgr {
 		float value;
 		float delta;
 		friend class NeuralLayer;
+		size_t getInputSize() const {
+			return input.size();
+		}
+		size_t getOutputSize() const {
+			return output.size();
+		}
+		const SignalPtr& getInput(size_t idx) const {
+			return input[idx];
+		}
+		const SignalPtr& getOutput(size_t idx) const {
+			return output[idx];
+		}
+		SignalPtr& getInput(size_t idx) {
+			return input[idx];
+		}
+		SignalPtr& getOutput(size_t idx) {
+			return output[idx];
+		}
 		bool hasBias() const {
 			return (bias.get() != nullptr);
 		}

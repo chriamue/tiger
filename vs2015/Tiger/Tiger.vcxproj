@@ -142,6 +142,7 @@
     <ClInclude Include="..\..\include\ConvolutionFilter.h" />
     <ClInclude Include="..\..\include\MNIST.h" />
     <ClInclude Include="..\..\include\NeuralFilter.h" />
+    <ClInclude Include="..\..\include\NeuralLayerRegion.h" />
     <ClInclude Include="..\..\include\NeuralSystem.h" />
     <ClInclude Include="..\..\include\NeuralLayer.h" />
     <ClInclude Include="..\..\include\Neuron.h" />
@@ -152,6 +153,7 @@
     <ClCompile Include="..\..\src\AveragePoolFilter.cpp" />
     <ClCompile Include="..\..\src\ConvolutionFilter.cpp" />
     <ClCompile Include="..\..\src\NeuralFilter.cpp" />
+    <ClCompile Include="..\..\src\NeuralLayerRegion.cpp" />
     <ClCompile Include="..\..\src\NeuralSystem.cpp" />
     <ClCompile Include="..\..\src\NeuralLayer.cpp" />
     <ClCompile Include="..\..\src\main.cpp" />
