@@ -70,11 +70,25 @@ namespace tgr {
 		float value;
 		bool active;
 		friend class NeuralLayer;
-		size_t getInputSize() const {
+		size_t getInputWeightSize() const {
 			return input.size();
 		}
-		size_t getOutputSize() const {
+		size_t getOutputWeightSize() const {
 			return output.size();
+		}
+		size_t getInputNeuronSize() const {
+			size_t count = 0;
+			for (auto in : input) {
+				count += in->input.size();
+			}
+			return count;
+		}
+		size_t getOutputNeuronSize() const {
+			size_t count = 0;
+			for (auto out : output) {
+				count += out->output.size();
+			}
+			return count;
 		}
 		float evaluate();
 		const SignalPtr& getInput(size_t idx) const {

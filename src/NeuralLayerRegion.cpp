@@ -94,7 +94,7 @@ namespace aly {
 					nvgFill(nvg);
 				}
 				if (lineWidth > 0.1f&&selected.x != -1 && std::abs(i - selected.x) <= selectionRadius&&std::abs(j - selected.y) <= selectionRadius) {
-					int N = (int)n.getInputSize();
+					int N = (int)n.getInputWeightSize();
 					nvgLineCap(nvg, NVG_SQUARE);
 					for (int i = 0; i < N; i++) {
 						SignalPtr& sig = n.getInput(i);
@@ -157,12 +157,15 @@ namespace aly {
 		popScissor(context->nvgContext);
 
 		if (selected.x != -1 && selected.y != -1) {
-
+			Neuron* neuron = layer->get(selected.x, selected.y);
 			context->setCursor(&Cursor::CrossHairs);
 			nvgFontFaceId(nvg, context->getFontHandle(FontType::Bold));
 			nvgFontSize(nvg, 16.0f);
 			nvgTextAlign(nvg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
 			drawText(nvg, cursorPosition + pixel2(0.0f, 10.0f), MakeString() << selected, FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
+			drawText(nvg, cursorPosition + pixel2(0.0f, 10.0f+16.0f), MakeString() << "in: "<<neuron->getInputNeuronSize()<<" / "<<neuron->getInputWeightSize(), FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
+			drawText(nvg, cursorPosition + pixel2(0.0f, 10.0f+32.0f), MakeString() << "out: " << neuron->getOutputNeuronSize() << " / " << neuron->getOutputWeightSize(), FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
+
 		}
 	}
 	bool NeuralLayerRegion::onEventHandler(AlloyContext* context, const InputEvent& e) {

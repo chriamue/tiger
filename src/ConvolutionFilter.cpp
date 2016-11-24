@@ -35,14 +35,14 @@ namespace tgr {
 		int index = 0;
 		for (int jj = 0; jj < kernelSize; jj++) {
 			for (int ii = 0; ii < kernelSize; ii++) {
-				SignalPtr sig = SignalPtr(new Signal(RandomUniform(0.0f, 1.0f)));
+				SignalPtr sig = SignalPtr(new Signal(RandomUniform(0.0f, 1.0f/(width*height*inputLayers.size()))));
 				signals[index++]=sig;
 				system.add(sig);
 			}
 		}
 		for (int f = 0; f < outputLayers.size(); f++) {
-			outputLayers[f] = NeuralLayerPtr(new NeuralLayer(app, MakeString() << "feature [" << f << "]", ow, oh));
-			NeuralLayerPtr outputLayer = outputLayers[f];
+			NeuralLayerPtr outputLayer = NeuralLayerPtr(new NeuralLayer(app, MakeString() << "feature [" << f << "]", ow, oh));
+			outputLayers[f] = outputLayer;
 			outputLayer->setFunction(Tanh());
 			for (NeuralLayerPtr inputLayer : inputLayers) {
 				inputLayer->addChild(outputLayer);
@@ -51,7 +51,7 @@ namespace tgr {
 						index = 0;
 						for (int jj = 0; jj < kernelSize; jj++) {
 							for (int ii = 0; ii < kernelSize; ii++) {
-								MakeConnection(inputLayer->get(i + ii, j + jj),signals[index++], outputLayer->get(i, j));
+								MakeConnection(inputLayer->get(i+ii, j+jj),signals[index++], outputLayer->get(i, j));
 							}
 						}
 					}

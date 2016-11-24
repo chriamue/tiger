@@ -59,15 +59,14 @@ namespace tgr {
 		return signals;
 	}
 	void NeuralLayer::evaluate() {
-		std::cout << "Evaluate " << getName() << std::endl;
 		int N = (int)neurons.size();
 		float totalWeight=0.0f;
+#pragma omp parallel for
 		for (int n = 0; n < N; n++) {
 			Neuron& neuron = neurons[n];
 			neuron.evaluate();
 			totalWeight += neuron.value;
 		}
-		std::cout << "Total Weight: " << totalWeight << std::endl;
 	}
 	void NeuralLayer::addChild(const std::shared_ptr<NeuralLayer>& layer) {
 		children.push_back(layer);

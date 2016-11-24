@@ -21,7 +21,7 @@ namespace tgr {
 			sys.add(outputLayer->getBiasSignals());
 			for (int j = 0; j < outputLayer->height; j++) {
 				for (int i = 0; i < outputLayer->width; i++) {
-					SignalPtr sig = SignalPtr(new Signal(RandomUniform(0.0f, 1.0f)));
+					SignalPtr sig = SignalPtr(new Signal(RandomUniform(0.0f, 1.0f/(kernelSize*kernelSize))));
 					Neuron* dest = outputLayer->get(i, j);
 					dest->addInput(sig);
 					sig->addOutput(dest);
