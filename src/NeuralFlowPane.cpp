@@ -59,12 +59,19 @@ namespace aly{
 		nvgLineTo(nvg, pt0.x, pt0.y);
 		nvgStroke(nvg);
 	}
+
 	NeuralFlowPane::NeuralFlowPane(const std::string& name, const AUnit2D& pos, const AUnit2D& dims) :
 		Composite(name, pos, dims),dragEnabled(false) {
 
 		Application::addListener(this);
 	}
-
+	void NeuralFlowPane::pack(const pixel2& pos, const pixel2& dims, const double2& dpmm, double pixelRatio, bool clamp) {
+		Composite::pack(pos, dims, dpmm, pixelRatio);
+		router.update();
+		for (NeuralConnectionPtr connect : connections) {
+			router.evaluate(connect);
+		}
+	}
 	bool NeuralFlowPane::onEventHandler(AlloyContext* context, const InputEvent& e) {
 		if (e.type == InputType::MouseButton&&e.isUp() && e.button == GLFW_MOUSE_BUTTON_RIGHT) {
 			dragEnabled = false;
@@ -99,12 +106,14 @@ namespace aly{
 		return false;
 	}
 	void NeuralFlowPane::draw(AlloyContext* context) {
-		for (NeuralConnectionPtr con : connections) {
-			con->draw(context, this);
-		}
+
 
 		Composite::draw(context);
-		
+		for (NeuralConnectionPtr con : connections) {
+			if (con->source->isVisible() && con->target->isVisible()) {
+				con->draw(context, this);
+			}
+		}
 	}
 	void NeuralFlowPane::add(tgr::NeuralLayer* layer,const pixel2& cursor) {
 		AlloyContext* context = AlloyApplicationContext().get();
@@ -118,12 +127,7 @@ namespace aly{
 				NeuralConnectionPtr con = NeuralConnectionPtr(new NeuralConnection(layer,child.get()));
 				connections.insert(con);
 			}
-			for(auto dep:layer->getDependencies()){
-				if (dep->isVisible()) {
-					NeuralConnectionPtr con = NeuralConnectionPtr(new NeuralConnection(dep,layer));
-					connections.insert(con);
-				}
-			}
+			router.add(std::dynamic_pointer_cast<dataflow::AvoidanceNode>(layerRegion));
 			layerRegions.push_back(layerRegion);
 		} else {
 			NeuralLayerRegionPtr layerRegion = layer->getRegion();

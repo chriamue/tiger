@@ -199,7 +199,7 @@ namespace tgr {
 		return true;
 	}
 	bool NeuralLayer::isVisible() const {
-		if (layerRegion.get() != nullptr) {
+		if (layerRegion.get() != nullptr&&layerRegion->parent!=nullptr) {
 			return layerRegion->isVisible();
 		}
 		else {

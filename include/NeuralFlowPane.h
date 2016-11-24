@@ -5,17 +5,27 @@
 #include "AvoidanceRouting.h"
 namespace aly {
 	class NeuralFlowPane;
-	class NeuralConnection {
+	class NeuralConnection: public dataflow::AvoidanceConnection {
 	public:
 		tgr::NeuralLayer* source;
 		tgr::NeuralLayer* target;
 		bool selected = false;
-		std::vector<float2> path;
 		void setSelected(bool b) {
 			selected = b;
 		}
 		bool isSelected() const {
 			return selected;
+		}
+		dataflow::Direction getDirection() const {
+			return dataflow::Direction::South;
+		}
+		float2 getSourceLocation() const {
+			box2px bounds = source->getRegion()->getBounds(false);
+			return bounds.position + float2(bounds.dimensions.x*0.5f, bounds.dimensions.y);
+		}
+		float2 getDestinationLocation() const {
+			box2px bounds = target->getRegion()->getBounds(false);
+			return bounds.position + float2(bounds.dimensions.x*0.5f, 0.0f);
 		}
 		NeuralConnection(tgr::NeuralLayer* source=nullptr, tgr::NeuralLayer* target=nullptr):source(source),target(target) {
 		}
@@ -36,6 +46,7 @@ namespace aly {
 		bool dragEnabled;
 	public:
 		std::set<NeuralConnectionPtr> connections;
+		virtual void pack(const pixel2& pos, const pixel2& dims, const double2& dpmm, double pixelRatio, bool clamp) override;
 		virtual bool NeuralFlowPane::onEventHandler(AlloyContext* context, const InputEvent& e) override;
 		NeuralFlowPane(const std::string& name, const AUnit2D& pos, const AUnit2D& dims);
 		void add(tgr::NeuralLayer* layer, const pixel2& cursor);

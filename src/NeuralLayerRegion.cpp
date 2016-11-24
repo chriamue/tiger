@@ -5,6 +5,10 @@
 using namespace tgr;
 namespace aly {
 	const float NeuralLayerRegion::fontSize = 24.0f;
+	box2px NeuralLayerRegion::getObstacleBounds() const {
+		box2px box =getBounds(false);
+		return box;
+	}
 	NeuralLayerRegion::NeuralLayerRegion(const std::string& name, tgr::NeuralLayer* layer,
 		const AUnit2D& pos, const AUnit2D& dims, bool resizeable) :
 		Composite(name, pos, dims), layer(layer),scale(1.0f) {

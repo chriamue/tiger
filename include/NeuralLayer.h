@@ -70,7 +70,7 @@ namespace tgr {
 			void evaluate();
 			aly::NeuralLayerRegionPtr getRegion();
 			bool hasRegion() const {
-				return (layerRegion.get() != nullptr);
+				return (layerRegion.get() != nullptr&&layerRegion->parent!=nullptr);
 			}
 			bool isVisible() const; 
 			std::vector<SignalPtr> getBiasSignals() const;

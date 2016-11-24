@@ -1,4 +1,5 @@
 #include "AlloyWidget.h"
+#include "AvoidanceRouting.h"
 #ifndef _NEURAL_LAYER_REGION_H_
 #define _NEURAL_LAYER_REGION_H_
 namespace tgr {
@@ -7,7 +8,7 @@ namespace tgr {
 }
 namespace aly {
 	
-	class NeuralLayerRegion : public Composite {
+	class NeuralLayerRegion : public Composite, public dataflow::AvoidanceNode{
 	protected:
 		static const float fontSize;
 		tgr::NeuralLayer* layer;
@@ -30,6 +31,7 @@ namespace aly {
 		void setExtents(const box2px& ext) {
 			extents = ext;
 		}
+		aly::box2px getObstacleBounds() const override;
 		NeuralLayerRegion(const std::string& name, tgr::NeuralLayer* layer, const AUnit2D& pos,
 			const AUnit2D& dims, bool resizeable = true);
 		virtual bool onEventHandler(AlloyContext* context, const InputEvent& event)
