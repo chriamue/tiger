@@ -1,2 +1,2 @@
-# Tiger
-Neural Network API
+# Tiger Machine
+Neural Network Authoring Application

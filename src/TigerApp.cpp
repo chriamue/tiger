@@ -9,7 +9,7 @@
 using namespace aly;
 using namespace tgr;
 TigerApp::TigerApp() :
-	Application(1800, 800, "Tiger Artifical Intelligence",true), selectedLayer(nullptr){
+	Application(1800, 800, "Tiger Machine",true), selectedLayer(nullptr){
 }
 bool TigerApp::init(Composite& rootNode) {
 
