@@ -4,10 +4,10 @@
 #include "NeuralLayer.h"
 using namespace tgr;
 namespace aly {
-	const float NeuralLayerRegion::fontSize=24.0f;
+	const float NeuralLayerRegion::fontSize = 24.0f;
 	NeuralLayerRegion::NeuralLayerRegion(const std::string& name, tgr::NeuralLayer* layer,
 		const AUnit2D& pos, const AUnit2D& dims, bool resizeable) :
-		Composite(name, pos, dims),layer(layer) {
+		Composite(name, pos, dims), layer(layer) {
 		selectionRadius = 2;
 		cellPadding = pixel2(10, 10);
 		if (resizeable) {
@@ -17,7 +17,7 @@ namespace aly {
 		setClampDragToParentBounds(false);
 		textLabel = TextLabelPtr(new TextLabel(name, CoordPX(0.0f, 0.0f), CoordPerPX(1.0f, 0.0f, 0.0f, fontSize)));
 		textLabel->fontStyle = FontStyle::Outline;
-		textLabel->textColor= MakeColor(AlloyApplicationContext()->theme.LIGHTER);
+		textLabel->textColor = MakeColor(AlloyApplicationContext()->theme.LIGHTER);
 		textLabel->textAltColor = MakeColor(AlloyApplicationContext()->theme.DARKER);
 		add(textLabel);
 	}
@@ -47,10 +47,27 @@ namespace aly {
 		int bins = layer->bins;
 		pixel2 pos = pixel2(-1, -1);
 		int2 selected = int2(-1, -1);
+
 		if (bounds.contains(cursorPosition)) {
 			pos = (cursorPosition - bounds.position) / bounds.dimensions;
 			selected = int2((int)std::floor(width*pos.x), (int)std::floor(height*pos.y));
 		}
+		if (lastSelected != selected) {
+			for (Neuron* neuron : activeList) {
+				neuron->active = false;
+			}
+			activeList.clear();
+			if (selected.x != -1) {
+				std::vector<Neuron*> out;
+				(*layer)(selected.x, selected.y).getInputNeurons(out);
+				for (Neuron* neuron : out) {
+					neuron->active = true;
+					activeList.push_back(neuron);
+				}
+			}
+			lastSelected = selected;
+		}
+		std::list<int2> highlight;
 		for (int j = 0; j < height; j++) {
 			for (int i = 0; i < width; i++) {
 				float2 center = float2(bounds.position.x + (i + 0.5f)*scale, bounds.position.y + (j + 0.5f)*scale);
@@ -60,6 +77,9 @@ namespace aly {
 				nvgFill(nvg);
 
 				Neuron& n = (*layer)(i, j);
+				if (n.active) {
+					highlight.push_back(int2(i,j));
+				}
 				if (bins > 1) {
 					int b = layer->getBin(n);
 					float aeps = 0.5f / rOuter;
@@ -121,58 +141,66 @@ namespace aly {
 		if (selected.x != -1 && selected.y != -1) {
 			nvgStrokeWidth(nvg, 2.0f);
 			float2 center = float2(bounds.position.x + (selected.x + 0.5f)*scale, bounds.position.y + (selected.y + 0.5f)*scale);
-			nvgStrokeColor(nvg, Color(200,200,200));
+			nvgStrokeColor(nvg, Color(200, 200, 200));
+			nvgBeginPath(nvg);
+			nvgCircle(nvg, center.x, center.y, scale*0.5f);
+			nvgStroke(nvg);
+		}
+		for (int2 pos: highlight) {
+			nvgStrokeWidth(nvg, 2.0f);
+			float2 center = float2(bounds.position.x + (pos.x + 0.5f)*scale, bounds.position.y + (pos.y + 0.5f)*scale);
+			nvgStrokeColor(nvg, Color(200, 200, 200));
 			nvgBeginPath(nvg);
 			nvgCircle(nvg, center.x, center.y, scale*0.5f);
 			nvgStroke(nvg);
 		}
 		popScissor(context->nvgContext);
-	
+
 		if (selected.x != -1 && selected.y != -1) {
-	
+
 			context->setCursor(&Cursor::CrossHairs);
 			nvgFontFaceId(nvg, context->getFontHandle(FontType::Bold));
 			nvgFontSize(nvg, 16.0f);
-			nvgTextAlign(nvg, NVG_ALIGN_LEFT| NVG_ALIGN_TOP);
+			nvgTextAlign(nvg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
 			drawText(nvg, cursorPosition + pixel2(0.0f, 10.0f), MakeString() << selected, FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
 		}
 	}
-	bool NeuralLayerRegion::onEventHandler(AlloyContext* context,const InputEvent& e) {
+	bool NeuralLayerRegion::onEventHandler(AlloyContext* context, const InputEvent& e) {
 		const float GLYPH_SCALE = 8.0f;
 		if (Composite::onEventHandler(context, e))
 			return true;
 
-			bool over = context->isMouseOver(this, true);
-			if (e.type == InputType::MouseButton
-				&& e.button == GLFW_MOUSE_BUTTON_LEFT && e.isDown() && over) {
-				dynamic_cast<Composite*>(this->parent)->putLast(this);
-			}
-			if (over) {
-				cursorPosition = e.cursor;
-			}
-			else {
-				cursorPosition = float2(-1, -1);
-			}
-			if (e.type == InputType::Scroll&&over) {
-				box2px bounds = getBounds(false);
-				pixel scaling = (pixel)(1 - 0.1f*e.scroll.y);
-				pixel2 padding = getPadding();
-				pixel2 newBounds = (bounds.dimensions- padding)*scaling + padding;
-				pixel2 cursor = context->cursorPosition;
-				pixel2 relPos = (cursor - bounds.position) / bounds.dimensions;
-				pixel2 newPos = cursor - relPos*newBounds;
-				bounds.position = newPos;
-				bounds.dimensions = newBounds;
-				setDragOffset(pixel2(0, 0));
-				position = CoordPX(bounds.position - parent->getBoundsPosition());
-				dimensions = CoordPX(bounds.dimensions);
-				float2 dims = GLYPH_SCALE*float2(layer->dimensions());
-				cursor = aly::clamp(dims*(e.cursor - bounds.position) / bounds.dimensions, float2(0.0f), dims);
-				context->requestPack();
-				return true;
-			}
-		
-		
-			return false;
+		bool over = context->isMouseOver(this, true);
+		if (e.type == InputType::MouseButton
+			&& e.button == GLFW_MOUSE_BUTTON_LEFT && e.isDown() && over) {
+			dynamic_cast<Composite*>(this->parent)->putLast(this);
+		}
+		if (over) {
+			cursorPosition = e.cursor;
+		}
+		else {
+			cursorPosition = float2(-1, -1);
+		}
+		if (e.type == InputType::Scroll&&over) {
+			box2px bounds = getBounds(false);
+			pixel scaling = (pixel)(1 - 0.1f*e.scroll.y);
+			pixel2 padding = getPadding();
+			pixel2 newBounds = (bounds.dimensions - padding)*scaling + padding;
+			pixel2 cursor = context->cursorPosition;
+			pixel2 relPos = (cursor - bounds.position) / bounds.dimensions;
+			pixel2 newPos = cursor - relPos*newBounds;
+			bounds.position = newPos;
+			bounds.dimensions = newBounds;
+			setDragOffset(pixel2(0, 0));
+			position = CoordPX(bounds.position - parent->getBoundsPosition());
+			dimensions = CoordPX(bounds.dimensions);
+			float2 dims = GLYPH_SCALE*float2(layer->dimensions());
+			cursor = aly::clamp(dims*(e.cursor - bounds.position) / bounds.dimensions, float2(0.0f), dims);
+			context->requestPack();
+			return true;
+		}
+
+
+		return false;
 	}
 }

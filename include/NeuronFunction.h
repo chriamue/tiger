@@ -219,25 +219,27 @@ namespace tgr {
 	};
 	struct Constant {
 	protected:
-		float value;
+		float* value;
 	public:
-		Constant() {}
+		Constant() {
+			value = nullptr;
+		}
 		NeuronFunctionType virtual type() const {
 			return NeuronFunctionType::Constant;
 		}
 		float forward(float t) const {
-			return value;
+			return *value;
 		}
 		float forwardChange(float t) const {
 			return 0.0f;
 		}
 		float backward(float t) const {
-			return value;
+			return *value;
 		}
 		float backwardChange(float t) const {
 			return 0.0f;
 		}
-		Constant(float val):value(val) {
+		Constant(float* val):value(val) {
 		}
 		Constant(const NeuronFunction& func):value(static_cast<Constant>(func).value){
 		}
@@ -246,7 +248,7 @@ namespace tgr {
 	};
 	struct LeakyReLU {
 	private:
-		const float eps;
+		float eps;
 	public:
 		LeakyReLU(float eps = 0.01f) :eps(eps) {}
 		NeuronFunctionType virtual type() const {
@@ -265,7 +267,7 @@ namespace tgr {
 		float backwardChange(float t) const {
 			return (t > 0.0f) ? 1.0f : 1.0f / eps;
 		}
-		LeakyReLU(const NeuronFunction& func) :eps(static_cast<LeakyReLU>(func).eps) {
+		LeakyReLU(const NeuronFunction& func):eps(0.01f) {
 		}
 		virtual ~LeakyReLU() {
 		}

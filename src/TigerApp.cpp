@@ -181,7 +181,7 @@ void TigerApp::initialize() {
 	std::vector<aly::Image1f> images;
 	parse_mnist_images(trainFile,images);
 	if (images.size() > 0) {
-		const aly::Image1f& ref = images[RandomUniform(0,images.size()-1)];
+		const aly::Image1f& ref = images[RandomUniform(0,(int)images.size()-1)];
 		ConvolutionFilterPtr conv1(new ConvolutionFilter(this, ref.width, ref.height, 5, 6));
 		sys.add(conv1);
 		AveragePoolFilterPtr avg1(new AveragePoolFilter(this, conv1->getOutputLayers(), 2));

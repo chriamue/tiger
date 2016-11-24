@@ -3,6 +3,7 @@
 #define _NEURAL_LAYER_REGION_H_
 namespace tgr {
 	class NeuralLayer;
+	class Neuron;
 }
 namespace aly {
 	
@@ -13,6 +14,8 @@ namespace aly {
 		TextLabelPtr textLabel;
 		int selectionRadius;
 		pixel2 cursorPosition;
+		int2 lastSelected;
+		std::list<tgr::Neuron*> activeList;
 	public:
 		static float2 getPadding() {
 			return float2(0.0f, 4.0f + fontSize);

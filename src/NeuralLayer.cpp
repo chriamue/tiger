@@ -59,11 +59,15 @@ namespace tgr {
 		return signals;
 	}
 	void NeuralLayer::evaluate() {
+		std::cout << "Evaluate " << getName() << std::endl;
 		int N = (int)neurons.size();
+		float totalWeight=0.0f;
 		for (int n = 0; n < N; n++) {
 			Neuron& neuron = neurons[n];
 			neuron.evaluate();
+			totalWeight += neuron.value;
 		}
+		std::cout << "Total Weight: " << totalWeight << std::endl;
 	}
 	void NeuralLayer::addChild(const std::shared_ptr<NeuralLayer>& layer) {
 		children.push_back(layer);
@@ -162,11 +166,8 @@ namespace tgr {
 	Neuron& NeuralLayer::operator[](const size_t i) {
 		return neurons[i];
 	}
-	Neuron& NeuralLayer::get(const int i, const int j) {
-		return neurons[aly::clamp(i, 0, width - 1) + aly::clamp(j, 0, height - 1) * width];
-	}
-	const Neuron& NeuralLayer::get(const int i, const int j) const {
-		return neurons[aly::clamp(i, 0, width - 1) + aly::clamp(j, 0, height - 1) * width];
+	Neuron* NeuralLayer::get(const int i, const int j) {
+		return &neurons[aly::clamp(i, 0, width - 1) + aly::clamp(j, 0, height - 1) * width];
 	}
 	Neuron& NeuralLayer::operator()(const int i, const int j) {
 		return neurons[aly::clamp(i, 0, width - 1) + aly::clamp(j, 0, height - 1) * width];
@@ -198,6 +199,14 @@ namespace tgr {
 		}
 		return true;
 	}
+	bool NeuralLayer::isVisible() const {
+		if (layerRegion.get() != nullptr) {
+			return layerRegion->isVisible();
+		}
+		else {
+			return false;
+		}
+	}
 	aly::NeuralLayerRegionPtr NeuralLayer::getRegion() {
 		if (layerRegion.get() == nullptr) {
 			float2 dims=float2(240.0f*getAspect(),240.0f)+ NeuralLayerRegion::getPadding();
@@ -222,6 +231,8 @@ namespace tgr {
 			layerRegion->position = CoordPX(cursor - offset - 0.5f*dims);
 		}
 	}
+
+
 	void NeuralLayer::initialize(const aly::ExpandTreePtr& tree, const aly::TreeItemPtr& parent)  {
 		TreeItemPtr item;
 		parent->addItem(item=TreeItemPtr(new TreeItem(getName(), 0x0f20e)));

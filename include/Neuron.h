@@ -22,7 +22,7 @@
 #define NEURON_H_
 #include <AlloyMath.h>
 #include "NeuronFunction.h"
-
+#include <memory>
 namespace tgr {
 	class NeuralLayer;
 	struct Terminal {
@@ -43,16 +43,22 @@ namespace tgr {
 	class Neuron;
 	struct Signal {
 		float value;
-		float delta;
 		std::vector<Neuron*> input;
 		std::vector<Neuron*> output;
-		Signal() :value(0.0f), delta(0.0f) {
+		Signal() :value(0.0f) {
 
 		}
-		Signal(float value) : value(value), delta(0.0f) {
+		Signal(float value) : value(value) {
 
+		}
+		void addInput(Neuron* n) {
+			input.push_back(n);
+		}
+		void addOutput(Neuron* n) {
+			output.push_back(n);
 		}
 	};
+
 	typedef std::shared_ptr<Signal> SignalPtr;
 	class Neuron {
 	protected:
@@ -60,10 +66,9 @@ namespace tgr {
 		std::shared_ptr<Neuron> bias;
 		std::vector<SignalPtr> input;
 		std::vector<SignalPtr> output;
-
 	public:
 		float value;
-		float delta;
+		bool active;
 		friend class NeuralLayer;
 		size_t getInputSize() const {
 			return input.size();
@@ -84,6 +89,10 @@ namespace tgr {
 		SignalPtr& getOutput(size_t idx) {
 			return output[idx];
 		}
+		std::vector<Neuron*> getInputNeurons() const;
+		void getInputNeurons(std::vector<Neuron*>& out) const;
+		std::vector<Neuron*> getOutputNeurons() const;
+		void getOutputNeurons(std::vector<Neuron*>& out) const;
 		bool hasBias() const {
 			return (bias.get() != nullptr);
 		}
@@ -105,11 +114,9 @@ namespace tgr {
 		}
 		void addInput(const SignalPtr& s) {
 			input.push_back(s);
-			s->output.push_back(this);
 		}
 		void addOutput(const SignalPtr& s) {
 			output.push_back(s);
-			s->input.push_back(this);
 		}
 		float& getInputWeight(size_t idx) {
 			return input[idx]->value;
@@ -130,9 +137,10 @@ namespace tgr {
 	};
 	class Bias : public Neuron {
 		public:		
-			Bias() :Neuron(Constant(), false, 1.0f) {
+			Bias() :Neuron(Constant(&value), false, 1.0f) {
 
 			}
 	};
+	void MakeConnection(Neuron* src, const std::shared_ptr<Signal>& signal,Neuron* dest);
 }
 #endif

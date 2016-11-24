@@ -17,18 +17,26 @@ namespace tgr {
 		inputLayers.push_back(layer);
 		outputLayers.resize(features);
 	}
+	ConvolutionFilter::ConvolutionFilter(TigerApp* app, const std::vector<NeuralLayerPtr>& layers, int kernelSize, int features) :NeuralFilter(app), kernelSize(kernelSize) {
+		if (kernelSize % 2 == 0) {
+			throw std::runtime_error("Kernel size must be odd.");
+		}
+		inputLayers = layers;
+		outputLayers.resize(features);
+	}
 	void ConvolutionFilter::initialize(NeuralSystem& system) {
 		int pad = kernelSize / 2;
-		NeuralLayerPtr inputLayer = inputLayers[0];
-		int width = inputLayer->width;
-		int height = inputLayer->height;
+		
+		int width = inputLayers[0]->width;
+		int height = inputLayers[0]->height;
 		int ow = width - 2 * pad;
 		int oh = height - 2 * pad;
-		std::vector<SignalPtr> signals;
+		std::vector<SignalPtr> signals(kernelSize*kernelSize);
+		int index = 0;
 		for (int jj = 0; jj < kernelSize; jj++) {
 			for (int ii = 0; ii < kernelSize; ii++) {
 				SignalPtr sig = SignalPtr(new Signal(RandomUniform(0.0f, 1.0f)));
-				signals.push_back(sig);
+				signals[index++]=sig;
 				system.add(sig);
 			}
 		}
@@ -36,22 +44,19 @@ namespace tgr {
 			outputLayers[f] = NeuralLayerPtr(new NeuralLayer(app, MakeString() << "feature [" << f << "]", ow, oh));
 			NeuralLayerPtr outputLayer = outputLayers[f];
 			outputLayer->setFunction(Tanh());
-			inputLayer->addChild(outputLayer);
-			for (int j = 0; j < oh; j++) {
-				for (int i = 0; i < ow; i++) {
-					int index = 0;
-					for (int jj = 0; jj < kernelSize; jj++) {
-						for (int ii = 0; ii < kernelSize; ii++) {
-							Neuron& src = inputLayer->get(i + ii, j + jj);
-							Neuron& dest = outputLayer->get(i, j);
-							SignalPtr sig = signals[index++];
-							src.addOutput(sig);
-							dest.addInput(sig);
+			for (NeuralLayerPtr inputLayer : inputLayers) {
+				inputLayer->addChild(outputLayer);
+				for (int j = 0; j < oh; j++) {
+					for (int i = 0; i < ow; i++) {
+						index = 0;
+						for (int jj = 0; jj < kernelSize; jj++) {
+							for (int ii = 0; ii < kernelSize; ii++) {
+								MakeConnection(inputLayer->get(i + ii, j + jj),signals[index++], outputLayer->get(i, j));
+							}
 						}
 					}
 				}
 			}
-
 		}
 	}
 }

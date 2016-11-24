@@ -10,6 +10,7 @@ namespace tgr {
 			(*layer)(t.x, t.y).value = pr.second;
 		}
 		for (NeuralLayerPtr layer:layers) {
+			
 			layer->evaluate();
 		}
 		for (auto iter = output.begin(); iter != output.end();iter++) {
@@ -69,7 +70,8 @@ namespace tgr {
 	Terminal NeuralSystem::addInput(int i, int j, const NeuralLayerPtr& layer, float value) {
 		Terminal t(i, j,  layer.get());
 		input[t] = value;
-		(*layer)(t.x, t.y).setFunction(Constant());
+		Neuron& neuron = (*layer)(t.x, t.y);
+		neuron.setFunction(Constant(&neuron.value));
 		return t;
 	}
 	Terminal NeuralSystem::addOutput(int i, int j, const NeuralLayerPtr& layer, float value){
@@ -85,7 +87,7 @@ namespace tgr {
 		signals.insert(signals.end(), sigs.begin(), sigs.end());
 	}
 	Neuron* NeuralSystem::getNeuron(const Terminal& t) const {
-		return &t.layer->get(t.x, t.y);
+		return t.layer->get(t.x, t.y);
 	}
 	SignalPtr NeuralSystem::add(Terminal source, Terminal target,float weight) {
 		SignalPtr signal = std::shared_ptr<Signal>(new Signal(weight));

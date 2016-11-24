@@ -57,6 +57,9 @@ namespace tgr {
 			iterator end() {
 				return neurons.end();
 			}
+
+			void acitvate(Neuron* neuron);
+			void deactivate();
 			bool isVisited() const {
 				return visited;
 			}
@@ -66,6 +69,7 @@ namespace tgr {
 			void evaluate();
 			void appendTo(const std::shared_ptr<aly::Composite>& comp, aly::pixel2 cursor);
 			aly::NeuralLayerRegionPtr getRegion();
+			bool isVisible() const; 
 			std::vector<SignalPtr> getBiasSignals() const;
 			std::vector<std::shared_ptr<NeuralLayer>>& getChildren() {
 				return children;
@@ -102,9 +106,8 @@ namespace tgr {
 			float getAspect() const {
 				return width / (float)height;
 			}
-			Neuron& get(int i, int j);
-			const Neuron& get(int i, int j) const;
-
+			Neuron* get(int i, int j);
+			
 			void resize(int width, int height, int b=1);
 			const Neuron& operator[](const size_t i) const;
 			Neuron& operator[](const size_t i);
