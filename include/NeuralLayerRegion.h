@@ -21,9 +21,10 @@ namespace aly {
 	public:
 		pixel2 cursorOffset;
 		float scale;
+		bool isFocused(bool recurse=true) const;
 		void setScale(float s,pixel2 cursor);
 		static float2 getPadding() {
-			return float2(0.0f, 4.0f + fontSize);
+			return float2(0.0f, 14.0f + fontSize);
 		}
 		void setSelectionRadius(int radius) {
 			selectionRadius = radius;

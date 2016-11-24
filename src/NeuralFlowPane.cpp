@@ -1,18 +1,19 @@
 #include "NeuralFlowPane.h"
 #include "AlloyApplication.h"
+#include "AlloyDrawUtil.h"
 namespace aly{
 
 	bool NeuralConnection::operator ==(const std::shared_ptr<NeuralConnection> & r) const {
-		return (source == r->source && target == r->target);
+		return (source == r->source && destination == r->destination);
 	}
 	bool NeuralConnection::operator !=(const std::shared_ptr<NeuralConnection> & r) const{
-		return (source != r->source || target != r->target);
+		return (source != r->source || destination != r->destination);
 	}
 	bool NeuralConnection::operator <(const std::shared_ptr<NeuralConnection> & r) const{
-		return (std::make_tuple(source, target) < std::make_tuple(r->source, r->target));
+		return (std::make_tuple(source, destination) < std::make_tuple(r->source, r->destination));
 	}
 	bool NeuralConnection::operator >(const std::shared_ptr<NeuralConnection> & r) const{
-		return (std::make_tuple(source, target) > std::make_tuple(r->source, r->target));
+		return (std::make_tuple(source, destination) > std::make_tuple(r->source, r->destination));
 	}
 	float NeuralConnection::distance(const float2& pt) {
 		float minD = 1E30f;
@@ -27,7 +28,7 @@ namespace aly{
 			return;
 		const float scale = 1.0f;// flow->getScale();
 		NVGcontext* nvg = context->nvgContext;
-		if (selected) {
+		if (source->isFocused()) {
 			nvgStrokeWidth(nvg, std::max(scale * 6.0f, 1.0f));
 			nvgStrokeColor(nvg, context->theme.LIGHTEST);
 		}
@@ -107,12 +108,84 @@ namespace aly{
 	}
 	void NeuralFlowPane::draw(AlloyContext* context) {
 
-
-		Composite::draw(context);
+		NVGcontext* nvg = context->nvgContext;
+		box2px bounds = getBounds();
+		float w = bounds.dimensions.x;
+		float h = bounds.dimensions.y;
+		pixel lineWidth = borderWidth.toPixels(bounds.dimensions.y, context->dpmm.y,
+			context->pixelRatio);
+		if (isScrollEnabled()) {
+			pushScissor(nvg, getCursorBounds());
+		}
+		if (backgroundColor->a > 0) {
+			nvgBeginPath(nvg);
+			if (roundCorners) {
+				nvgRoundedRect(nvg, bounds.position.x, bounds.position.y,
+					bounds.dimensions.x, bounds.dimensions.y,
+					context->theme.CORNER_RADIUS);
+			}
+			else {
+				nvgRect(nvg, bounds.position.x, bounds.position.y,
+					bounds.dimensions.x, bounds.dimensions.y);
+			}
+			nvgFillColor(nvg, *backgroundColor);
+			nvgFill(nvg);
+		}
+		pushScissor(nvg, getCursorBounds());
 		for (NeuralConnectionPtr con : connections) {
-			if (con->source->isVisible() && con->target->isVisible()) {
+			if (con->source->isVisible() && con->destination->isVisible()) {
 				con->draw(context, this);
 			}
+		}
+		popScissor(nvg);
+		for (std::shared_ptr<Region>& region : children) {
+			if (region->isVisible()) {
+				region->draw(context);
+			}
+		}
+
+		if (verticalScrollTrack.get() != nullptr) {
+			if (isScrollEnabled()) {
+				if (extents.dimensions.y > h) {
+					verticalScrollTrack->draw(context);
+					verticalScrollHandle->draw(context);
+				}
+				else {
+					verticalScrollTrack->draw(context);
+				}
+				if (extents.dimensions.x > w) {
+					horizontalScrollTrack->draw(context);
+					horizontalScrollHandle->draw(context);
+				}
+				else {
+					horizontalScrollTrack->draw(context);
+				}
+			}
+		}
+		if (isScrollEnabled()) {
+			popScissor(nvg);
+		}
+		if (borderColor->a > 0) {
+
+			nvgLineJoin(nvg, NVG_ROUND);
+			nvgBeginPath(nvg);
+			if (roundCorners) {
+				nvgRoundedRect(nvg, bounds.position.x + lineWidth * 0.5f,
+					bounds.position.y + lineWidth * 0.5f,
+					bounds.dimensions.x - lineWidth,
+					bounds.dimensions.y - lineWidth,
+					context->theme.CORNER_RADIUS);
+			}
+			else {
+				nvgRect(nvg, bounds.position.x + lineWidth * 0.5f,
+					bounds.position.y + lineWidth * 0.5f,
+					bounds.dimensions.x - lineWidth,
+					bounds.dimensions.y - lineWidth);
+			}
+			nvgStrokeColor(nvg, *borderColor);
+			nvgStrokeWidth(nvg, lineWidth);
+			nvgStroke(nvg);
+			nvgLineJoin(nvg, NVG_MITER);
 		}
 	}
 	void NeuralFlowPane::add(tgr::NeuralLayer* layer,const pixel2& cursor) {
@@ -121,11 +194,19 @@ namespace aly{
 			pixel2 offset = getDrawOffset() + getBoundsPosition();
 			NeuralLayerRegionPtr layerRegion = layer->getRegion();
 			float2 dims = layerRegion->dimensions.toPixels(float2(context->screenDimensions()), context->dpmm, context->pixelRatio);
-			layerRegion->position = CoordPX(cursor - offset - 0.5f*dims);
+			layerRegion->position = CoordPX(aly::round(cursor - offset - 0.5f*dims));
 			Composite::add(layerRegion);
 			for(auto child:layer->getChildren()){
-				NeuralConnectionPtr con = NeuralConnectionPtr(new NeuralConnection(layer,child.get()));
-				connections.insert(con);
+				if (child->hasRegion()) {
+					NeuralConnectionPtr con = NeuralConnectionPtr(new NeuralConnection(layerRegion, child->getRegion()));
+					connections.insert(con);
+				}
+			}
+			for (auto dep : layer->getDependencies()) {
+				if (dep->hasRegion()) {
+					NeuralConnectionPtr con = NeuralConnectionPtr(new NeuralConnection(dep->getRegion(), layerRegion));
+					connections.insert(con);
+				}
 			}
 			router.add(std::dynamic_pointer_cast<dataflow::AvoidanceNode>(layerRegion));
 			layerRegions.push_back(layerRegion);
@@ -134,7 +215,7 @@ namespace aly{
 			AlloyContext* context = AlloyApplicationContext().get();
 			pixel2 offset = getDrawOffset() + getBoundsPosition();
 			float2 dims = layerRegion->dimensions.toPixels(float2(context->screenDimensions()), context->dpmm, context->pixelRatio);
-			layerRegion->position = CoordPX(cursor - offset - 0.5f*dims);
+			layerRegion->position = CoordPX(aly::round(cursor - offset - 0.5f*dims));
 		}
 
 		

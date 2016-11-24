@@ -7,8 +7,8 @@ namespace aly {
 	class NeuralFlowPane;
 	class NeuralConnection: public dataflow::AvoidanceConnection {
 	public:
-		tgr::NeuralLayer* source;
-		tgr::NeuralLayer* target;
+		NeuralLayerRegionPtr source;
+		NeuralLayerRegionPtr destination;
 		bool selected = false;
 		void setSelected(bool b) {
 			selected = b;
@@ -20,14 +20,14 @@ namespace aly {
 			return dataflow::Direction::South;
 		}
 		float2 getSourceLocation() const {
-			box2px bounds = source->getRegion()->getBounds(false);
+			box2px bounds = source->getBounds(false);
 			return bounds.position + float2(bounds.dimensions.x*0.5f, bounds.dimensions.y);
 		}
 		float2 getDestinationLocation() const {
-			box2px bounds = target->getRegion()->getBounds(false);
-			return bounds.position + float2(bounds.dimensions.x*0.5f, 0.0f);
+			box2px bounds = destination->getBounds(false);
+			return bounds.position + float2(bounds.dimensions.x*0.5f,26.0f);
 		}
-		NeuralConnection(tgr::NeuralLayer* source=nullptr, tgr::NeuralLayer* target=nullptr):source(source),target(target) {
+		NeuralConnection(const NeuralLayerRegionPtr& source=nullptr, const NeuralLayerRegionPtr& destination=nullptr):source(source),destination(destination) {
 		}
 		bool operator ==(const std::shared_ptr<NeuralConnection> & r) const;
 		bool operator !=(const std::shared_ptr<NeuralConnection> & r) const;

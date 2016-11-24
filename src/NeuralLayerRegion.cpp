@@ -6,12 +6,14 @@ using namespace tgr;
 namespace aly {
 	const float NeuralLayerRegion::fontSize = 24.0f;
 	box2px NeuralLayerRegion::getObstacleBounds() const {
-		box2px box =getBounds(false);
+		box2px box = getBounds(false);
+		box.position.y += 26.0f;
+		box.dimensions.y -= 26.0f;
 		return box;
 	}
 	NeuralLayerRegion::NeuralLayerRegion(const std::string& name, tgr::NeuralLayer* layer,
 		const AUnit2D& pos, const AUnit2D& dims, bool resizeable) :
-		Composite(name, pos, dims), layer(layer),scale(1.0f) {
+		Composite(name, pos, dims), layer(layer), scale(1.0f){
 		selectionRadius = 2;
 		cellPadding = pixel2(10, 10);
 		if (resizeable) {
@@ -19,29 +21,41 @@ namespace aly {
 		}
 		setDragEnabled(true);
 		setClampDragToParentBounds(false);
-		textLabel = TextLabelPtr(new TextLabel(name, CoordPX(0.0f, 0.0f), CoordPerPX(1.0f, 0.0f, 0.0f, fontSize)));
-		textLabel->fontStyle = FontStyle::Outline;
-		textLabel->textColor = MakeColor(AlloyApplicationContext()->theme.LIGHTER);
-		textLabel->textAltColor = MakeColor(AlloyApplicationContext()->theme.DARKER);
-		textLabel->setTruncate(false);
-		add(textLabel);
+
 	}
 
 	void NeuralLayerRegion::draw(AlloyContext* context) {
 		Composite::draw(context);
-		pushScissor(context->nvgContext, getCursorBounds());
+
 		NVGcontext* nvg = context->nvgContext;
 		aly::box2px bounds = getBounds();
+		pushScissor(nvg, parent->getCursorBounds());
+		nvgFontSize(nvg, fontSize);
+		nvgFontFaceId(nvg, context->getFontHandle(FontType::Bold));
+		nvgTextAlign(nvg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+		drawText(nvg, bounds.position + float2(2.0f, 0.0f), name, FontStyle::Outline, context->theme.LIGHTER, context->theme.DARK);
+		popScissor(nvg);
+		pushScissor(nvg, getCursorBounds());
+		nvgBeginPath(nvg);
+		nvgRoundedRect(nvg, bounds.position.x, bounds.position.y+fontSize+2.0f, bounds.dimensions.x, bounds.dimensions.y-fontSize-2.0f,3.0f);
+		if (isFocused()) {
+			nvgFillColor(nvg, context->theme.LIGHTEST);
+		}
+		else {
+			nvgFillColor(nvg, context->theme.LIGHTEST.toDarker(0.8f));
+		}
+		nvgFill(nvg);
+
 		pixel2 origin = bounds.position;
 		pixel2 padding = getPadding();
-		bounds.position += padding;
+		bounds.position += float2(0.0f,fontSize+8.0f);
 		bounds.dimensions -= padding;
 		int width = layer->width;
 		int height = layer->height;
 		float scale = bounds.dimensions.x / width;
 
 		nvgBeginPath(nvg);
-		nvgRoundedRect(nvg, bounds.position.x, bounds.position.y, bounds.dimensions.x, bounds.dimensions.y, 2.0f);
+		nvgRect(nvg, bounds.position.x, bounds.position.y, bounds.dimensions.x, bounds.dimensions.y);
 		nvgFillColor(nvg, context->theme.DARKER);
 		nvgFill(nvg);
 
@@ -83,7 +97,7 @@ namespace aly {
 
 				Neuron& n = (*layer)(i, j);
 				if (n.active) {
-					highlight.push_back(int2(i,j));
+					highlight.push_back(int2(i, j));
 				}
 				if (bins > 1) {
 					int b = layer->getBin(n);
@@ -151,7 +165,7 @@ namespace aly {
 			nvgCircle(nvg, center.x, center.y, scale*0.5f);
 			nvgStroke(nvg);
 		}
-		for (int2 pos: highlight) {
+		for (int2 pos : highlight) {
 			nvgStrokeWidth(nvg, 2.0f);
 			float2 center = float2(bounds.position.x + (pos.x + 0.5f)*scale, bounds.position.y + (pos.y + 0.5f)*scale);
 			nvgStrokeColor(nvg, Color(200, 200, 200));
@@ -163,13 +177,14 @@ namespace aly {
 
 		if (selected.x != -1 && selected.y != -1) {
 			Neuron* neuron = layer->get(selected.x, selected.y);
+
 			context->setCursor(&Cursor::CrossHairs);
 			nvgFontFaceId(nvg, context->getFontHandle(FontType::Bold));
 			nvgFontSize(nvg, 16.0f);
 			nvgTextAlign(nvg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
 			drawText(nvg, cursorPosition + pixel2(0.0f, 10.0f), MakeString() << selected, FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
-			drawText(nvg, cursorPosition + pixel2(0.0f, 10.0f+16.0f), MakeString() << "in: "<<neuron->getInputNeuronSize()<<" / "<<neuron->getInputWeightSize(), FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
-			drawText(nvg, cursorPosition + pixel2(0.0f, 10.0f+32.0f), MakeString() << "out: " << neuron->getOutputNeuronSize() << " / " << neuron->getOutputWeightSize(), FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
+			drawText(nvg, cursorPosition + pixel2(0.0f, 10.0f + 16.0f), MakeString() << "in: " << neuron->getInputNeuronSize() << " / " << neuron->getInputWeightSize(), FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
+			drawText(nvg, cursorPosition + pixel2(0.0f, 10.0f + 32.0f), MakeString() << "out: " << neuron->getOutputNeuronSize() << " / " << neuron->getOutputWeightSize(), FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
 
 		}
 	}
@@ -197,19 +212,31 @@ namespace aly {
 
 		return false;
 	}
+	bool NeuralLayerRegion::isFocused(bool recurse) const {
+		bool ret=(activeList.size() > 0 || lastSelected.x != -1);
+		if (ret)return true;
+		if (recurse) {
+			for (auto child : layer->getChildren()) {
+				if (child->hasRegion() && child->getRegion()->isFocused(false)) {
+					return true;
+				}
+			}
+		}
+		return false;
+	}
 	void  NeuralLayerRegion::setScale(float s, pixel2 cursor) {
 		AlloyContext* context = AlloyApplicationContext().get();
 		box2px bounds = getBounds(false);
 		float lastScale = scale;
-		scale = clamp(scale * (1.0f +s * 0.1f), 0.1f, 10.0f);
+		scale = clamp(scale * (1.0f + s * 0.1f), 0.1f, 10.0f);
 		float scaling = scale / lastScale;
 		pixel2 padding = getPadding();
 		pixel2 newBounds = (bounds.dimensions - padding)*scaling + padding;
 
 		pixel2 relPos = (cursor - bounds.position) / bounds.dimensions;
 		pixel2 newPos = cursor - relPos*newBounds;
-		bounds.position = newPos;
-		bounds.dimensions = newBounds;
+		bounds.position = aly::round(newPos);
+		bounds.dimensions = aly::round(newBounds);
 		setDragOffset(pixel2(0, 0));
 		position = CoordPX(bounds.position - parent->getBoundsPosition());
 		dimensions = CoordPX(bounds.dimensions);
