@@ -29,8 +29,11 @@
 #include <vector>
 #include <set>
 class TigerApp;
-
+namespace aly {
+	class NeuralFlowPane;
+}
 namespace tgr {
+
 	std::string MakeID(int len=8);
 	class NeuralLayer {
 		protected:
@@ -58,8 +61,6 @@ namespace tgr {
 				return neurons.end();
 			}
 
-			void acitvate(Neuron* neuron);
-			void deactivate();
 			bool isVisited() const {
 				return visited;
 			}
@@ -67,8 +68,10 @@ namespace tgr {
 				visited = v;
 			}
 			void evaluate();
-			void appendTo(const std::shared_ptr<aly::Composite>& comp, aly::pixel2 cursor);
 			aly::NeuralLayerRegionPtr getRegion();
+			bool hasRegion() const {
+				return (layerRegion.get() != nullptr);
+			}
 			bool isVisible() const; 
 			std::vector<SignalPtr> getBiasSignals() const;
 			std::vector<std::shared_ptr<NeuralLayer>>& getChildren() {

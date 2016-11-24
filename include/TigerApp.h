@@ -7,6 +7,7 @@
 #include "AlloyImage.h"
 #include "NeuralSystem.h"
 #include "AlloyExpandTree.h"
+#include "NeuralFlowPane.h"
 class TigerApp : public aly::Application {
 protected:
 	tgr::NeuralLayer* selectedLayer;
@@ -17,8 +18,7 @@ protected:
 	aly::IconButtonPtr playButton, stopButton;
 	aly::ExpandTreePtr expandTree;
 	aly::DrawPtr dragIconPane;
-	aly::CompositePtr renderRegion;
-	
+	aly::NeuralFlowPanePtr renderRegion;
 	void initialize();
 public:
 

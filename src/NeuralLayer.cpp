@@ -213,23 +213,7 @@ namespace tgr {
 		}
 		return layerRegion;
 	}
-	void NeuralLayer::appendTo(const std::shared_ptr<Composite>& renderRegion,pixel2 cursor) {
 
-		AlloyContext* context = AlloyApplicationContext().get();
-		if (layerRegion.get() == nullptr) {
-			pixel2 offset = renderRegion->getDrawOffset() + renderRegion->getBoundsPosition();
-			RegionPtr region = getRegion();
-			float2 dims = region->dimensions.toPixels(float2(context->screenDimensions()), context->dpmm, context->pixelRatio);
-			region->position = CoordPX(cursor - offset - 0.5f*dims);
-			renderRegion->add(region);
-		}
-		else {
-			AlloyContext* context = AlloyApplicationContext().get();
-			pixel2 offset = renderRegion->getDrawOffset() + renderRegion->getBoundsPosition();
-			float2 dims = layerRegion->dimensions.toPixels(float2(context->screenDimensions()), context->dpmm, context->pixelRatio);
-			layerRegion->position = CoordPX(cursor - offset - 0.5f*dims);
-		}
-	}
 
 
 	void NeuralLayer::initialize(const aly::ExpandTreePtr& tree, const aly::TreeItemPtr& parent)  {

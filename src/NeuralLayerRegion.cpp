@@ -7,7 +7,7 @@ namespace aly {
 	const float NeuralLayerRegion::fontSize = 24.0f;
 	NeuralLayerRegion::NeuralLayerRegion(const std::string& name, tgr::NeuralLayer* layer,
 		const AUnit2D& pos, const AUnit2D& dims, bool resizeable) :
-		Composite(name, pos, dims), layer(layer) {
+		Composite(name, pos, dims), layer(layer),scale(1.0f) {
 		selectionRadius = 2;
 		cellPadding = pixel2(10, 10);
 		if (resizeable) {
@@ -19,12 +19,13 @@ namespace aly {
 		textLabel->fontStyle = FontStyle::Outline;
 		textLabel->textColor = MakeColor(AlloyApplicationContext()->theme.LIGHTER);
 		textLabel->textAltColor = MakeColor(AlloyApplicationContext()->theme.DARKER);
+		textLabel->setTruncate(false);
 		add(textLabel);
 	}
 
 	void NeuralLayerRegion::draw(AlloyContext* context) {
-		pushScissor(context->nvgContext, getCursorBounds());
 		Composite::draw(context);
+		pushScissor(context->nvgContext, getCursorBounds());
 		NVGcontext* nvg = context->nvgContext;
 		aly::box2px bounds = getBounds();
 		pixel2 origin = bounds.position;
@@ -169,7 +170,6 @@ namespace aly {
 		}
 	}
 	bool NeuralLayerRegion::onEventHandler(AlloyContext* context, const InputEvent& e) {
-		const float GLYPH_SCALE = 8.0f;
 		if (Composite::onEventHandler(context, e))
 			return true;
 
@@ -185,25 +185,29 @@ namespace aly {
 			cursorPosition = float2(-1, -1);
 		}
 		if (e.type == InputType::Scroll&&over) {
-			box2px bounds = getBounds(false);
-			pixel scaling = (pixel)(1 - 0.1f*e.scroll.y);
-			pixel2 padding = getPadding();
-			pixel2 newBounds = (bounds.dimensions - padding)*scaling + padding;
-			pixel2 cursor = context->cursorPosition;
-			pixel2 relPos = (cursor - bounds.position) / bounds.dimensions;
-			pixel2 newPos = cursor - relPos*newBounds;
-			bounds.position = newPos;
-			bounds.dimensions = newBounds;
-			setDragOffset(pixel2(0, 0));
-			position = CoordPX(bounds.position - parent->getBoundsPosition());
-			dimensions = CoordPX(bounds.dimensions);
-			float2 dims = GLYPH_SCALE*float2(layer->dimensions());
-			cursor = aly::clamp(dims*(e.cursor - bounds.position) / bounds.dimensions, float2(0.0f), dims);
+			setScale(e.scroll.y, e.cursor);
 			context->requestPack();
 			return true;
 		}
 
 
 		return false;
+	}
+	void  NeuralLayerRegion::setScale(float s, pixel2 cursor) {
+		AlloyContext* context = AlloyApplicationContext().get();
+		box2px bounds = getBounds(false);
+		float lastScale = scale;
+		scale = clamp(scale * (1.0f +s * 0.1f), 0.1f, 10.0f);
+		float scaling = scale / lastScale;
+		pixel2 padding = getPadding();
+		pixel2 newBounds = (bounds.dimensions - padding)*scaling + padding;
+
+		pixel2 relPos = (cursor - bounds.position) / bounds.dimensions;
+		pixel2 newPos = cursor - relPos*newBounds;
+		bounds.position = newPos;
+		bounds.dimensions = newBounds;
+		setDragOffset(pixel2(0, 0));
+		position = CoordPX(bounds.position - parent->getBoundsPosition());
+		dimensions = CoordPX(bounds.dimensions);
 	}
 }

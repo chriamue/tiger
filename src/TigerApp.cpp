@@ -33,7 +33,7 @@ bool TigerApp::init(Composite& rootNode) {
 
 	controlLayout->backgroundColor = MakeColor(getContext()->theme.DARKER);
 	controlLayout->borderWidth = UnitPX(0.0f);
-	renderRegion = CompositePtr(new Composite("View", CoordPX(0.0f, 0.0f), CoordPercent(1.0f, 1.0f)));
+	renderRegion = NeuralFlowPanePtr(new NeuralFlowPane("View", CoordPX(0.0f, 0.0f), CoordPercent(1.0f, 1.0f)));
 	layout->setWest(controlLayout, UnitPX(400.0f));
 	layout->setEast(expandTree, UnitPX(400.0f));
 	controlLayout->setCenter(controls);
@@ -167,7 +167,7 @@ bool TigerApp::onEventHandler(AlloyContext* context, const aly::InputEvent& e) {
 			dragIconPane->setVisible(false);
 			AlloyApplicationContext()->getGlassPane()->setVisible(false);
 			if (overTarget) {
-				selectedLayer->appendTo(renderRegion,e.cursor);
+				renderRegion->add(selectedLayer, e.cursor);
 				AlloyApplicationContext()->requestPack();
 			}
 		}
