@@ -21,21 +21,45 @@ namespace aly {
 		}
 		setDragEnabled(true);
 		setClampDragToParentBounds(false);
-
+		AlloyContext* context = AlloyApplicationContext().get();
+		std::shared_ptr<IconButton> cancelButton = std::shared_ptr<IconButton>(new IconButton(0xf070, CoordPX(0.0f, 2.0f), CoordPX(24, 24), IconType::CIRCLE));
+		cancelButton->setOrigin(Origin::TopLeft);
+		cancelButton->setRescaleOnHover(false);
+		cancelButton->borderColor = MakeColor(AlloyApplicationContext()->theme.LIGHTEST);
+		cancelButton ->iconColor = MakeColor(AlloyApplicationContext()->theme.LIGHT);
+		cancelButton->foregroundColor = MakeColor(COLOR_NONE);
+		cancelButton->backgroundColor = MakeColor(COLOR_NONE);
+		cancelButton->borderWidth = UnitPX(0.0f);
+		cancelButton->onMouseDown = [this](AlloyContext* context, const InputEvent& event) {
+			this->setVisible(false);
+			return true;
+		};
+		Composite::add(cancelButton);
 	}
 
 	void NeuralLayerRegion::draw(AlloyContext* context) {
-		Composite::draw(context);
 
 		NVGcontext* nvg = context->nvgContext;
 		aly::box2px bounds = getBounds();
+
+
+		nvgBeginPath(nvg);
+		nvgRoundedRect(nvg, bounds.position.x, bounds.position.y, 26.0f, fontSize + 8.0f, 3.0f);
+		nvgFillColor(nvg, context->theme.DARK.toSemiTransparent(0.5f));
+		nvgFill(nvg);
+
+		Composite::draw(context);
+
+
 		pushScissor(nvg, parent->getCursorBounds());
 		nvgFontSize(nvg, fontSize);
 		nvgFontFaceId(nvg, context->getFontHandle(FontType::Bold));
 		nvgTextAlign(nvg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
-		drawText(nvg, bounds.position + float2(2.0f, 0.0f), name, FontStyle::Outline, context->theme.LIGHTER, context->theme.DARK);
+		drawText(nvg, bounds.position + float2(28.0f, 0.0f), name, FontStyle::Outline, context->theme.LIGHTER, context->theme.DARK);
 		popScissor(nvg);
 		pushScissor(nvg, getCursorBounds());
+
+
 		nvgBeginPath(nvg);
 		nvgRoundedRect(nvg, bounds.position.x, bounds.position.y+fontSize+2.0f, bounds.dimensions.x, bounds.dimensions.y-fontSize-2.0f,3.0f);
 		if (isFocused()) {

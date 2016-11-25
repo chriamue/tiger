@@ -16,13 +16,22 @@ namespace aly {
 		int selectionRadius;
 		pixel2 cursorPosition;
 		int2 lastSelected;
-		
 		std::list<tgr::Neuron*> activeList;
 	public:
 		pixel2 cursorOffset;
 		float scale;
 		bool isFocused(bool recurse=true) const;
 		void setScale(float s,pixel2 cursor);
+		void setScale(float s) {
+			scale = s;
+		};
+		void reset() {
+			cursorPosition=float2(0.0f,0.0f);
+			lastSelected=int2(-1);
+			activeList.clear();
+			scale = 1;
+			cursorOffset = float2(0.0f, 0.0f);
+		}
 		static float2 getPadding() {
 			return float2(0.0f, 14.0f + fontSize);
 		}

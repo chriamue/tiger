@@ -28,13 +28,16 @@ namespace aly{
 			return;
 		const float scale = 1.0f;// flow->getScale();
 		NVGcontext* nvg = context->nvgContext;
+		float lineWidth = 6.0f*scale;
 		if (source->isFocused()) {
 			nvgStrokeWidth(nvg, std::max(scale * 6.0f, 1.0f));
 			nvgStrokeColor(nvg, context->theme.LIGHTEST);
+			nvgFillColor(nvg, context->theme.LIGHTEST);
 		}
 		else {
 			nvgStrokeWidth(nvg, std::max(scale * 4.0f, 1.0f));
 			nvgStrokeColor(nvg, context->theme.LIGHTEST.toDarker(0.8f));
+			nvgFillColor(nvg, context->theme.LIGHTEST.toDarker(0.8f));
 		}
 
 		float2 offset = flow->getDrawOffset();
@@ -59,11 +62,23 @@ namespace aly{
 		pt0 = offset + path.back();
 		nvgLineTo(nvg, pt0.x, pt0.y);
 		nvgStroke(nvg);
+
+		nvgLineCap(nvg, NVG_ROUND);
+		nvgLineJoin(nvg, NVG_BEVEL);
+		nvgBeginPath(nvg);
+
+		float2 pos = aly::round(offset + path.front());
+		float2 dims(15.0f,10.0f);
+		nvgMoveTo(nvg, pos.x , pos.y + dims.y);
+		nvgLineTo(nvg, pos.x-dims.x*0.5f, pos.y);
+		nvgLineTo(nvg, pos.x + dims.x*0.5f, pos.y);
+		nvgClosePath(nvg);
+		nvgFill(nvg);
 	}
 
 	NeuralFlowPane::NeuralFlowPane(const std::string& name, const AUnit2D& pos, const AUnit2D& dims) :
 		Composite(name, pos, dims),dragEnabled(false) {
-
+		router.setBorderSpacing(30.0f);
 		Application::addListener(this);
 	}
 	void NeuralFlowPane::pack(const pixel2& pos, const pixel2& dims, const double2& dpmm, double pixelRatio, bool clamp) {
@@ -209,15 +224,19 @@ namespace aly{
 				}
 			}
 			router.add(std::dynamic_pointer_cast<dataflow::AvoidanceNode>(layerRegion));
+
+			layerRegion->setVisible(true);
 			layerRegions.push_back(layerRegion);
 		} else {
 			NeuralLayerRegionPtr layerRegion = layer->getRegion();
+			layerRegion->setDragOffset(float2(0.0f, 0.0f));
+			layerRegion->reset();
+			layerRegion->setVisible(true);
 			AlloyContext* context = AlloyApplicationContext().get();
 			pixel2 offset = getDrawOffset() + getBoundsPosition();
 			float2 dims = layerRegion->dimensions.toPixels(float2(context->screenDimensions()), context->dpmm, context->pixelRatio);
 			layerRegion->position = CoordPX(aly::round(cursor - offset - 0.5f*dims));
 		}
-
 		
 	}
 }
