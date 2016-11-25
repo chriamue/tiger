@@ -32,17 +32,33 @@ namespace tgr {
 		}
 		return ss.str();
 	}
-	NeuralLayer::NeuralLayer(TigerApp* app,int width, int height, int bins, bool bias, const NeuronFunction& func) :app(app),width(width), height(height), bins(bins),id(-1),visited(false) {
-		neurons.resize(width*height*bins, Neuron(func, bias));
-		if (bias) {
+	NeuralLayer::NeuralLayer(TigerApp* app,int width, int height, int bins, bool bias, const NeuronFunction& func) :app(app),width(width), height(height), bins(bins),bias(bias),id(-1),visited(false) {
+		neurons.resize(width*height*bins, Neuron(func));
 
+		if (bias) {
+			biasNeurons.resize(width*height*bins, Bias());
+			for (size_t idx = 0; idx < neurons.size(); idx++) {
+				MakeConnection(&biasNeurons[idx], SignalPtr(new Signal(1.0f)), &neurons[idx]);
+			}
 		}
 	}
-	NeuralLayer::NeuralLayer(TigerApp* app, const std::string& name,int width, int height, int bins,bool bias, const NeuronFunction& func) :app(app), name(name), width(width), height(height), bins(bins), id(-1) {
-		neurons.resize(width*height*bins,Neuron(func,bias));
+	NeuralLayer::NeuralLayer(TigerApp* app, const std::string& name,int width, int height, int bins,bool bias, const NeuronFunction& func) :app(app), name(name), width(width), height(height), bins(bins),bias(bias), id(-1) {
+		neurons.resize(width*height*bins,Neuron(func));
+		if (bias) {
+			biasNeurons.resize(width*height*bins, Bias());
+			for (size_t idx = 0; idx < neurons.size(); idx++) {
+				MakeConnection(&biasNeurons[idx], SignalPtr(new Signal(1.0f)), &neurons[idx]);
+			}
+		}
 	}
 	void NeuralLayer::resize(int w, int h, int b) {
 		neurons.resize(w * h * b);
+		if (bias) {
+			biasNeurons.resize(width*height*bins, Bias());
+			for (size_t idx = 0; idx < neurons.size(); idx++) {
+				MakeConnection(&biasNeurons[idx], SignalPtr(new Signal(1.0f)), &neurons[idx]);
+			}
+		}
 		neurons.shrink_to_fit();
 		width = w;
 		height = h;
@@ -50,11 +66,9 @@ namespace tgr {
 	}
 	std::vector<SignalPtr> NeuralLayer::getBiasSignals() const {
 		std::vector<SignalPtr> signals;
-		for (const Neuron& n : neurons) {
-			SignalPtr sig = n.getBiasSignal();
-			if (sig.get()!=nullptr) {
-				signals.push_back(sig);
-			}
+		for (const Neuron& n : biasNeurons) {
+			SignalPtr sig = n.output.front();
+			signals.push_back(sig);
 		}
 		return signals;
 	}

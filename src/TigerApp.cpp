@@ -184,10 +184,8 @@ void TigerApp::initialize() {
 		const aly::Image1f& ref = images[RandomUniform(0,(int)images.size()-1)];
 		ConvolutionFilterPtr conv1(new ConvolutionFilter(this, ref.width, ref.height, 5, 6));
 		sys.add(conv1);
-		
 		AveragePoolFilterPtr avg1(new AveragePoolFilter(this, conv1->getOutputLayers(), 2));
 		sys.add(avg1);
-		
 		for (int i = 0; i < avg1->getOutputSize(); i++) {
 			ConvolutionFilterPtr conv2(new ConvolutionFilter(this, avg1->getOutputLayer(i), 5, 16));
 			sys.add(conv2);

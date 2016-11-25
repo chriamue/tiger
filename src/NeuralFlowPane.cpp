@@ -230,11 +230,14 @@ namespace aly{
 		} else {
 			NeuralLayerRegionPtr layerRegion = layer->getRegion();
 			layerRegion->setDragOffset(float2(0.0f, 0.0f));
+			float2 dims = float2(240.0f*layer->getAspect(), 240.0f) + NeuralLayerRegion::getPadding();
+			layerRegion->position = CoordPerPX(0.5f, 0.5f, -dims.x*0.5f, -dims.y*0.5f);
+			layerRegion->dimensions = CoordPX(dims.x, dims.y);
 			layerRegion->reset();
 			layerRegion->setVisible(true);
 			AlloyContext* context = AlloyApplicationContext().get();
 			pixel2 offset = getDrawOffset() + getBoundsPosition();
-			float2 dims = layerRegion->dimensions.toPixels(float2(context->screenDimensions()), context->dpmm, context->pixelRatio);
+			dims = layerRegion->dimensions.toPixels(float2(context->screenDimensions()), context->dpmm, context->pixelRatio);
 			layerRegion->position = CoordPX(aly::round(cursor - offset - 0.5f*dims));
 		}
 		

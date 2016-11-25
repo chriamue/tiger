@@ -24,13 +24,12 @@ namespace tgr {
 					SignalPtr sig = SignalPtr(new Signal(RandomUniform(0.0f, 1.0f/(kernelSize*kernelSize))));
 					Neuron* dest = outputLayer->get(i, j);
 					dest->addInput(sig);
-					sig->addOutput(dest);
 					sys.add(sig);
 					for (int jj = 0; jj < kernelSize; jj++) {
 						for (int ii = 0; ii < kernelSize; ii++) {
 							Neuron* src=inputLayer->get(i*kernelSize + ii, j*kernelSize + jj);
 							src->addOutput(sig);
-							sig->addInput(src);
+							sig->add(src, dest);
 						}
 					}
 				}

@@ -33,46 +33,45 @@ namespace tgr {
 	bool Terminal::operator >(const Terminal & r) const {
 		return (std::make_tuple(x, y, (layer) ? layer->id : -1) < std::make_tuple(r.x, r.y, (layer) ? layer->id : -1));
 	}
-	Neuron::Neuron(const NeuronFunction& func,bool _bias,float val) :transform(func),value(val),active(false) {
-		if (_bias) {
-			bias.reset(new Bias());
-			SignalPtr bsignal=SignalPtr(new Signal());
-			bsignal->value = 0.5f;
-			addInput(bsignal);
-			bias->addOutput(bsignal);
-		}
+	Neuron::Neuron(const NeuronFunction& func,float val) :transform(func),value(val),active(false) {
 	}
 	std::vector<Neuron*> Neuron::getInputNeurons()  const {
 		std::vector<Neuron*> out;
 		for (SignalPtr sig : input) {
-			out.insert(out.end(), sig->input.begin(), sig->input.end());
+			auto in = sig->get(this);
+				out.insert(out.end(), in.begin(), in.end());
 		}
 		return out;
 	}
 	void Neuron::getInputNeurons(std::vector<Neuron*>& out) const {
 		out.clear();
 		for (SignalPtr sig : input) {
-			out.insert(out.end(), sig->input.begin(), sig->input.end());
+			auto in = sig->get(this);
+			out.insert(out.end(), in.begin(), in.end());
 		}
 	}
-	std::vector<Neuron*> Neuron::getOutputNeurons() const {
-		std::vector<Neuron*> out;
+	std::vector<const Neuron*> Neuron::getOutputNeurons() const {
+		std::vector<const Neuron*> out;
 		for (SignalPtr sig : output) {
-			out.insert(out.end(), sig->output.begin(), sig->output.end());
+			for (auto pr : sig->mapping) {
+				out.push_back(pr.first);
+			}
 		}
 		return out;
 	}
-	void Neuron::getOutputNeurons(std::vector<Neuron*>& out) const {
+	void Neuron::getOutputNeurons(std::vector<const Neuron*>& out) const {
 		out.clear();
 		for (SignalPtr sig : output) {
-			out.insert(out.end(), sig->output.begin(), sig->output.end());
+			for (auto pr : sig->mapping) {
+				out.push_back(pr.first);
+			}
 		}
 	}
 	float Neuron::evaluate() {
 		float sum1 = 0.0f, sum2;
 		for (SignalPtr sig : input) {
 			sum2 = 0.0f;
-			for (Neuron* inner : sig->input) {
+			for (Neuron* inner : sig->get(this)) {
 				sum2 += inner->value;
 			}
 			sum1 += sig->value*sum2;
@@ -83,8 +82,7 @@ namespace tgr {
 	void MakeConnection(Neuron* src,const std::shared_ptr<Signal>& signal, Neuron* dest) {
 		src->addOutput(signal);
 		dest->addInput(signal);
-		signal->addInput(src);
-		signal->addOutput(dest);
+		signal->add(src,dest);
 	}
 
 }

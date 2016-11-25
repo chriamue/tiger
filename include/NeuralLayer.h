@@ -38,10 +38,11 @@ namespace tgr {
 	class NeuralLayer {
 		protected:
 			std::vector<Neuron> neurons;
+			std::vector<Neuron> biasNeurons;
 			std::vector<std::shared_ptr<NeuralLayer>> children;
 			std::vector<NeuralLayer*> dependencies;
 			std::string name;
-
+			bool bias;
 			bool visited;
 			aly::NeuralLayerRegionPtr layerRegion;
 			TigerApp* app;
@@ -60,7 +61,6 @@ namespace tgr {
 			iterator end() {
 				return neurons.end();
 			}
-
 			bool isVisited() const {
 				return visited;
 			}

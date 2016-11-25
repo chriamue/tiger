@@ -23,6 +23,7 @@
 #include <AlloyMath.h>
 #include "NeuronFunction.h"
 #include <memory>
+#include <map>
 namespace tgr {
 	class NeuralLayer;
 	struct Terminal {
@@ -43,19 +44,30 @@ namespace tgr {
 	class Neuron;
 	struct Signal {
 		float value;
-		std::vector<Neuron*> input;
-		std::vector<Neuron*> output;
+		std::map<const Neuron*,std::vector<Neuron*>> mapping;
 		Signal() :value(0.0f) {
 
 		}
 		Signal(float value) : value(value) {
-
 		}
-		void addInput(Neuron* n) {
-			input.push_back(n);
+		std::vector<Neuron*>& operator[](const Neuron* n) {
+			return mapping.at(n);
 		}
-		void addOutput(Neuron* n) {
-			output.push_back(n);
+		std::vector<Neuron*>& get(const Neuron* n) {
+			return mapping.at(n);
+		}
+		const std::vector<Neuron*>& operator[](const Neuron* n) const {
+			return mapping.at(n);
+		}
+		const std::vector<Neuron*>& get(const Neuron* n) const {
+			return mapping.at(n);
+		}
+		size_t size(const Neuron* n) const {
+			return mapping.at(n).size();
+		}
+		
+		void add(Neuron* in,const Neuron* out) {
+			mapping[out].push_back(in);
 		}
 	};
 
@@ -63,7 +75,6 @@ namespace tgr {
 	class Neuron {
 	protected:
 		NeuronFunction transform;
-		std::shared_ptr<Neuron> bias;
 		std::vector<SignalPtr> input;
 		std::vector<SignalPtr> output;
 	public:
@@ -79,16 +90,12 @@ namespace tgr {
 		size_t getInputNeuronSize() const {
 			size_t count = 0;
 			for (auto in : input) {
-				count += in->input.size();
+				count += in->size(this);
 			}
 			return count;
 		}
 		size_t getOutputNeuronSize() const {
-			size_t count = 0;
-			for (auto out : output) {
-				count += out->output.size();
-			}
-			return count;
+			return output.size();
 		}
 		float evaluate();
 		const SignalPtr& getInput(size_t idx) const {
@@ -105,27 +112,9 @@ namespace tgr {
 		}
 		std::vector<Neuron*> getInputNeurons() const;
 		void getInputNeurons(std::vector<Neuron*>& out) const;
-		std::vector<Neuron*> getOutputNeurons() const;
-		void getOutputNeurons(std::vector<Neuron*>& out) const;
-		bool hasBias() const {
-			return (bias.get() != nullptr);
-		}
-		SignalPtr getBiasSignal() const {
-			if (hasBias()) {
-				return bias->output.front();
-			}
-			else {
-				return SignalPtr();
-			}
-		}
-		float getBias() const {
-			if (hasBias()) {
-				return bias->output.front()->value;
-			}
-			else {
-				return 0;
-			}
-		}
+		std::vector<const Neuron*> getOutputNeurons() const;
+		void getOutputNeurons(std::vector<const Neuron*>& out) const;
+		
 		void addInput(const SignalPtr& s) {
 			input.push_back(s);
 		}
@@ -144,14 +133,14 @@ namespace tgr {
 		const float& getOutputWeight(size_t idx) const {
 			return output[idx]->value;
 		}
-		Neuron(const NeuronFunction& func = ReLU(),bool bias=false,float val=0.0f);
+		Neuron(const NeuronFunction& func = ReLU(),float val=0.0f);
 		void setFunction(const NeuronFunction& func) {
 			transform = func;
 		}
 	};
 	class Bias : public Neuron {
 		public:		
-			Bias() :Neuron(Constant(&value), false, 1.0f) {
+			Bias() :Neuron(Constant(&value), 1.0f) {
 
 			}
 	};

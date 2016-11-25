@@ -91,8 +91,9 @@ namespace tgr {
 	}
 	SignalPtr NeuralSystem::add(Terminal source, Terminal target,float weight) {
 		SignalPtr signal = std::shared_ptr<Signal>(new Signal(weight));
-		getNeuron(target)->addInput(signal);
-		getNeuron(source)->addOutput(signal);
+		Neuron* dest=getNeuron(target);
+		Neuron* src = getNeuron(source);
+		MakeConnection(src, signal,dest);
 		signals.push_back(signal);
 		return signal;
 	}
