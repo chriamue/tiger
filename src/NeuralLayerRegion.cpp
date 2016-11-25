@@ -208,7 +208,7 @@ namespace aly {
 			nvgTextAlign(nvg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
 			drawText(nvg, cursorPosition + pixel2(0.0f, 10.0f), MakeString() << selected, FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
 			drawText(nvg, cursorPosition + pixel2(0.0f, 10.0f + 16.0f), MakeString() << "in: " << neuron->getInputNeuronSize() << " / " << neuron->getInputWeightSize(), FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
-			drawText(nvg, cursorPosition + pixel2(0.0f, 10.0f + 32.0f), MakeString() << "out: " << neuron->getOutputNeuronSize() << " / " << neuron->getOutputWeightSize(), FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
+			drawText(nvg, cursorPosition + pixel2(0.0f, 10.0f + 32.0f), MakeString() << "out: " << neuron->getOutputNeuronSize(), FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
 
 		}
 	}
