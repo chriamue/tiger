@@ -8,6 +8,7 @@
 #include "NeuralSystem.h"
 #include "AlloyExpandTree.h"
 #include "NeuralFlowPane.h"
+#include "AlloyTimeline.h"
 class TigerApp : public aly::Application {
 protected:
 	tgr::NeuralLayer* selectedLayer;
@@ -19,6 +20,15 @@ protected:
 	aly::ExpandTreePtr expandTree;
 	aly::DrawPtr dragIconPane;
 	aly::NeuralFlowPanePtr renderRegion;
+	aly::TimelineSliderPtr timelineSlider;
+	aly::Number epochs;
+	aly::Number iterationsPerEpoch;
+	aly::Number learningRateInitial;
+	aly::Number learningRateDelta;
+	std::string trainFile;
+	std::string evalFile;
+	std::string trainLabelFile;
+	std::string evalLabelFile;
 	void initialize();
 public:
 

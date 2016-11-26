@@ -24,20 +24,60 @@ bool TigerApp::init(Composite& rootNode) {
 		parametersDirty = true;
 	};
 
-	initialize();
+	epochs = Integer(12);
+	iterationsPerEpoch = Integer(100);
+	learningRateInitial = Float(0.8f);
+	learningRateDelta = Float(0.5);
+
 	controls->setAlwaysShowVerticalScrollBar(false);
 	controls->setScrollEnabled(false);
 	controls->backgroundColor = MakeColor(getContext()->theme.DARKER);
 	controls->borderColor = MakeColor(getContext()->theme.DARK);
 	controls->borderWidth = UnitPX(1.0f);
+	controls->addGroup("Data", true);
+	
+	trainFile=getFullPath("data/train-images.idx3-ubyte");
+	controls->addFileField("Train Images",trainFile);
+	controls->addFileField("Train Labels", trainLabelFile);
+
+	controls->addFileField("Evaluation Images", evalFile);
+	controls->addFileField("Evaluation Labels", evalLabelFile);
+	initialize();
+	controls->addGroup("Training",true);
+	controls->addNumberField("Epochs",epochs);
+	controls->addNumberField("Iterations",iterationsPerEpoch);
+	controls->addNumberField("Learning Rate", learningRateInitial,Float(0.0f), Float(1.0f));
+	controls->addNumberField("Learning Delta", learningRateDelta, Float(0.0f), Float(1.0f));
+
 
 	controlLayout->backgroundColor = MakeColor(getContext()->theme.DARKER);
 	controlLayout->borderWidth = UnitPX(0.0f);
-	renderRegion = NeuralFlowPanePtr(new NeuralFlowPane("View", CoordPX(0.0f, 0.0f), CoordPercent(1.0f, 1.0f)));
+	renderRegion = NeuralFlowPanePtr(new NeuralFlowPane("View", CoordPX(0.0f, 0.0f), CoordPerPX(1.0f, 1.0f, 0.0f, -80.0f)));
 	layout->setWest(controlLayout, UnitPX(400.0f));
 	layout->setEast(expandTree, UnitPX(400.0f));
 	controlLayout->setCenter(controls);
-	layout->setCenter(renderRegion);
+	
+	timelineSlider = TimelineSliderPtr(
+		new TimelineSlider("Timeline", CoordPerPX(0.0f, 1.0f, 0.0f, -80.0f), CoordPerPX(1.0f, 0.0f, 0.0f, 80.0f), Integer(0), Integer(0), Integer(0)));
+	CompositePtr viewRegion = CompositePtr(new Composite("View", CoordPX(0.0f, 0.0f), CoordPercent(1.0f, 1.0f)));
+	timelineSlider->backgroundColor = MakeColor(AlloyApplicationContext()->theme.DARKER);
+	timelineSlider->borderColor = MakeColor(AlloyApplicationContext()->theme.DARK);
+	timelineSlider->borderWidth = UnitPX(0.0f);
+	timelineSlider->onChangeEvent = [this](const Number& timeValue, const Number& lowerValue, const Number& upperValue) {
+
+	};
+	timelineSlider->setMajorTick(100);
+	timelineSlider->setMinorTick(10);
+	timelineSlider->setLowerValue(0);
+	timelineSlider->setUpperValue(0);
+	timelineSlider->setMaxValue(1000);
+	timelineSlider->setVisible(true);
+	timelineSlider->setModifiable(false);
+	viewRegion->add(renderRegion);
+	viewRegion->add(timelineSlider);
+
+	
+	layout->setCenter(viewRegion);
 
 	CompositePtr infoComposite = CompositePtr(new Composite("Info", CoordPX(0.0f, 0.0f), CoordPercent(1.0f, 1.0f)));
 	infoComposite->backgroundColor = MakeColor(getContext()->theme.DARKER);
@@ -177,7 +217,6 @@ bool TigerApp::onEventHandler(AlloyContext* context, const aly::InputEvent& e) {
 	return false;
 }
 void TigerApp::initialize() {
-	std::string trainFile=getFullPath("data/train-images.idx3-ubyte");
 	std::vector<aly::Image1f> images;
 	parse_mnist_images(trainFile,images);
 	if (images.size() > 0) {
