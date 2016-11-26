@@ -71,10 +71,12 @@ namespace tgr {
 		float sum1 = 0.0f, sum2;
 		for (SignalPtr sig : input) {
 			sum2 = 0.0f;
-			for (Neuron* inner : sig->get(this)) {
+			std::vector<Neuron*>& input = sig->get(this);
+			for (Neuron* inner : input) {
 				sum2 += inner->value;
+				
 			}
-			sum1 += sig->value*sum2;
+			sum1 += sig->value*sum2/(float(input.size()));
 		}
 		value = transform.forward(aly::clamp(sum1,0.0f,1.0f));
 		return value;

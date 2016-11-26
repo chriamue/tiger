@@ -80,12 +80,7 @@ namespace tgr {
 		return t;
 	}
 
-	void NeuralSystem::add(const SignalPtr& signal) {
-		signals.push_back(signal);
-	}
-	void NeuralSystem::add(const std::vector<SignalPtr>& sigs) {
-		signals.insert(signals.end(), sigs.begin(), sigs.end());
-	}
+
 	Neuron* NeuralSystem::getNeuron(const Terminal& t) const {
 		return t.layer->get(t.x, t.y);
 	}
@@ -94,7 +89,7 @@ namespace tgr {
 		Neuron* dest=getNeuron(target);
 		Neuron* src = getNeuron(source);
 		MakeConnection(src, signal,dest);
-		signals.push_back(signal);
+
 		return signal;
 	}
 	void NeuralSystem::train(float learningRate) {

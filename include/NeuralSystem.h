@@ -9,7 +9,6 @@ namespace tgr {
 	protected:
 		std::vector<NeuralLayerPtr> layers;
 		std::vector<NeuralLayerPtr> roots;
-		std::vector<SignalPtr> signals;
 		std::map<Terminal,float> input;
 		std::map<Terminal,float> output;
 	public:
@@ -35,8 +34,6 @@ namespace tgr {
 		Terminal addInput(int i,int j,const NeuralLayerPtr& layer, float value=0.0f);
 		Terminal addOutput(int i, int j, const NeuralLayerPtr& layer, float value=0.0f);
 
-		void add(const SignalPtr& signal);
-		void add(const std::vector<SignalPtr>& signals);
 		SignalPtr add(Terminal source,Terminal target,float weight=0.0f);
 		void add(const std::shared_ptr<NeuralFilter>& filter);
 	

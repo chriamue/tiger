@@ -140,6 +140,7 @@
   <ItemGroup>
     <ClInclude Include="..\..\include\AveragePoolFilter.h" />
     <ClInclude Include="..\..\include\ConvolutionFilter.h" />
+    <ClInclude Include="..\..\include\FullyConnectedFilter.h" />
     <ClInclude Include="..\..\include\MNIST.h" />
     <ClInclude Include="..\..\include\NeuralFilter.h" />
     <ClInclude Include="..\..\include\NeuralFlowPane.h" />
@@ -153,6 +154,7 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\AveragePoolFilter.cpp" />
     <ClCompile Include="..\..\src\ConvolutionFilter.cpp" />
+    <ClCompile Include="..\..\src\FullyConnectedFilter.cpp" />
     <ClCompile Include="..\..\src\MNIST.cpp" />
     <ClCompile Include="..\..\src\NeuralFilter.cpp" />
     <ClCompile Include="..\..\src\NeuralFlowPane.cpp" />

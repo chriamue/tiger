@@ -28,10 +28,17 @@ namespace tgr {
 		protected:
 			std::vector<NeuralLayerPtr> inputLayers;
 			std::vector<NeuralLayerPtr> outputLayers;
+			std::string name;
 			TigerApp* app;
 		public:
 			virtual bool isTrainable() const {
 				return true;
+			}
+			std::string getName() const {
+				return name;
+			}
+			void setName(const std::string& n) {
+				name = n;
 			}
 			std::vector<NeuralLayerPtr>& getInputLayers() {
 				return inputLayers;
@@ -65,7 +72,7 @@ namespace tgr {
 			size_t getInputSize() const {
 				return inputLayers.size();
 			}
-			NeuralFilter(TigerApp* app):app(app) {}
+			NeuralFilter(TigerApp* app,const std::string& name):app(app),name(name) {}
 			virtual ~NeuralFilter() {}
 			virtual void initialize(NeuralSystem& sys) = 0;
 	};

@@ -3,21 +3,21 @@
 
 using namespace aly;
 namespace tgr {
-	ConvolutionFilter::ConvolutionFilter(TigerApp* app, int width, int height, int kernelSize, int features) :NeuralFilter(app), kernelSize(kernelSize) {
+	ConvolutionFilter::ConvolutionFilter(TigerApp* app, int width, int height, int kernelSize, int features) :NeuralFilter(app,"Feature"), kernelSize(kernelSize) {
 		if (kernelSize % 2 == 0) {
 			throw std::runtime_error("Kernel size must be odd.");
 		}
-		inputLayers.push_back(NeuralLayerPtr(new NeuralLayer(app, MakeString() << "convolution [" << kernelSize << "]", width, height)));
+		inputLayers.push_back(NeuralLayerPtr(new NeuralLayer(app,"Input Layer", width, height)));
 		outputLayers.resize(features);
 	}
-	ConvolutionFilter::ConvolutionFilter(TigerApp* app, const NeuralLayerPtr& layer, int kernelSize, int features) :NeuralFilter(app), kernelSize(kernelSize) {
+	ConvolutionFilter::ConvolutionFilter(TigerApp* app, const NeuralLayerPtr& layer, int kernelSize, int features) :NeuralFilter(app, "Feature"), kernelSize(kernelSize) {
 		if (kernelSize % 2 == 0) {
 			throw std::runtime_error("Kernel size must be odd.");
 		}
 		inputLayers.push_back(layer);
 		outputLayers.resize(features);
 	}
-	ConvolutionFilter::ConvolutionFilter(TigerApp* app, const std::vector<NeuralLayerPtr>& layers, int kernelSize, int features) :NeuralFilter(app), kernelSize(kernelSize) {
+	ConvolutionFilter::ConvolutionFilter(TigerApp* app, const std::vector<NeuralLayerPtr>& layers, int kernelSize, int features) :NeuralFilter(app, "Feature"), kernelSize(kernelSize) {
 		if (kernelSize % 2 == 0) {
 			throw std::runtime_error("Kernel size must be odd.");
 		}
@@ -35,13 +35,12 @@ namespace tgr {
 		int index = 0;
 		for (int jj = 0; jj < kernelSize; jj++) {
 			for (int ii = 0; ii < kernelSize; ii++) {
-				SignalPtr sig = SignalPtr(new Signal(RandomUniform(0.0f, 1.0f/(width*height*inputLayers.size()))));
+				SignalPtr sig = SignalPtr(new Signal(RandomUniform(0.0f, 1.0f)));
 				signals[index++]=sig;
-				system.add(sig);
 			}
 		}
 		for (int f = 0; f < outputLayers.size(); f++) {
-			NeuralLayerPtr outputLayer = NeuralLayerPtr(new NeuralLayer(app, MakeString() << "feature [" << f << "]", ow, oh));
+			NeuralLayerPtr outputLayer = NeuralLayerPtr(new NeuralLayer(app, MakeString() << name<< " [" << f << "]", ow, oh));
 			outputLayers[f] = outputLayer;
 			outputLayer->setFunction(Tanh());
 			for (NeuralLayerPtr inputLayer : inputLayers) {

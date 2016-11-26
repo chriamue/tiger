@@ -37,6 +37,7 @@ bool TigerApp::init(Composite& rootNode) {
 	controls->addGroup("Data", true);
 	
 	trainFile=getFullPath("data/train-images.idx3-ubyte");
+	trainLabelFile = getFullPath("data/train-labels.idx1-ubyte");
 	controls->addFileField("Train Images",trainFile);
 	controls->addFileField("Train Labels", trainLabelFile);
 
@@ -218,22 +219,44 @@ bool TigerApp::onEventHandler(AlloyContext* context, const aly::InputEvent& e) {
 }
 void TigerApp::initialize() {
 	std::vector<aly::Image1f> images;
+	std::vector<uint8_t> labels;
 	parse_mnist_images(trainFile,images);
+	parse_mnist_labels(trainLabelFile, labels);
+
+	int K = 4;
 	if (images.size() > 0) {
 		const aly::Image1f& ref = images[RandomUniform(0,(int)images.size()-1)];
-		ConvolutionFilterPtr conv1(new ConvolutionFilter(this, ref.width, ref.height, 5, 6));
+		ConvolutionFilterPtr conv1(new ConvolutionFilter(this,ref.width, ref.height, 5, 6));
 		sys.add(conv1);
-		AveragePoolFilterPtr avg1(new AveragePoolFilter(this, conv1->getOutputLayers(), 2));
-		sys.add(avg1);
-		for (int i = 0; i < avg1->getOutputSize(); i++) {
-			ConvolutionFilterPtr conv2(new ConvolutionFilter(this, avg1->getOutputLayer(i), 5, 16));
-			sys.add(conv2);
-		}
 		for (int i = 0; i < ref.width; i++) {
 			for (int j = 0; j < ref.height; j++) {
 				sys.addInput(i, j, conv1->getInputLayer(0), ref(i, j).x);
 			}
 		}
+		std::vector<NeuralLayerPtr> all;
+		for (int i = 0; i < conv1->getOutputSize(); i++) {
+			AveragePoolFilterPtr avg1(new AveragePoolFilter(this, conv1->getOutputLayer(i), 2));
+			avg1->setName(MakeString()<<"First Sub-Sample [" << i << "]");
+			sys.add(avg1);
+			all.push_back(avg1->getOutputLayer(0));
+		}
+		for (int i = 0; i < all.size(); i++) {
+			std::vector<NeuralLayerPtr> in;
+			for (int k = 0; k < K; k++) {
+				in.push_back(all[(k + i) % all.size()]);
+			}
+			ConvolutionFilterPtr conv2(new ConvolutionFilter(this, in, 3, 4));
+			conv2->setName(MakeString() << "Feature [" << i << "]");
+			sys.add(conv2);
+			
+			for (int i = 0; i < conv2->getOutputSize(); i++) {
+				AveragePoolFilterPtr avg2(new AveragePoolFilter(this, conv2->getOutputLayer(i), 2));
+				avg2->setName(MakeString() << "Second Sub-Sample [" << i << "]");
+				sys.add(avg2);
+			}
+			
+		}
+
 		sys.initialize(expandTree);
 		sys.evaluate();
 	}

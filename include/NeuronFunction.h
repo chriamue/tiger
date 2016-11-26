@@ -31,9 +31,7 @@ namespace tgr {
 	public:
 		struct Interface {
 			virtual float forward(float t) const = 0;
-			virtual float forwardChange(float t) const = 0;
-			virtual float backward(float t) const = 0;
-			virtual float backwardChange(float t) const = 0;
+			virtual float change(float t) const = 0;
 			virtual NeuronFunctionType type() const = 0;
 		};
 	private:
@@ -47,15 +45,10 @@ namespace tgr {
 			virtual float forward(float t) const {
 				return value.forward(t);
 			}
-			virtual float forwardChange(float t) const {
-				return value.forwardChange(t);
+			virtual float change(float t) const {
+				return value.change(t);
 			}
-			virtual float backward(float t) const {
-				return value.backward(t);
-			}
-			virtual float backwardChange(float t) const {
-				return value.backwardChange(t);
-			}
+
 		};
 		std::shared_ptr<Interface> impl;
 	public:
@@ -100,20 +93,10 @@ namespace tgr {
 				throw std::runtime_error("NeuronFunction type has not been defined.");
 			return impl->forward(t);
 		}
-		virtual float forwardChange(float t) const {
+		virtual float change(float t) const {
 			if (impl.get() == nullptr)
 				throw std::runtime_error("NeuronFunction type has not been defined.");
-			return impl->forwardChange(t);
-		}
-		virtual float backward(float t) const {
-			if (impl.get() == nullptr)
-				throw std::runtime_error("NeuronFunction type has not been defined.");
-			return impl->backward(t);
-		}
-		virtual float backwardChange(float t) const {
-			if (impl.get() == nullptr)
-				throw std::runtime_error("NeuronFunction type has not been defined.");
-			return impl->backwardChange(t);
+			return impl->change(t);
 		}
 		virtual inline ~NeuronFunction() {
 		}
@@ -128,15 +111,9 @@ namespace tgr {
 		float forward(float t) const {
 			return 1.0f / (1 + std::exp(-t));
 		}
-		float forwardChange(float t) const {
+		float change(float t) const {
 			float f_t = forward(t);
 			return f_t*(1 - f_t);
-		}
-		float backward(float f) const {
-			return -std::log(1.0f / f - 1.0f);
-		}
-		float backwardChange(float f) const {
-			return 1.0f / (f*f*(1.0f / f - 1.0f));
 		}
 		Sigmoid(const NeuronFunction& r) {
 		}
@@ -153,15 +130,9 @@ namespace tgr {
 			float e = std::exp(2 * t);
 			return (e - 1) / (e + 1);
 		}
-		float forwardChange(float t) const {
+		float change(float t) const {
 			float f_t = forward(t);
 			return 1.0f - f_t*f_t;
-		}
-		float backward(float t) const {
-			return 0.5f*std::log((1 + t) / (1 - t));
-		}
-		float backwardChange(float t) const {
-			return 1.0f / (1.0f - t*t);
 		}
 		Tanh(const NeuronFunction& r) {
 		}
@@ -179,15 +150,9 @@ namespace tgr {
 		float forward(float t) const {
 			return std::max(0.0f, t);
 		}
-		float forwardChange(float t) const {
+		float change(float t) const {
 			float f_t = forward(t);
 			return (f_t > 0.0f) ? 1.0f : 0.0f;
-		}
-		float backward(float t) const {
-			return std::max(0.0f, t);
-		}
-		float backwardChange(float t) const {
-			return (t > 0.0f) ? 1.0f : 0.0f;
 		}
 		ReLU(const NeuronFunction& r) {
 		}
@@ -203,15 +168,10 @@ namespace tgr {
 		float forward(float t) const {
 			return t;
 		}
-		float forwardChange(float t) const {
+		float change(float t) const {
 			return 1.0f;
 		}
-		float backward(float t) const {
-			return t;
-		}
-		float backwardChange(float t) const {
-			return 1.0f;
-		}
+
 		Linear(const NeuronFunction& r) {
 		}
 		virtual ~Linear() {
@@ -230,15 +190,10 @@ namespace tgr {
 		float forward(float t) const {
 			return *value;
 		}
-		float forwardChange(float t) const {
+		float change(float t) const {
 			return 0.0f;
 		}
-		float backward(float t) const {
-			return *value;
-		}
-		float backwardChange(float t) const {
-			return 0.0f;
-		}
+
 		Constant(float* val):value(val) {
 		}
 		Constant(const NeuronFunction& func):value(static_cast<Constant>(func).value){
@@ -257,16 +212,11 @@ namespace tgr {
 		float forward(float t) const {
 			return (t > 0.0f) ? t : eps*t;
 		}
-		float forwardChange(float t) const {
+		float change(float t) const {
 			float f_t = forward(t);
 			return (f_t > 0.0f) ? 1.0f : eps;
 		}
-		float backward(float t) const {
-			return (t > 0.0f) ? t : t / eps;
-		}
-		float backwardChange(float t) const {
-			return (t > 0.0f) ? 1.0f : 1.0f / eps;
-		}
+
 		LeakyReLU(const NeuronFunction& func):eps(0.01f) {
 		}
 		virtual ~LeakyReLU() {

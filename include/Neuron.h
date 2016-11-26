@@ -140,7 +140,7 @@ namespace tgr {
 	};
 	class Bias : public Neuron {
 		public:		
-			Bias() :Neuron(Constant(&value), 1.0f) {
+			Bias(float val=0.0f) :Neuron(Constant(&value), val) {
 
 			}
 	};

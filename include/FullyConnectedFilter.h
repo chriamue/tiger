@@ -20,14 +20,15 @@
 */
 #include "NeuralFilter.h"
 namespace tgr {
-	class AveragePoolFilter :public NeuralFilter {
+	class FullyConnectedFilter :public NeuralFilter {
 	protected:
-		int kernelSize;
+		int width;
+		int height;
 	public:
-		AveragePoolFilter(TigerApp* app, const std::vector<NeuralLayerPtr>& inputLayers, int kernelSize);
-		AveragePoolFilter(TigerApp* app, const NeuralLayerPtr& inputLayer, int kernelSize);
+		FullyConnectedFilter(TigerApp* app, const std::vector<NeuralLayerPtr>& inputLayers, int width,int height);
+		FullyConnectedFilter(TigerApp* app, const NeuralLayerPtr& inputLayer, int width, int height);
 
 		virtual void initialize(NeuralSystem& sys) override;
 	};
-	typedef std::shared_ptr<AveragePoolFilter> AveragePoolFilterPtr;
+	typedef std::shared_ptr<FullyConnectedFilter> FullyConnectedFilterPtr;
 }

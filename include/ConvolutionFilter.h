@@ -24,7 +24,7 @@ namespace tgr {
 	protected:
 		int kernelSize;
 	public:
-		ConvolutionFilter(TigerApp* app, int width, int height, int kernelSize, int features);
+		ConvolutionFilter(TigerApp* app,  int width, int height, int kernelSize, int features);
 		ConvolutionFilter(TigerApp* app, const NeuralLayerPtr& inputLayer, int kernelSize, int features);
 		ConvolutionFilter(TigerApp* app, const std::vector<NeuralLayerPtr>& inputLayers, int kernelSize, int features);
 		virtual void initialize(NeuralSystem& sys) override;
