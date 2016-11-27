@@ -1,3 +1,4 @@
+
 #include "MNIST.h"
 namespace tgr {
 	void parse_mnist_header(std::ifstream& ifs, mnist_header& header) {

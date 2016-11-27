@@ -145,6 +145,8 @@
     <ClInclude Include="..\..\include\NeuralFilter.h" />
     <ClInclude Include="..\..\include\NeuralFlowPane.h" />
     <ClInclude Include="..\..\include\NeuralLayerRegion.h" />
+    <ClInclude Include="..\..\include\NeuralOptimization.h" />
+    <ClInclude Include="..\..\include\NeuralProcessor.h" />
     <ClInclude Include="..\..\include\NeuralSystem.h" />
     <ClInclude Include="..\..\include\NeuralLayer.h" />
     <ClInclude Include="..\..\include\Neuron.h" />
@@ -159,6 +161,8 @@
     <ClCompile Include="..\..\src\NeuralFilter.cpp" />
     <ClCompile Include="..\..\src\NeuralFlowPane.cpp" />
     <ClCompile Include="..\..\src\NeuralLayerRegion.cpp" />
+    <ClCompile Include="..\..\src\NeuralOptimization.cpp" />
+    <ClCompile Include="..\..\src\NeuralProcessor.cpp" />
     <ClCompile Include="..\..\src\NeuralSystem.cpp" />
     <ClCompile Include="..\..\src\NeuralLayer.cpp" />
     <ClCompile Include="..\..\src\main.cpp" />

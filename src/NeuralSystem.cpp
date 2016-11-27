@@ -1,27 +1,73 @@
+/*
+* Copyright(C) 2016, Blake C. Lucas, Ph.D. (img.science@gmail.com)
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+*/
 #include "NeuralSystem.h"
 #include "NeuralFilter.h"
 using namespace aly;
 namespace tgr {
-
-	void NeuralSystem::evaluate() {
-		for (const std::pair<Terminal, float>& pr : input) {
-			Terminal t = pr.first;
-			NeuralLayer* layer= t.layer;
-			(*layer)(t.x, t.y).value = pr.second;
-		}
-		for (NeuralLayerPtr layer:layers) {
-			
+	void NeuralSystem::backpropagate() {
+		for (NeuralLayer* layer : backpropLayers) {
 			layer->evaluate();
 		}
-		for (auto iter = output.begin(); iter != output.end();iter++) {
+	}
+	void NeuralSystem::pushInput(){
+		for (const std::pair<Terminal, float>& pr : input) {
+			Terminal t = pr.first;
+			NeuralLayer* layer = t.layer;
+			(*layer)(t.x, t.y).value = pr.second;
+		}
+	}
+
+	void NeuralSystem::pullOutput(){
+		for (auto iter = output.begin(); iter != output.end(); iter++) {
 			Terminal t = iter->first;
 			NeuralLayer* layer = t.layer;
-			iter->second=(*layer)(t.x, t.y).value;
+			iter->second = (*layer)(t.x, t.y).value;
+		}
+	}
+	void NeuralSystem::resetError() {
+		for (auto iter = output.begin(); iter != output.end(); iter++) {
+			Terminal t = iter->first;
+			NeuralLayer* layer = t.layer;
+			Neuron& neuron = (*layer)(t.x, t.y);
+			neuron.change =0.0f;
+		}
+	}
+	void NeuralSystem::accumulateError() {
+		for (auto iter = output.begin(); iter != output.end(); iter++) {
+			Terminal t = iter->first;
+			NeuralLayer* layer = t.layer;
+			Neuron& neuron = (*layer)(t.x, t.y);
+			neuron.change += iter->second-neuron.value;
+		}
+	}
+	void NeuralSystem::evaluate() {
+		for (NeuralLayerPtr layer:layers) {
+			layer->evaluate();
 		}
 	}
 	void NeuralSystem::initialize() {
 		roots.clear();
+		leafs.clear();
 		std::list<NeuralLayerPtr> q;
+		std::list<NeuralLayer*> q2;
 		for (NeuralLayerPtr layer : layers) {
 			layer->setVisited(false);
 			if (layer->isRoot()) {
@@ -29,6 +75,8 @@ namespace tgr {
 				q.push_back(layer);
 			}
 		}
+		
+		backpropLayers.clear();
 		std::vector<NeuralLayerPtr> order;
 		int index = 0;
 		while (!q.empty()) {
@@ -44,6 +92,28 @@ namespace tgr {
 			}
 		}
 		layers = order;
+		order.clear();
+
+		q2.clear();
+		for (NeuralLayerPtr layer : layers) {
+			layer->setVisited(false);
+			if (layer->isLeaf()) {
+				leafs.push_back(layer);
+				q2.push_back(layer.get());
+			}
+		}
+
+		while (!q2.empty()) {
+			NeuralLayer* layer = q2.front();
+			q2.pop_front();
+			layer->setVisited(true);
+			backpropLayers.push_back(layer);
+			for (NeuralLayer* dep : layer->getDependencies()) {
+				if (dep->ready()) {
+					q2.push_back(dep);
+				}
+			}
+		}
 	}
 	void NeuralSystem::add(const std::shared_ptr<NeuralFilter>& filter) {
 		filter->initialize(*this);

@@ -68,6 +68,7 @@ namespace tgr {
 				visited = v;
 			}
 			void evaluate();
+			void backpropagate();
 			aly::NeuralLayerRegionPtr getRegion();
 			bool hasRegion() const {
 				return (layerRegion.get() != nullptr&&layerRegion->parent!=nullptr);
@@ -89,6 +90,9 @@ namespace tgr {
 			}
 			bool isRoot() const {
 				return (dependencies.size() == 0);
+			}
+			bool isLeaf() const {
+				return (children.size() == 0);
 			}
 			void addChild(const std::shared_ptr<NeuralLayer>& layer);
 			void setName(const std::string& n) {

@@ -33,7 +33,7 @@ namespace tgr {
 	bool Terminal::operator >(const Terminal & r) const {
 		return (std::make_tuple(x, y, (layer) ? layer->id : -1) < std::make_tuple(r.x, r.y, (layer) ? layer->id : -1));
 	}
-	Neuron::Neuron(const NeuronFunction& func,float val) :transform(func),value(val),active(false) {
+	Neuron::Neuron(const NeuronFunction& func,float val) :transform(func),value(val),change(0.0f),active(false) {
 	}
 	std::vector<Neuron*> Neuron::getInputNeurons()  const {
 		std::vector<Neuron*> out;
@@ -67,6 +67,32 @@ namespace tgr {
 			}
 		}
 	}
+	float Neuron::backpropagate() {
+		float sum1 = 0.0f,sum2;
+		if (output.size() > 0) {
+			for (SignalPtr sig : output) {
+				sum2 = 0.0f;
+				for (auto pr : sig->mapping) {
+					sum2 += pr.first->change;
+				}
+				sum1 += sig->value*sum2 / float(sig->mapping.size());
+			}
+			change = sum1*transform.change(value);
+		}
+		else {
+			//Must be leaf node, error term is stored in the change variable.
+			change *= transform.change(value);
+		}
+		for (SignalPtr sig : input) {
+			sum2 = 0.0f;
+			std::vector<Neuron*>& input = sig->get(this);
+			for (Neuron* inner : input) {
+				sum2 += inner->value;
+			}
+			sig->change=change*sum2 / (float(input.size()));
+		}
+		return change;
+	}
 	float Neuron::evaluate() {
 		float sum1 = 0.0f, sum2;
 		for (SignalPtr sig : input) {
@@ -78,7 +104,8 @@ namespace tgr {
 			}
 			sum1 += sig->value*sum2/(float(input.size()));
 		}
-		value = transform.forward(aly::clamp(sum1,0.0f,1.0f));
+		change = 0.0f;
+		value = transform.forward(sum1);
 		return value;
 	}
 	void MakeConnection(Neuron* src,const std::shared_ptr<Signal>& signal, Neuron* dest) {

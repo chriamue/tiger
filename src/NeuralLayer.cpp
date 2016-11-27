@@ -72,6 +72,14 @@ namespace tgr {
 		}
 		return signals;
 	}
+	void NeuralLayer::backpropagate() {
+		int N = (int)neurons.size();
+#pragma omp parallel for
+		for (int n = 0; n < N; n++) {
+			Neuron& neuron = neurons[n];
+			neuron.backpropagate();
+		}
+	}
 	void NeuralLayer::evaluate() {
 		int N = (int)neurons.size();
 		float totalWeight=0.0f;

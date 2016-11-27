@@ -44,8 +44,9 @@ namespace tgr {
 	class Neuron;
 	struct Signal {
 		float value;
+		float change;
 		std::map<const Neuron*,std::vector<Neuron*>> mapping;
-		Signal() :value(0.0f) {
+		Signal() :value(0.0f),change(0.0f) {
 
 		}
 		Signal(float value) : value(value) {
@@ -79,6 +80,7 @@ namespace tgr {
 		std::vector<SignalPtr> output;
 	public:
 		float value;
+		float change;
 		bool active;
 		friend class NeuralLayer;
 		size_t getInputWeightSize() const {
@@ -98,6 +100,8 @@ namespace tgr {
 			return output.size();
 		}
 		float evaluate();
+		float backpropagate();
+
 		const SignalPtr& getInput(size_t idx) const {
 			return input[idx];
 		}

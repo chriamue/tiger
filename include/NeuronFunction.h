@@ -111,8 +111,7 @@ namespace tgr {
 		float forward(float t) const {
 			return 1.0f / (1 + std::exp(-t));
 		}
-		float change(float t) const {
-			float f_t = forward(t);
+		float change(float f_t) const {
 			return f_t*(1 - f_t);
 		}
 		Sigmoid(const NeuronFunction& r) {
@@ -130,8 +129,7 @@ namespace tgr {
 			float e = std::exp(2 * t);
 			return (e - 1) / (e + 1);
 		}
-		float change(float t) const {
-			float f_t = forward(t);
+		float change(float f_t) const {
 			return 1.0f - f_t*f_t;
 		}
 		Tanh(const NeuronFunction& r) {
@@ -150,8 +148,7 @@ namespace tgr {
 		float forward(float t) const {
 			return std::max(0.0f, t);
 		}
-		float change(float t) const {
-			float f_t = forward(t);
+		float change(float f_t) const {
 			return (f_t > 0.0f) ? 1.0f : 0.0f;
 		}
 		ReLU(const NeuronFunction& r) {
@@ -168,7 +165,7 @@ namespace tgr {
 		float forward(float t) const {
 			return t;
 		}
-		float change(float t) const {
+		float change(float f_t) const {
 			return 1.0f;
 		}
 
@@ -190,7 +187,7 @@ namespace tgr {
 		float forward(float t) const {
 			return *value;
 		}
-		float change(float t) const {
+		float change(float f_t) const {
 			return 0.0f;
 		}
 
@@ -212,8 +209,7 @@ namespace tgr {
 		float forward(float t) const {
 			return (t > 0.0f) ? t : eps*t;
 		}
-		float change(float t) const {
-			float f_t = forward(t);
+		float change(float f_t) const {
 			return (f_t > 0.0f) ? 1.0f : eps;
 		}
 
