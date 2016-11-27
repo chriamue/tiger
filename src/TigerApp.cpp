@@ -31,10 +31,22 @@ using namespace tgr;
 TigerApp::TigerApp() :
 	Application(1800, 800, "Tiger Machine",true), selectedLayer(nullptr){
 }
+void TigerApp::setSampleIndex(int idx){
+	sampleIndex.setValue(idx);
+}
+void TigerApp::setSampleRange(int mn, int mx){
+	tweenRegion->setMinValue(Integer(mn));
+	tweenRegion->setMaxValue(Integer(mx));
+	sampleIndex.setValue(aly::clamp(sampleIndex.toInteger(), mn, mx));
+	tweenRegion->setValue(sampleIndex.toDouble());
+}
+
 bool TigerApp::init(Composite& rootNode) {
 
 	parametersDirty = true;
 	frameBuffersDirty = true;
+
+	CompositePtr toolbar = CompositePtr(new Composite("Toolbar",CoordPX(0.0f,0.0f),CoordPerPX(1.0f,0.0f,0.0f,40.0f)));
 
 	BorderCompositePtr layout = BorderCompositePtr(new BorderComposite("UI Layout", CoordPX(0.0f, 0.0f), CoordPercent(1.0f, 1.0f), true));
 	ParameterPanePtr controls = ParameterPanePtr(new ParameterPane("Controls", CoordPX(0.0f, 0.0f), CoordPercent(1.0f, 1.0f)));
@@ -70,10 +82,52 @@ bool TigerApp::init(Composite& rootNode) {
 	controls->addNumberField("Learning Rate", learningRateInitial,Float(0.0f), Float(1.0f));
 	controls->addNumberField("Learning Delta", learningRateDelta, Float(0.0f), Float(1.0f));
 
+	toolbar->backgroundColor = MakeColor(getContext()->theme.DARKER);
+	sampleIndex = Integer(5);
+	minIndex = 0;
+	maxIndex=100;
+	const float numAspect = 2.0f;
+	const float entryHeight = 40.0f;
+	const float aspect = 6.0f;
+	TextLabelPtr labelRegion = TextLabelPtr(new TextLabel("Sample", CoordPX(0.0f, 0.0f), CoordPX(90.0f,entryHeight)));
+	
+	tweenRegion = HorizontalSliderPtr(new HorizontalSlider("sample tween", CoordPX(90.0f,0.0f), CoordPX(aspect * entryHeight, entryHeight),false,Integer(minIndex), Integer(maxIndex), sampleIndex));
+	ModifiableNumberPtr valueRegion = ModifiableNumberPtr(new ModifiableNumber("sample field", CoordPX(aspect * entryHeight+90.0f, 0.0f), CoordPX(numAspect * entryHeight, entryHeight), sampleIndex.type()));
+	valueRegion->setAlignment(HorizontalAlignment::Center, VerticalAlignment::Middle);
+	valueRegion->fontSize = UnitPX(entryHeight - 8.0f);
+	labelRegion->setAlignment(HorizontalAlignment::Left, VerticalAlignment::Middle);
+	labelRegion->fontSize=UnitPX(entryHeight - 8.0f);
+	valueRegion->setNumberValue(sampleIndex);
+	valueRegion->onTextEntered = [this](NumberField* field) {
+		int val = field->getValue().toInteger();
+		if (val < minIndex) {
+			val = minIndex;
+			field->setNumberValue(Integer(val));
+		}
+		if (val > maxIndex) {
+			val = maxIndex;
+			field->setNumberValue(Integer(val));
+		}
+		tweenRegion->setValue(val);
+		setSampleIndex(val);
+	};
+	tweenRegion->setOnChangeEvent([this,valueRegion](const aly::Number& value) {
+		valueRegion->setNumberValue(value);
+		setSampleIndex(value.toInteger());
+	});
+	
+	valueRegion->textColor = MakeColor(AlloyDefaultContext()->theme.LIGHTER);
+	valueRegion->backgroundColor = MakeColor(0, 0, 0, 0);
+	valueRegion->borderWidth = UnitPX(0.0f);
+	tweenRegion->backgroundColor = MakeColor(0, 0, 0, 0);
+	tweenRegion->borderWidth = UnitPX(0.0f);
+	toolbar->add(labelRegion);
+	toolbar->add(tweenRegion);
+	toolbar->add(valueRegion);
 
 	controlLayout->backgroundColor = MakeColor(getContext()->theme.DARKER);
 	controlLayout->borderWidth = UnitPX(0.0f);
-	renderRegion = NeuralFlowPanePtr(new NeuralFlowPane("View", CoordPX(0.0f, 0.0f), CoordPerPX(1.0f, 1.0f, 0.0f, -80.0f)));
+	renderRegion = NeuralFlowPanePtr(new NeuralFlowPane("View", CoordPX(0.0f, 40.0f), CoordPerPX(1.0f, 1.0f, 0.0f, -120.0f)));
 	layout->setWest(controlLayout, UnitPX(400.0f));
 	layout->setEast(expandTree, UnitPX(400.0f));
 	controlLayout->setCenter(controls);
@@ -94,6 +148,7 @@ bool TigerApp::init(Composite& rootNode) {
 	timelineSlider->setMaxValue(1000);
 	timelineSlider->setVisible(true);
 	timelineSlider->setModifiable(false);
+	viewRegion->add(toolbar);
 	viewRegion->add(renderRegion);
 	viewRegion->add(timelineSlider);
 

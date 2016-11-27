@@ -42,6 +42,8 @@ protected:
 	aly::NeuralFlowPanePtr renderRegion;
 	aly::TimelineSliderPtr timelineSlider;
 	aly::Number epochs;
+	aly::Number sampleIndex;
+	int minIndex,maxIndex;
 	aly::Number iterationsPerEpoch;
 	aly::Number learningRateInitial;
 	aly::Number learningRateDelta;
@@ -49,9 +51,11 @@ protected:
 	std::string evalFile;
 	std::string trainLabelFile;
 	std::string evalLabelFile;
+	aly::HorizontalSliderPtr tweenRegion;
 	void initialize();
 public:
-
+	void setSampleIndex(int idx);
+	void setSampleRange(int mn, int mx);
 	bool overTarget = false;
 	TigerApp();
 	virtual void draw(aly::AlloyContext* context) override;

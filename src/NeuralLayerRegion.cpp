@@ -62,12 +62,12 @@ namespace aly {
 		NVGcontext* nvg = context->nvgContext;
 		aly::box2px bounds = getBounds();
 
-
+		pushScissor(nvg, parent->getCursorBounds());
 		nvgBeginPath(nvg);
 		nvgRoundedRect(nvg, bounds.position.x, bounds.position.y, 26.0f, fontSize + 8.0f, 3.0f);
 		nvgFillColor(nvg, context->theme.DARK.toSemiTransparent(0.5f));
 		nvgFill(nvg);
-
+		popScissor(nvg);
 		Composite::draw(context);
 
 
