@@ -53,16 +53,20 @@ namespace tgr {
 		int oh = height - 2 * pad;
 		std::vector<SignalPtr> signals(kernelSize*kernelSize);
 		int index = 0;
-		for (int jj = 0; jj < kernelSize; jj++) {
-			for (int ii = 0; ii < kernelSize; ii++) {
-				SignalPtr sig = SignalPtr(new Signal(RandomUniform(0.0f, 1.0f)));
-				signals[index++]=sig;
-			}
-		}
+
 		for (int f = 0; f < outputLayers.size(); f++) {
 			NeuralLayerPtr outputLayer = NeuralLayerPtr(new NeuralLayer(app, MakeString() << name<< " [" << f << "]", ow, oh));
 			outputLayers[f] = outputLayer;
 			outputLayer->setFunction(Tanh());
+
+			index = 0;
+			for (int jj = 0; jj < kernelSize; jj++) {
+				for (int ii = 0; ii < kernelSize; ii++) {
+					SignalPtr sig = SignalPtr(new Signal(RandomUniform(0.0f, 1.0f)));
+					signals[index++] = sig;
+				}
+			}
+
 			for (NeuralLayerPtr inputLayer : inputLayers) {
 				inputLayer->addChild(outputLayer);
 				for (int j = 0; j < oh; j++) {
