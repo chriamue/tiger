@@ -248,11 +248,7 @@ void TigerApp::initialize() {
 		const aly::Image1f& ref = images[RandomUniform(0,(int)images.size()-1)];
 		ConvolutionFilterPtr conv1(new ConvolutionFilter(this,ref.width, ref.height, 5, 6));
 		sys.add(conv1);
-		for (int i = 0; i < ref.width; i++) {
-			for (int j = 0; j < ref.height; j++) {
-				sys.addInput(i, j, conv1->getInputLayer(0), ref(i, j).x);
-			}
-		}
+		conv1->getInputLayer(0)->set(ref);
 		std::vector<NeuralLayerPtr> all;
 		for (int i = 0; i < conv1->getOutputSize(); i++) {
 			AveragePoolFilterPtr avg1(new AveragePoolFilter(this, conv1->getOutputLayer(i), 2));
@@ -273,10 +269,8 @@ void TigerApp::initialize() {
 				AveragePoolFilterPtr avg2(new AveragePoolFilter(this, conv2->getOutputLayer(i), 2));
 				avg2->setName(MakeString() << "Second Sub-Sample [" << i << "]");
 				sys.add(avg2);
-			}
-			
+			}	
 		}
-
 		sys.initialize(expandTree);
 		sys.evaluate();
 	}

@@ -82,13 +82,20 @@ namespace tgr {
 	}
 	void NeuralLayer::evaluate() {
 		int N = (int)neurons.size();
-		float totalWeight=0.0f;
 #pragma omp parallel for
 		for (int n = 0; n < N; n++) {
 			Neuron& neuron = neurons[n];
 			neuron.evaluate();
-			totalWeight += neuron.value;
 		}
+
+	}
+	aly::Vector1f NeuralLayer::toVector() const{
+		int N = (int)neurons.size();
+		Vector1f data(N);
+		for (int n = 0; n < N; n++) {
+			data[n] = neurons[n].value;
+		}
+		return data;
 	}
 	void NeuralLayer::addChild(const std::shared_ptr<NeuralLayer>& layer) {
 		children.push_back(layer);
@@ -187,9 +194,19 @@ namespace tgr {
 	Neuron& NeuralLayer::operator[](const size_t i) {
 		return neurons[i];
 	}
+	const Neuron* NeuralLayer::get(const int i, const int j) const {
+		return &neurons[aly::clamp(i, 0, width - 1) + aly::clamp(j, 0, height - 1) * width];
+	}
 	Neuron* NeuralLayer::get(const int i, const int j) {
 		return &neurons[aly::clamp(i, 0, width - 1) + aly::clamp(j, 0, height - 1) * width];
 	}
+	const Neuron* NeuralLayer::get(const size_t i) const {
+		return &neurons[i];
+	}
+	Neuron* NeuralLayer::get(const size_t i) {
+		return &neurons[i];
+	}
+
 	Neuron& NeuralLayer::operator()(const int i, const int j) {
 		return neurons[aly::clamp(i, 0, width - 1) + aly::clamp(j, 0, height - 1) * width];
 	}
@@ -237,6 +254,32 @@ namespace tgr {
 	}
 
 
+	void NeuralLayer::set(const Image1f& input) {
+		for (int j = 0; j < input.height; j++) {
+			for (int i = 0; i < input.width; i++) {
+				get(i, j)->value = input(i, j).x;
+			}
+		}
+	}
+	void NeuralLayer::set(const std::vector<float>& input) {
+		for (size_t i = 0; i < input.size(); i++) {
+			get(i)->value = input[i];
+		}
+	}
+	void NeuralLayer::get( Image1f& input) {
+		input.resize(width, height);
+		for (int j = 0; j < input.height; j++) {
+			for (int i = 0; i < input.width; i++) {
+				input(i, j).x = get(i, j)->value;
+			}
+		}
+	}
+	void NeuralLayer::get(std::vector<float>& input) {
+		input.resize(size());
+		for (size_t i = 0; i < input.size(); i++) {
+			input[i] = get(i)->value;
+		}
+	}
 
 	void NeuralLayer::initialize(const aly::ExpandTreePtr& tree, const aly::TreeItemPtr& parent)  {
 		TreeItemPtr item;

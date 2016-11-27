@@ -31,15 +31,14 @@ namespace tgr {
 		std::vector<NeuralLayer*> backpropLayers;
 		std::vector<NeuralLayerPtr> roots;
 		std::vector<NeuralLayerPtr> leafs;
-		std::map<Terminal,float> input;
-		std::map<Terminal,float> output;
 	public:
 		void evaluate();
 		void backpropagate();
-		void pushInput();
-		void pullOutput();
-		void accumulateError();
-		void resetError();
+		void accumulateChange(const NeuralLayerPtr& layer,const aly::Image1f& output);
+		void accumulateChange(const NeuralLayerPtr& layer, const std::vector<float>& output);
+		void computeChange(const NeuralLayerPtr& layer, const aly::Image1f& output);
+		void computeChange(const NeuralLayerPtr& layer, const std::vector<float>& output);
+		void resetChange(const NeuralLayerPtr& layer);
 		void initialize();
 		void train(float learningRate);
 		Neuron* getNeuron(const Terminal& t) const;
@@ -56,11 +55,11 @@ namespace tgr {
 		std::vector<NeuralLayerPtr>& getLayers() {
 			return layers;
 		}
-		void setInput(const Terminal& t, float value);
-		float getOutput(const Terminal& t);
-		Terminal addInput(int i,int j,const NeuralLayerPtr& layer, float value=0.0f);
-		Terminal addOutput(int i, int j, const NeuralLayerPtr& layer, float value=0.0f);
-
+		void setLayer(const NeuralLayerPtr& layer,const aly::Image1f& input);
+		void setLayer(const NeuralLayerPtr& layer, const std::vector<float>& input);
+		void getLayer(const NeuralLayerPtr& layer, aly::Image1f& input);
+		void getLayer(const NeuralLayerPtr& layer, std::vector<float>& input);
+		
 		SignalPtr add(Terminal source,Terminal target,float weight=0.0f);
 		void add(const std::shared_ptr<NeuralFilter>& filter);
 	

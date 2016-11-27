@@ -21,6 +21,7 @@
 #ifndef NEURON_H_
 #define NEURON_H_
 #include <AlloyMath.h>
+#include <AlloySparseMatrix.h>
 #include "NeuronFunction.h"
 #include <memory>
 #include <map>

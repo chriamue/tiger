@@ -27,40 +27,60 @@ namespace tgr {
 			layer->evaluate();
 		}
 	}
-	void NeuralSystem::pushInput(){
-		for (const std::pair<Terminal, float>& pr : input) {
-			Terminal t = pr.first;
-			NeuralLayer* layer = t.layer;
-			(*layer)(t.x, t.y).value = pr.second;
+
+	void NeuralSystem::accumulateChange(const NeuralLayerPtr& layer, const Image1f& output) {
+		for (int j = 0; j <output.height; j++) {
+			for (int i = 0; i < output.width; i++) {
+				Neuron* neuron = layer->get(i, j);
+				neuron->change+=output(i, j).x- neuron->value;
+			}
 		}
+	}
+	void NeuralSystem::accumulateChange(const NeuralLayerPtr& layer, const std::vector<float>& output) {
+		for (size_t i = 0; i < output.size(); i++) {
+			Neuron* neuron = layer->get(i);
+			neuron->change +=  output[i]- neuron->value;
+		}
+	}
+	void NeuralSystem::computeChange(const NeuralLayerPtr& layer, const Image1f& output) {
+		for (int j = 0; j <output.height; j++) {
+			for (int i = 0; i < output.width; i++) {
+				Neuron* neuron = layer->get(i, j);
+				neuron->change = output(i, j).x- neuron->value;
+			}
+		}
+	}
+	void NeuralSystem::computeChange(const NeuralLayerPtr& layer, const std::vector<float>& output) {
+		for (size_t i = 0; i < output.size(); i++) {
+			Neuron* neuron = layer->get(i);
+			neuron->change = output[i]- neuron->value;
+		}
+	}
+	void NeuralSystem::resetChange(const NeuralLayerPtr& layer) {
+		for (size_t i = 0; i < layer->size(); i++) {
+			Neuron* neuron = layer->get(i);
+			neuron->change = 0.0f;
+		}
+	}
+	void NeuralSystem::setLayer(const NeuralLayerPtr& layer, const Image1f& input) {
+		layer->set(input);
+	}
+	void NeuralSystem::setLayer(const NeuralLayerPtr& layer, const std::vector<float>& input) {
+		layer->set(input);
+	}
+	void NeuralSystem::getLayer(const NeuralLayerPtr& layer, Image1f& input) {
+		layer->get(input);
+	}
+	void NeuralSystem::getLayer(const NeuralLayerPtr& layer, std::vector<float>& input) {	
+		layer->get(input);
 	}
 
-	void NeuralSystem::pullOutput(){
-		for (auto iter = output.begin(); iter != output.end(); iter++) {
-			Terminal t = iter->first;
-			NeuralLayer* layer = t.layer;
-			iter->second = (*layer)(t.x, t.y).value;
-		}
-	}
-	void NeuralSystem::resetError() {
-		for (auto iter = output.begin(); iter != output.end(); iter++) {
-			Terminal t = iter->first;
-			NeuralLayer* layer = t.layer;
-			Neuron& neuron = (*layer)(t.x, t.y);
-			neuron.change =0.0f;
-		}
-	}
-	void NeuralSystem::accumulateError() {
-		for (auto iter = output.begin(); iter != output.end(); iter++) {
-			Terminal t = iter->first;
-			NeuralLayer* layer = t.layer;
-			Neuron& neuron = (*layer)(t.x, t.y);
-			neuron.change += iter->second-neuron.value;
-		}
-	}
+
 	void NeuralSystem::evaluate() {
 		for (NeuralLayerPtr layer:layers) {
 			layer->evaluate();
+			Vector1f data=layer->toVector();
+			std::cout << layer->getName() << ":: Sum: " << data.sum() << " Std. Dev: " << data.stdDev() << std::endl;
 		}
 	}
 	void NeuralSystem::initialize() {
@@ -130,24 +150,6 @@ namespace tgr {
 		for (NeuralLayerPtr n : roots) {
 			n->initialize(tree, root);
 		}
-	}
-	void NeuralSystem::setInput(const Terminal& t, float value) {
-		input[t] = value;
-	}
-	float NeuralSystem::getOutput(const Terminal& t) {
-		return output[t];
-	}
-	Terminal NeuralSystem::addInput(int i, int j, const NeuralLayerPtr& layer, float value) {
-		Terminal t(i, j,  layer.get());
-		input[t] = value;
-		Neuron& neuron = (*layer)(t.x, t.y);
-		neuron.setFunction(Constant(&neuron.value));
-		return t;
-	}
-	Terminal NeuralSystem::addOutput(int i, int j, const NeuralLayerPtr& layer, float value){
-		Terminal t(i, j, layer.get());
-		output[t] = value;
-		return t;
 	}
 
 

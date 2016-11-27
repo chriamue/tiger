@@ -93,19 +93,22 @@ namespace tgr {
 		}
 		return change;
 	}
+
 	float Neuron::evaluate() {
 		float sum1 = 0.0f, sum2;
-		for (SignalPtr sig : input) {
-			sum2 = 0.0f;
-			std::vector<Neuron*>& input = sig->get(this);
-			for (Neuron* inner : input) {
-				sum2 += inner->value;
-				
+		if (input.size() > 0) {
+			for (SignalPtr sig : input) {
+				sum2 = 0.0f;
+				std::vector<Neuron*>& input = sig->get(this);
+				for (Neuron* inner : input) {
+					sum2 += inner->value;
+
+				}
+				sum1 += sig->value*sum2 / (float(input.size()));
 			}
-			sum1 += sig->value*sum2/(float(input.size()));
+			change = 0.0f;
+			value = transform.forward(sum1);
 		}
-		change = 0.0f;
-		value = transform.forward(sum1);
 		return value;
 	}
 	void MakeConnection(Neuron* src,const std::shared_ptr<Signal>& signal, Neuron* dest) {

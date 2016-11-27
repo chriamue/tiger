@@ -113,20 +113,30 @@ namespace tgr {
 			float getAspect() const {
 				return width / (float)height;
 			}
+			const Neuron* get(int i, int j) const;
 			Neuron* get(int i, int j);
-			
 			void resize(int width, int height, int b=1);
 			const Neuron& operator[](const size_t i) const;
+			size_t size() const {
+				return neurons.size();
+			}
 			Neuron& operator[](const size_t i);
 			Neuron& operator()(const int i, const int j);
 			Neuron& operator()(const size_t i, const size_t j);
 			Neuron& operator()(const aly::int2 ij);
 			Neuron& operator()(const Terminal ij);
+			const Neuron* get(const size_t i) const;
+			Neuron* get(const size_t i);
 			const Neuron& operator()(const int i, const int j) const;
 			const Neuron& operator()(const size_t i, const size_t j) const;
 			const Neuron& operator()(const aly::int2 ij) const;
 			const Neuron& operator()(const Terminal ij) const;
 			void draw(aly::AlloyContext* context, const aly::box2px& bounds);
+			void set(const aly::Image1f& input);
+			void set(const std::vector<float>& input);
+			void get(aly::Image1f& input);
+			void get(std::vector<float>& input);
+			aly::Vector1f toVector() const;
 			NeuralLayer(TigerApp* app,int width=0,int height=0,int bins=1,bool bias=false, const NeuronFunction& func = ReLU());
 			NeuralLayer(TigerApp* app,const std::string& name,int width = 0, int height = 0, int bins = 1, bool bias = false, const NeuronFunction& func=ReLU());
 	};
