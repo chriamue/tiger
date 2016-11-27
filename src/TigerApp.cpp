@@ -33,8 +33,11 @@ TigerApp::TigerApp() :
 }
 void TigerApp::setSampleIndex(int idx){
 	sampleIndex.setValue(idx);
+	inputLayer->set(trainInputData[idx]);
 }
 void TigerApp::setSampleRange(int mn, int mx){
+	minIndex = mn;
+	maxIndex = mx;
 	tweenRegion->setMinValue(Integer(mn));
 	tweenRegion->setMaxValue(Integer(mx));
 	sampleIndex.setValue(aly::clamp(sampleIndex.toInteger(), mn, mx));
@@ -51,6 +54,10 @@ bool TigerApp::init(Composite& rootNode) {
 	BorderCompositePtr layout = BorderCompositePtr(new BorderComposite("UI Layout", CoordPX(0.0f, 0.0f), CoordPercent(1.0f, 1.0f), true));
 	ParameterPanePtr controls = ParameterPanePtr(new ParameterPane("Controls", CoordPX(0.0f, 0.0f), CoordPercent(1.0f, 1.0f)));
 	expandTree = ExpandTreePtr(new ExpandTree("Expand Tree", CoordPX(0.0f, 0.0f), CoordPercent(1.0f, 1.0f)));
+	expandTree->backgroundColor = MakeColor(getContext()->theme.DARKER);
+	expandTree->borderColor = MakeColor(getContext()->theme.DARK);
+	expandTree->borderWidth = UnitPX(1.0f);
+
 	BorderCompositePtr controlLayout = BorderCompositePtr(new BorderComposite("Control Layout", CoordPX(0.0f, 0.0f), CoordPercent(1.0f, 1.0f), true));
 	controls->onChange = [this](const std::string& label, const AnyInterface& value) {
 		parametersDirty = true;
@@ -83,16 +90,14 @@ bool TigerApp::init(Composite& rootNode) {
 	controls->addNumberField("Learning Delta", learningRateDelta, Float(0.0f), Float(1.0f));
 
 	toolbar->backgroundColor = MakeColor(getContext()->theme.DARKER);
-	sampleIndex = Integer(5);
-	minIndex = 0;
-	maxIndex=100;
+	sampleIndex = Integer(0);
 	const float numAspect = 2.0f;
 	const float entryHeight = 40.0f;
 	const float aspect = 6.0f;
-	TextLabelPtr labelRegion = TextLabelPtr(new TextLabel("Sample", CoordPX(0.0f, 0.0f), CoordPX(90.0f,entryHeight)));
+	TextLabelPtr labelRegion = TextLabelPtr(new TextLabel("Sample", CoordPX(0.0f, 0.0f), CoordPX(100.0f,entryHeight)));
 	
-	tweenRegion = HorizontalSliderPtr(new HorizontalSlider("sample tween", CoordPX(90.0f,0.0f), CoordPX(aspect * entryHeight, entryHeight),false,Integer(minIndex), Integer(maxIndex), sampleIndex));
-	ModifiableNumberPtr valueRegion = ModifiableNumberPtr(new ModifiableNumber("sample field", CoordPX(aspect * entryHeight+90.0f, 0.0f), CoordPX(numAspect * entryHeight, entryHeight), sampleIndex.type()));
+	tweenRegion = HorizontalSliderPtr(new HorizontalSlider("sample tween", CoordPX(100.0f,0.0f), CoordPX(aspect * entryHeight, entryHeight),false,Integer(minIndex), Integer(maxIndex), sampleIndex));
+	ModifiableNumberPtr valueRegion = ModifiableNumberPtr(new ModifiableNumber("sample field", CoordPX(aspect * entryHeight+100.0f, 0.0f), CoordPX(numAspect * entryHeight, entryHeight), sampleIndex.type()));
 	valueRegion->setAlignment(HorizontalAlignment::Center, VerticalAlignment::Middle);
 	valueRegion->fontSize = UnitPX(entryHeight - 8.0f);
 	labelRegion->setAlignment(HorizontalAlignment::Left, VerticalAlignment::Middle);
@@ -124,10 +129,10 @@ bool TigerApp::init(Composite& rootNode) {
 	toolbar->add(labelRegion);
 	toolbar->add(tweenRegion);
 	toolbar->add(valueRegion);
-
+	setSampleIndex(0);
 	controlLayout->backgroundColor = MakeColor(getContext()->theme.DARKER);
 	controlLayout->borderWidth = UnitPX(0.0f);
-	renderRegion = NeuralFlowPanePtr(new NeuralFlowPane("View", CoordPX(0.0f, 40.0f), CoordPerPX(1.0f, 1.0f, 0.0f, -120.0f)));
+	flowRegion = NeuralFlowPanePtr(new NeuralFlowPane("View", CoordPX(0.0f, 40.0f), CoordPerPX(1.0f, 1.0f, 0.0f, -120.0f)));
 	layout->setWest(controlLayout, UnitPX(400.0f));
 	layout->setEast(expandTree, UnitPX(400.0f));
 	controlLayout->setCenter(controls);
@@ -149,7 +154,7 @@ bool TigerApp::init(Composite& rootNode) {
 	timelineSlider->setVisible(true);
 	timelineSlider->setModifiable(false);
 	viewRegion->add(toolbar);
-	viewRegion->add(renderRegion);
+	viewRegion->add(flowRegion);
 	viewRegion->add(timelineSlider);
 
 	
@@ -251,13 +256,16 @@ bool TigerApp::init(Composite& rootNode) {
 	glass->add(dragIconPane);
 	glass->backgroundColor = MakeColor(0, 0, 0, 0);
 
-	renderRegion->backgroundColor = MakeColor(getContext()->theme.DARK);
-	renderRegion->borderColor = MakeColor(getContext()->theme.DARK);
-	renderRegion->borderWidth = UnitPX(1.0f);
+	flowRegion->backgroundColor = MakeColor(getContext()->theme.DARK);
+	flowRegion->borderColor = MakeColor(getContext()->theme.DARK);
+	flowRegion->borderWidth = UnitPX(1.0f);
 	Application::addListener(&rootNode);
 	rootNode.onEvent = [this](AlloyContext* context, const InputEvent& event) {
 		return onEventHandler(context, event);
 	};
+	getContext()->addDeferredTask([=]() {
+		flowRegion->add(inputLayer.get(), flowRegion->getBounds().center());
+	});
 	return true;
 }
 void TigerApp::setSelectedLayer(tgr::NeuralLayer* layer) {
@@ -271,7 +279,7 @@ bool TigerApp::onEventHandler(AlloyContext* context, const aly::InputEvent& e) {
 			dragIconPane->setVisible(true);
 			AlloyApplicationContext()->requestPack();
 		}
-		if (renderRegion->isVisible() && renderRegion->getBounds().contains(e.cursor)) {
+		if (flowRegion->isVisible() && flowRegion->getBounds().contains(e.cursor)) {
 			overTarget = true;
 		}
 		else {
@@ -283,7 +291,7 @@ bool TigerApp::onEventHandler(AlloyContext* context, const aly::InputEvent& e) {
 			dragIconPane->setVisible(false);
 			AlloyApplicationContext()->getGlassPane()->setVisible(false);
 			if (overTarget) {
-				renderRegion->add(selectedLayer, e.cursor);
+				flowRegion->add(selectedLayer, e.cursor);
 				AlloyApplicationContext()->requestPack();
 			}
 		}
@@ -293,17 +301,17 @@ bool TigerApp::onEventHandler(AlloyContext* context, const aly::InputEvent& e) {
 	return false;
 }
 void TigerApp::initialize() {
-	std::vector<aly::Image1f> images;
 	std::vector<uint8_t> labels;
-	parse_mnist_images(trainFile,images);
+	parse_mnist_images(trainFile,trainInputData);
 	parse_mnist_labels(trainLabelFile, labels);
-
+	minIndex = 0;
+	maxIndex = (int)trainInputData.size() - 1;
 	int K = 4;
-	if (images.size() > 0) {
-		const aly::Image1f& ref = images[RandomUniform(0,(int)images.size()-1)];
+	if (trainInputData.size() > 0) {
+		const Image1f& ref = trainInputData[0];
 		ConvolutionFilterPtr conv1(new ConvolutionFilter(this,ref.width, ref.height, 5, 6));
 		sys.add(conv1);
-		conv1->getInputLayer(0)->set(ref);
+		inputLayer =conv1->getInputLayer(0);
 		std::vector<NeuralLayerPtr> all;
 		for (int i = 0; i < conv1->getOutputSize(); i++) {
 			AveragePoolFilterPtr avg1(new AveragePoolFilter(this, conv1->getOutputLayer(i), 2));

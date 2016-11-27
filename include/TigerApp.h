@@ -39,7 +39,7 @@ protected:
 	aly::IconButtonPtr playButton, stopButton;
 	aly::ExpandTreePtr expandTree;
 	aly::DrawPtr dragIconPane;
-	aly::NeuralFlowPanePtr renderRegion;
+	aly::NeuralFlowPanePtr flowRegion;
 	aly::TimelineSliderPtr timelineSlider;
 	aly::Number epochs;
 	aly::Number sampleIndex;
@@ -52,6 +52,10 @@ protected:
 	std::string trainLabelFile;
 	std::string evalLabelFile;
 	aly::HorizontalSliderPtr tweenRegion;
+	std::vector<aly::Image1f> trainInputData;
+	std::vector<float> trainOutputData;
+	tgr::NeuralLayerPtr inputLayer;
+	tgr::NeuralLayerPtr outputLayer;
 	void initialize();
 public:
 	void setSampleIndex(int idx);
