@@ -43,7 +43,12 @@ void TigerApp::setSampleRange(int mn, int mx){
 	sampleIndex.setValue(aly::clamp(sampleIndex.toInteger(), mn, mx));
 	tweenRegion->setValue(sampleIndex.toDouble());
 }
-
+void TigerApp::evaluate() {
+	sys.evaluate();
+}
+void TigerApp::learn() {
+	sys.backpropagate();
+}
 bool TigerApp::init(Composite& rootNode) {
 
 	parametersDirty = true;
@@ -94,14 +99,15 @@ bool TigerApp::init(Composite& rootNode) {
 	const float numAspect = 2.0f;
 	const float entryHeight = 40.0f;
 	const float aspect = 6.0f;
-	TextLabelPtr labelRegion = TextLabelPtr(new TextLabel("Sample", CoordPX(0.0f, 0.0f), CoordPX(100.0f,entryHeight)));
+	TextLabelPtr labelRegion = TextLabelPtr(new TextLabel("Selection:", CoordPX(0.0f, 0.0f), CoordPX(95.0f,entryHeight)));
 	
-	tweenRegion = HorizontalSliderPtr(new HorizontalSlider("sample tween", CoordPX(100.0f,0.0f), CoordPX(aspect * entryHeight, entryHeight),false,Integer(minIndex), Integer(maxIndex), sampleIndex));
-	ModifiableNumberPtr valueRegion = ModifiableNumberPtr(new ModifiableNumber("sample field", CoordPX(aspect * entryHeight+100.0f, 0.0f), CoordPX(numAspect * entryHeight, entryHeight), sampleIndex.type()));
+	tweenRegion = HorizontalSliderPtr(new HorizontalSlider("sample tween", CoordPX(0.0f,0.0f), CoordPX(aspect * entryHeight, entryHeight),false,Integer(minIndex), Integer(maxIndex), sampleIndex));
+	ModifiableNumberPtr valueRegion = ModifiableNumberPtr(new ModifiableNumber("sample field", CoordPX(0.0f, 0.0f), CoordPX(numAspect * entryHeight, entryHeight), sampleIndex.type()));
 	valueRegion->setAlignment(HorizontalAlignment::Center, VerticalAlignment::Middle);
-	valueRegion->fontSize = UnitPX(entryHeight - 8.0f);
+	valueRegion->fontSize = UnitPX(30.0f);
+	labelRegion->textColor = MakeColor(AlloyDefaultContext()->theme.LIGHTER);
 	labelRegion->setAlignment(HorizontalAlignment::Left, VerticalAlignment::Middle);
-	labelRegion->fontSize=UnitPX(entryHeight - 8.0f);
+	labelRegion->fontSize=UnitPX(30.0f);
 	valueRegion->setNumberValue(sampleIndex);
 	valueRegion->onTextEntered = [this](NumberField* field) {
 		int val = field->getValue().toInteger();
@@ -120,15 +126,39 @@ bool TigerApp::init(Composite& rootNode) {
 		valueRegion->setNumberValue(value);
 		setSampleIndex(value.toInteger());
 	});
+	TextLinkPtr evaluateButton = TextLinkPtr(new TextLink("Evaluate Network", CoordPX(0.0f, 0.0f), CoordPX(205.0f, entryHeight)));
+	evaluateButton->fontSize = UnitPX(30.0f);
+	evaluateButton->setAlignment(HorizontalAlignment::Center, VerticalAlignment::Middle);
+	evaluateButton->textColor = MakeColor(HSVtoColor(HSV(0.2f,0.4f,1.0f)));
+	evaluateButton->onMouseDown = [this](AlloyContext* context, const InputEvent& e) {
+		if (e.button == GLFW_MOUSE_BUTTON_LEFT) {
+			evaluate();
+			return true;
+		}
+	};
+
+	TextLinkPtr learnButton = TextLinkPtr(new TextLink("Learning Step", CoordPX(0.0f, 0.0f), CoordPX(170.0f, entryHeight)));
+	learnButton->fontSize = UnitPX(30.0f);
+	learnButton->setAlignment(HorizontalAlignment::Center, VerticalAlignment::Middle);
+	learnButton->textColor = MakeColor(HSVtoColor(HSV(0.2f, 0.4f, 1.0f)));
+	learnButton->onMouseDown = [this](AlloyContext* context, const InputEvent& e) {
+		if (e.button == GLFW_MOUSE_BUTTON_LEFT) {
+			learn();
+			return true;
+		}
+	};
 	
 	valueRegion->textColor = MakeColor(AlloyDefaultContext()->theme.LIGHTER);
 	valueRegion->backgroundColor = MakeColor(0, 0, 0, 0);
 	valueRegion->borderWidth = UnitPX(0.0f);
 	tweenRegion->backgroundColor = MakeColor(0, 0, 0, 0);
 	tweenRegion->borderWidth = UnitPX(0.0f);
+	toolbar->setOrientation(Orientation::Horizontal, pixel2(0.0f), pixel2(0.0f));
 	toolbar->add(labelRegion);
 	toolbar->add(tweenRegion);
 	toolbar->add(valueRegion);
+	toolbar->add(evaluateButton);
+	toolbar->add(learnButton);
 	setSampleIndex(0);
 	controlLayout->backgroundColor = MakeColor(getContext()->theme.DARKER);
 	controlLayout->borderWidth = UnitPX(0.0f);

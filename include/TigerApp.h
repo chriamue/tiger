@@ -64,6 +64,8 @@ public:
 	TigerApp();
 	virtual void draw(aly::AlloyContext* context) override;
 	bool init(aly::Composite& rootNode);
+	void evaluate();
+	void learn();
 	bool onEventHandler(aly::AlloyContext* context, const aly::InputEvent& e);
 	void setSelectedLayer(tgr::NeuralLayer* layer);
 };
