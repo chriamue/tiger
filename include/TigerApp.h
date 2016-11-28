@@ -53,7 +53,7 @@ protected:
 	std::string evalLabelFile;
 	aly::HorizontalSliderPtr tweenRegion;
 	std::vector<aly::Image1f> trainInputData;
-	std::vector<float> trainOutputData;
+	std::vector<uint8_t> trainOutputData;
 	tgr::NeuralLayerPtr inputLayer;
 	tgr::NeuralLayerPtr outputLayer;
 	void initialize();
@@ -65,7 +65,7 @@ public:
 	virtual void draw(aly::AlloyContext* context) override;
 	bool init(aly::Composite& rootNode);
 	void evaluate();
-	void learn();
+	void train(const std::vector<int>& sampleIndexes);
 	bool onEventHandler(aly::AlloyContext* context, const aly::InputEvent& e);
 	void setSelectedLayer(tgr::NeuralLayer* layer);
 };

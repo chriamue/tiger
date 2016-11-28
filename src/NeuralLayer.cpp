@@ -32,9 +32,8 @@ namespace tgr {
 		}
 		return ss.str();
 	}
-	NeuralLayer::NeuralLayer(TigerApp* app,int width, int height, int bins, bool bias, const NeuronFunction& func) :app(app),width(width), height(height), bins(bins),bias(bias),id(-1),visited(false) {
+	NeuralLayer::NeuralLayer(TigerApp* app,int width, int height, int bins, bool bias, const NeuronFunction& func) :app(app),width(width), height(height), bins(bins),bias(bias),id(-1),visited(false),trainable(true),residualError(0.0) {
 		neurons.resize(width*height*bins, Neuron(func));
-
 		if (bias) {
 			biasNeurons.resize(width*height*bins, Bias());
 			for (size_t idx = 0; idx < neurons.size(); idx++) {
@@ -96,6 +95,20 @@ namespace tgr {
 			data[n] = neurons[n].value;
 		}
 		return data;
+	}
+	void NeuralLayer::update() {
+		signals.clear();
+		for (Neuron& n : neurons) {
+			signals.insert(signals.end(), n.getInput().begin(), n.getInput().end());
+		}
+	}
+	bool NeuralLayer::optimize() {
+		if (optimizer.get() != nullptr) {
+			return optimizer->optimize(signals);
+		}
+		else {
+			return false;
+		}
 	}
 	void NeuralLayer::addChild(const std::shared_ptr<NeuralLayer>& layer) {
 		children.push_back(layer);
@@ -284,18 +297,24 @@ namespace tgr {
 	void NeuralLayer::initialize(const aly::ExpandTreePtr& tree, const aly::TreeItemPtr& parent)  {
 		TreeItemPtr item;
 		parent->addItem(item=TreeItemPtr(new TreeItem(getName(), 0x0f20e)));
-		const float fontSize = 24;
+		const float fontSize = 20;
+		const int lines = 2;
 		item->addItem(LeafItemPtr(new LeafItem([this,fontSize](AlloyContext* context, const box2px& bounds) {
 			NVGcontext* nvg = context->nvgContext;
 			float yoff = 2 + bounds.position.y;
 			nvgFontSize(nvg, fontSize);
 			nvgFontFaceId(nvg, context->getFontHandle(FontType::Normal));
 			std::string label;
-			label = MakeString() << "Dimensions: " << width << " x " << height <<" x "<<bins;
+
+			label = MakeString() << "In Layers: " << getDependencies().size() <<" Out Layers: "<<getChildren().size();
 			drawText(nvg, bounds.position.x, yoff, label.c_str(), FontStyle::Normal, context->theme.LIGHTER);
 			yoff += fontSize + 2;
 
-		}, pixel2(180, (fontSize + 2) + 2))));
+			label = MakeString() << "Size: " << width << " x " << height << " x " << bins;
+			drawText(nvg, bounds.position.x, yoff, label.c_str(), FontStyle::Normal, context->theme.LIGHTER);
+			yoff += fontSize + 2;
+
+		}, pixel2(180, lines*(fontSize + 2) + 2))));
 		item->onSelect = [this](TreeItem* item, const InputEvent& e) {
 			app->setSelectedLayer(this);
 			app->onEventHandler(AlloyDefaultContext().get(),e);

@@ -23,10 +23,14 @@ namespace tgr {
 	class ConvolutionFilter :public NeuralFilter {
 	protected:
 		int kernelSize;
+		std::vector<std::pair<int,int>> connectionMap;
 	public:
 		ConvolutionFilter(TigerApp* app,  int width, int height, int kernelSize, int features);
 		ConvolutionFilter(TigerApp* app, const NeuralLayerPtr& inputLayer, int kernelSize, int features);
 		ConvolutionFilter(TigerApp* app, const std::vector<NeuralLayerPtr>& inputLayers, int kernelSize, int features);
+		void setConnectionMap(const std::vector<std::pair<int, int>>& mapping) {
+			connectionMap = mapping;
+		}
 		virtual void initialize(NeuralSystem& sys) override;
 	};
 	typedef std::shared_ptr<ConvolutionFilter> ConvolutionFilterPtr;

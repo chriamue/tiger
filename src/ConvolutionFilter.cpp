@@ -23,11 +23,11 @@
 
 using namespace aly;
 namespace tgr {
-	ConvolutionFilter::ConvolutionFilter(TigerApp* app, int width, int height, int kernelSize, int features) :NeuralFilter(app,"Feature"), kernelSize(kernelSize) {
+	ConvolutionFilter::ConvolutionFilter(TigerApp* app, int width, int height, int kernelSize, int features) :NeuralFilter(app, "Feature"), kernelSize(kernelSize) {
 		if (kernelSize % 2 == 0) {
 			throw std::runtime_error("Kernel size must be odd.");
 		}
-		inputLayers.push_back(NeuralLayerPtr(new NeuralLayer(app,"Input Layer", width, height)));
+		inputLayers.push_back(NeuralLayerPtr(new NeuralLayer(app, "Input Layer", width, height)));
 		outputLayers.resize(features);
 	}
 	ConvolutionFilter::ConvolutionFilter(TigerApp* app, const NeuralLayerPtr& layer, int kernelSize, int features) :NeuralFilter(app, "Feature"), kernelSize(kernelSize) {
@@ -46,7 +46,7 @@ namespace tgr {
 	}
 	void ConvolutionFilter::initialize(NeuralSystem& system) {
 		int pad = kernelSize / 2;
-		
+
 		int width = inputLayers[0]->width;
 		int height = inputLayers[0]->height;
 		int ow = width - 2 * pad;
@@ -54,27 +54,62 @@ namespace tgr {
 		std::vector<SignalPtr> signals(kernelSize*kernelSize);
 		int index = 0;
 
-		for (int f = 0; f < outputLayers.size(); f++) {
-			NeuralLayerPtr outputLayer = NeuralLayerPtr(new NeuralLayer(app, MakeString() << name<< " [" << f << "]", ow, oh));
-			outputLayers[f] = outputLayer;
-			outputLayer->setFunction(Tanh());
+		if (connectionMap.size() == 0) {
+			for (int f = 0; f < outputLayers.size(); f++) {
+				NeuralLayerPtr outputLayer = NeuralLayerPtr(new NeuralLayer(app, MakeString() << name << " [" << f << "]", ow, oh));
+				outputLayers[f] = outputLayer;
+				outputLayer->setFunction(Tanh());
 
-			index = 0;
-			for (int jj = 0; jj < kernelSize; jj++) {
-				for (int ii = 0; ii < kernelSize; ii++) {
-					SignalPtr sig = SignalPtr(new Signal(RandomUniform(0.0f, 1.0f)));
-					signals[index++] = sig;
+				index = 0;
+				for (int jj = 0; jj < kernelSize; jj++) {
+					for (int ii = 0; ii < kernelSize; ii++) {
+						SignalPtr sig = SignalPtr(new Signal(RandomUniform(0.0f, 1.0f)));
+						signals[index++] = sig;
+					}
+				}
+				for (NeuralLayerPtr inputLayer : inputLayers) {
+					inputLayer->addChild(outputLayer);
+					for (int j = 0; j < oh; j++) {
+						for (int i = 0; i < ow; i++) {
+							index = 0;
+							for (int jj = 0; jj < kernelSize; jj++) {
+								for (int ii = 0; ii < kernelSize; ii++) {
+									MakeConnection(inputLayer->get(i + ii, j + jj), signals[index++], outputLayer->get(i, j));
+								}
+							}
+						}
+					}
 				}
 			}
-
-			for (NeuralLayerPtr inputLayer : inputLayers) {
+		}
+		else {
+			for (auto pr : connectionMap) {
+				int inIdx = pr.first;
+				int outIdx = pr.second;
+				NeuralLayerPtr outputLayer;
+				if (outputLayers[outIdx].get() == nullptr) {
+					outputLayer = NeuralLayerPtr(new NeuralLayer(app, MakeString() << name << " [" << outIdx << "]", ow, oh));
+					outputLayers[outIdx] = outputLayer;
+					outputLayer->setFunction(Tanh());
+				}
+				else {
+					outputLayer = outputLayers[outIdx];
+				}
+				index = 0;
+				for (int jj = 0; jj < kernelSize; jj++) {
+					for (int ii = 0; ii < kernelSize; ii++) {
+						SignalPtr sig = SignalPtr(new Signal(RandomUniform(0.0f, 1.0f)));
+						signals[index++] = sig;
+					}
+				}
+				NeuralLayerPtr inputLayer = inputLayers[inIdx];
 				inputLayer->addChild(outputLayer);
 				for (int j = 0; j < oh; j++) {
 					for (int i = 0; i < ow; i++) {
 						index = 0;
 						for (int jj = 0; jj < kernelSize; jj++) {
 							for (int ii = 0; ii < kernelSize; ii++) {
-								MakeConnection(inputLayer->get(i+ii, j+jj),signals[index++], outputLayer->get(i, j));
+								MakeConnection(inputLayer->get(i + ii, j + jj), signals[index++], outputLayer->get(i, j));
 							}
 						}
 					}

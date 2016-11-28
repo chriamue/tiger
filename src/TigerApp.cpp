@@ -25,9 +25,22 @@
 #include "ConvolutionFilter.h"
 #include "AveragePoolFilter.h"
 #include "AlloyDrawUtil.h"
+#include "FullyConnectedFilter.h"
 #include "MNIST.h"
 using namespace aly;
 using namespace tgr;
+#define O true
+#define X false
+static const bool MNIST_TABLE[] = {
+	O, X, X, X, O, O, O, X, X, O, O, O, O, X, O, O,
+	O, O, X, X, X, O, O, O, X, X, O, O, O, O, X, O,
+	O, O, O, X, X, X, O, O, O, X, X, O, X, O, O, O,
+	X, O, O, O, X, X, O, O, O, O, X, X, O, X, O, O,
+	X, X, O, O, O, X, X, O, O, O, O, X, O, O, X, O,
+	X, X, X, O, O, O, X, X, O, O, O, O, X, O, O, O
+};
+#undef O
+#undef X
 TigerApp::TigerApp() :
 	Application(1800, 800, "Tiger Machine",true), selectedLayer(nullptr){
 }
@@ -45,9 +58,6 @@ void TigerApp::setSampleRange(int mn, int mx){
 }
 void TigerApp::evaluate() {
 	sys.evaluate();
-}
-void TigerApp::learn() {
-	sys.backpropagate();
 }
 bool TigerApp::init(Composite& rootNode) {
 
@@ -99,7 +109,7 @@ bool TigerApp::init(Composite& rootNode) {
 	const float numAspect = 2.0f;
 	const float entryHeight = 40.0f;
 	const float aspect = 6.0f;
-	TextLabelPtr labelRegion = TextLabelPtr(new TextLabel("Selection:", CoordPX(0.0f, 0.0f), CoordPX(95.0f,entryHeight)));
+	TextLabelPtr labelRegion = TextLabelPtr(new TextLabel("Selection:", CoordPX(0.0f, 0.0f), CoordPX(105.0f,entryHeight)));
 	
 	tweenRegion = HorizontalSliderPtr(new HorizontalSlider("sample tween", CoordPX(0.0f,0.0f), CoordPX(aspect * entryHeight, entryHeight),false,Integer(minIndex), Integer(maxIndex), sampleIndex));
 	ModifiableNumberPtr valueRegion = ModifiableNumberPtr(new ModifiableNumber("sample field", CoordPX(0.0f, 0.0f), CoordPX(numAspect * entryHeight, entryHeight), sampleIndex.type()));
@@ -143,9 +153,10 @@ bool TigerApp::init(Composite& rootNode) {
 	learnButton->textColor = MakeColor(HSVtoColor(HSV(0.2f, 0.4f, 1.0f)));
 	learnButton->onMouseDown = [this](AlloyContext* context, const InputEvent& e) {
 		if (e.button == GLFW_MOUSE_BUTTON_LEFT) {
-			learn();
+			train(std::vector<int>{sampleIndex.toInteger()});
 			return true;
 		}
+		return false;
 	};
 	
 	valueRegion->textColor = MakeColor(AlloyDefaultContext()->theme.LIGHTER);
@@ -301,6 +312,32 @@ bool TigerApp::init(Composite& rootNode) {
 void TigerApp::setSelectedLayer(tgr::NeuralLayer* layer) {
 	selectedLayer = layer;
 }
+void TigerApp::train(const std::vector<int>& sampleIndexes) {
+	NeuralOptimizationPtr optimizer;
+	int iterations = 10;
+		for (auto layer : sys.getLayers()) {
+			if (layer->isTrainable()) {
+				layer->setOptimizer(optimizer);
+			}
+		}
+		std::vector<float> outputData(10);//10 digits for MNIST
+		for (int iter = 0; iter < iterations; iter++) {
+			sys.resetChange(outputLayer);
+			for (int idx : sampleIndexes) {
+				aly::Image1f& inputData=trainInputData[idx];
+				int out=trainOutputData[idx];
+				for (int i = 0; i < outputData.size(); i++) {
+					outputData[i] = (out == i) ? 1.0f : 0.0f;
+				}
+				inputLayer->set(inputData);
+				outputLayer->set(outputData);
+				sys.evaluate();
+				sys.accumulateChange(outputLayer,outputData);
+			}
+			sys.backpropagate();
+			sys.optimize();
+		}
+}
 bool TigerApp::onEventHandler(AlloyContext* context, const aly::InputEvent& e) {
 	if (selectedLayer != nullptr) {
 		dragIconPane->setDragOffset(e.cursor, pixel2(20.0f, 20.0f));
@@ -331,9 +368,8 @@ bool TigerApp::onEventHandler(AlloyContext* context, const aly::InputEvent& e) {
 	return false;
 }
 void TigerApp::initialize() {
-	std::vector<uint8_t> labels;
 	parse_mnist_images(trainFile,trainInputData);
-	parse_mnist_labels(trainLabelFile, labels);
+	parse_mnist_labels(trainLabelFile, trainOutputData);
 	minIndex = 0;
 	maxIndex = (int)trainInputData.size() - 1;
 	int K = 4;
@@ -349,14 +385,22 @@ void TigerApp::initialize() {
 			sys.add(avg1);
 			all.push_back(avg1->getOutputLayer(0));
 		}
-		for (int i = 0; i < all.size(); i++) {
-			std::vector<NeuralLayerPtr> in;
-			for (int k = 0; k < K; k++) {
-				in.push_back(all[(k + i) % all.size()]);
+	
+		ConvolutionFilterPtr conv2(new ConvolutionFilter(this, all, 5, 16));
+		std::vector<std::pair<int, int>> connectionTable;
+		for (int ii = 0; ii < 6; ii++) {
+			for (int jj = 0; jj < 16; jj++) {
+				if (MNIST_TABLE[jj + ii * 16]) {
+					connectionTable.push_back(std::pair<int,int>(ii, jj));
+				}
 			}
-			ConvolutionFilterPtr conv2(new ConvolutionFilter(this, in, 3, 4));
-			conv2->setName(MakeString() << "Feature [" << i << "]");
-			sys.add(conv2);
+		}
+		conv2->setConnectionMap(connectionTable);
+		sys.add(conv2);
+		/*
+		for (int i = 0; i < all.size(); i++) {
+
+
 			
 			for (int i = 0; i < conv2->getOutputSize(); i++) {
 				AveragePoolFilterPtr avg2(new AveragePoolFilter(this, conv2->getOutputLayer(i), 2));
@@ -364,6 +408,8 @@ void TigerApp::initialize() {
 				sys.add(avg2);
 			}	
 		}
+		*/
+		//FullyConnectedFilterPtr indicatorFilter(new FullyConnectedFilter(this,"Output Layer",,10,1));
 		sys.initialize(expandTree);
 		sys.evaluate();
 	}

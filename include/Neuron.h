@@ -102,7 +102,18 @@ namespace tgr {
 		}
 		float evaluate();
 		float backpropagate();
-
+		const std::vector<SignalPtr>& getInput() const {
+			return input;
+		}
+		const std::vector<SignalPtr>& getOutput() const {
+			return output;
+		}
+		std::vector<SignalPtr>& getInput(){
+			return input;
+		}
+		std::vector<SignalPtr>& getOutput() {
+			return output;
+		}
 		const SignalPtr& getInput(size_t idx) const {
 			return input[idx];
 		}

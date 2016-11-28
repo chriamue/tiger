@@ -26,6 +26,8 @@
 #include <AlloyWidget.h>
 #include "Neuron.h"
 #include "NeuralLayerRegion.h"
+#include "NeuralOptimization.h"
+
 #include <vector>
 #include <set>
 class TigerApp;
@@ -39,11 +41,16 @@ namespace tgr {
 		protected:
 			std::vector<Neuron> neurons;
 			std::vector<Neuron> biasNeurons;
+			std::vector<std::shared_ptr<Signal>> signals;
 			std::vector<std::shared_ptr<NeuralLayer>> children;
 			std::vector<NeuralLayer*> dependencies;
+			std::shared_ptr<NeuralOptimization> optimizer;
 			std::string name;
+			
 			bool bias;
 			bool visited;
+			bool trainable;
+			double residualError;
 			aly::NeuralLayerRegionPtr layerRegion;
 			TigerApp* app;
 		public:
@@ -61,12 +68,33 @@ namespace tgr {
 			iterator end() {
 				return neurons.end();
 			}
+			void setResidual(float r) {
+				residualError = r;
+			}
+			double getResidual() const {
+				return residualError;
+			}
+			double accumulateResidual(double r) {
+				residualError += r;
+				return residualError;
+			}
 			bool isVisited() const {
 				return visited;
+			}
+			bool isTrainable() const {
+				return trainable;
+			}
+			void setTrainable(bool t) {
+				trainable = t;
 			}
 			void setVisited(bool v) {
 				visited = v;
 			}
+			void setOptimizer(const std::shared_ptr<NeuralOptimization>& opt) {
+				optimizer = opt;
+			}
+			bool optimize();
+			void update();
 			void evaluate();
 			void backpropagate();
 			aly::NeuralLayerRegionPtr getRegion();
@@ -74,6 +102,12 @@ namespace tgr {
 				return (layerRegion.get() != nullptr&&layerRegion->parent!=nullptr);
 			}
 			bool isVisible() const; 
+			std::vector<std::shared_ptr<Signal>>& getSignals() {
+				return signals;
+			}
+			const std::vector<std::shared_ptr<Signal>>& getSignals() const {
+				return signals;
+			}
 			std::vector<SignalPtr> getBiasSignals() const;
 			std::vector<std::shared_ptr<NeuralLayer>>& getChildren() {
 				return children;

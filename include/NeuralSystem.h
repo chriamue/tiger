@@ -34,13 +34,13 @@ namespace tgr {
 	public:
 		void evaluate();
 		void backpropagate();
-		void accumulateChange(const NeuralLayerPtr& layer,const aly::Image1f& output);
-		void accumulateChange(const NeuralLayerPtr& layer, const std::vector<float>& output);
+		bool optimize();
+		double accumulateChange(const NeuralLayerPtr& layer,const aly::Image1f& output);
+		double accumulateChange(const NeuralLayerPtr& layer, const std::vector<float>& output);
 		void computeChange(const NeuralLayerPtr& layer, const aly::Image1f& output);
 		void computeChange(const NeuralLayerPtr& layer, const std::vector<float>& output);
 		void resetChange(const NeuralLayerPtr& layer);
 		void initialize();
-		void train(float learningRate);
 		Neuron* getNeuron(const Terminal& t) const;
 		void initialize(const aly::ExpandTreePtr& tree);
 		const std::vector<NeuralLayerPtr>& getRoots() const {
@@ -59,10 +59,7 @@ namespace tgr {
 		void setLayer(const NeuralLayerPtr& layer, const std::vector<float>& input);
 		void getLayer(const NeuralLayerPtr& layer, aly::Image1f& input);
 		void getLayer(const NeuralLayerPtr& layer, std::vector<float>& input);
-		
-		SignalPtr add(Terminal source,Terminal target,float weight=0.0f);
 		void add(const std::shared_ptr<NeuralFilter>& filter);
-	
 	};
 }
 #endif

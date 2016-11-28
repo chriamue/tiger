@@ -27,20 +27,38 @@ namespace tgr {
 			layer->evaluate();
 		}
 	}
-
-	void NeuralSystem::accumulateChange(const NeuralLayerPtr& layer, const Image1f& output) {
+	bool NeuralSystem::optimize() {
+		bool ret = false;
+		for (NeuralLayerPtr layer : layers) {
+			ret|=layer->optimize();
+		}
+		return ret;
+	}
+	double NeuralSystem::accumulateChange(const NeuralLayerPtr& layer, const Image1f& output) {
+		double residual=0;
 		for (int j = 0; j <output.height; j++) {
 			for (int i = 0; i < output.width; i++) {
 				Neuron* neuron = layer->get(i, j);
-				neuron->change+=output(i, j).x- neuron->value;
+				float err = output(i, j).x - neuron->value;
+				neuron->change+=err;
+				residual += err*err;
 			}
 		}
+		residual /= double(output.size());
+		layer->accumulateResidual(residual);
+		return layer->getResidual();
 	}
-	void NeuralSystem::accumulateChange(const NeuralLayerPtr& layer, const std::vector<float>& output) {
+	double NeuralSystem::accumulateChange(const NeuralLayerPtr& layer, const std::vector<float>& output) {
+		double residual = 0;
 		for (size_t i = 0; i < output.size(); i++) {
 			Neuron* neuron = layer->get(i);
-			neuron->change +=  output[i]- neuron->value;
+			float err = output[i] - neuron->value;
+			neuron->change +=  err;
+			residual += err*err;
 		}
+		residual /= double(output.size());
+		layer->accumulateResidual(residual);
+		return layer->getResidual();
 	}
 	void NeuralSystem::computeChange(const NeuralLayerPtr& layer, const Image1f& output) {
 		for (int j = 0; j <output.height; j++) {
@@ -57,6 +75,7 @@ namespace tgr {
 		}
 	}
 	void NeuralSystem::resetChange(const NeuralLayerPtr& layer) {
+		layer->setResidual(0.0);
 		for (size_t i = 0; i < layer->size(); i++) {
 			Neuron* neuron = layer->get(i);
 			neuron->change = 0.0f;
@@ -89,6 +108,8 @@ namespace tgr {
 		std::list<NeuralLayerPtr> q;
 		std::list<NeuralLayer*> q2;
 		for (NeuralLayerPtr layer : layers) {
+			layer->update();
+			
 			layer->setVisited(false);
 			if (layer->isRoot()) {
 				roots.push_back(layer);
@@ -135,6 +156,7 @@ namespace tgr {
 			}
 		}
 	}
+
 	void NeuralSystem::add(const std::shared_ptr<NeuralFilter>& filter) {
 		filter->initialize(*this);
 		auto inputs= filter->getInputLayers();
@@ -155,16 +177,5 @@ namespace tgr {
 
 	Neuron* NeuralSystem::getNeuron(const Terminal& t) const {
 		return t.layer->get(t.x, t.y);
-	}
-	SignalPtr NeuralSystem::add(Terminal source, Terminal target,float weight) {
-		SignalPtr signal = std::shared_ptr<Signal>(new Signal(weight));
-		Neuron* dest=getNeuron(target);
-		Neuron* src = getNeuron(source);
-		MakeConnection(src, signal,dest);
-
-		return signal;
-	}
-	void NeuralSystem::train(float learningRate) {
-
 	}
 }
