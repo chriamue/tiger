@@ -359,6 +359,7 @@ bool TigerApp::onEventHandler(AlloyContext* context, const aly::InputEvent& e) {
 			AlloyApplicationContext()->getGlassPane()->setVisible(false);
 			if (overTarget) {
 				flowRegion->add(selectedLayer, e.cursor);
+				flowRegion->update();
 				AlloyApplicationContext()->requestPack();
 			}
 		}

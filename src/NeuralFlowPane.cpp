@@ -21,6 +21,7 @@
 #include "NeuralFlowPane.h"
 #include "AlloyApplication.h"
 #include "AlloyDrawUtil.h"
+using namespace tgr;
 namespace aly{
 
 	bool NeuralConnection::operator ==(const std::shared_ptr<NeuralConnection> & r) const {
@@ -223,6 +224,18 @@ namespace aly{
 			nvgLineJoin(nvg, NVG_MITER);
 		}
 	}
+	void NeuralFlowPane::update() {
+		for (NeuralLayerRegionPtr layerRegion : layerRegions) {
+			NeuralLayer* layer = layerRegion->getLayer();
+			bool visible = false;
+			for (auto child : layer->getChildren()) {
+				if (child->isVisible()) {
+					visible = true;
+				}
+			}
+			layerRegion->setExpandable(!visible&&layer->getChildren().size()>0);
+		}
+	}
 	void NeuralFlowPane::add(tgr::NeuralLayer* layer,const pixel2& cursor) {
 		AlloyContext* context = AlloyApplicationContext().get();
 		if (!layer->hasRegion()) {
@@ -244,22 +257,17 @@ namespace aly{
 				}
 			}
 			router.add(std::dynamic_pointer_cast<dataflow::AvoidanceNode>(layerRegion));
-
 			layerRegion->setVisible(true);
 			layerRegions.push_back(layerRegion);
 		} else {
 			NeuralLayerRegionPtr layerRegion = layer->getRegion();
 			layerRegion->setDragOffset(float2(0.0f, 0.0f));
-			float2 dims = float2(240.0f*layer->getAspect(), 240.0f) + NeuralLayerRegion::getPadding();
-			layerRegion->position = CoordPerPX(0.5f, 0.5f, -dims.x*0.5f, -dims.y*0.5f);
-			layerRegion->dimensions = CoordPX(dims.x, dims.y);
 			layerRegion->reset();
 			layerRegion->setVisible(true);
 			AlloyContext* context = AlloyApplicationContext().get();
 			pixel2 offset = getDrawOffset() + getBoundsPosition();
-			dims = layerRegion->dimensions.toPixels(float2(context->screenDimensions()), context->dpmm, context->pixelRatio);
+			pixel2 dims = layerRegion->dimensions.toPixels(float2(context->screenDimensions()), context->dpmm, context->pixelRatio);
 			layerRegion->position = CoordPX(aly::round(cursor - offset - 0.5f*dims));
 		}
-		
 	}
 }

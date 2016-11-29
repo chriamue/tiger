@@ -262,6 +262,35 @@ namespace tgr {
 		if (layerRegion.get() == nullptr) {
 			float2 dims=float2(240.0f*getAspect(),240.0f)+ NeuralLayerRegion::getPadding();
 			layerRegion = NeuralLayerRegionPtr(new NeuralLayerRegion(name,this, CoordPerPX(0.5f, 0.5f, -dims.x*0.5f, -dims.y*0.5f), CoordPX(dims.x, dims.y)));
+			if (hasChildren()) {
+				layerRegion->setExpandable(true);
+				for (auto child : getChildren()) {
+					child->getRegion();
+				}
+			}
+			layerRegion->onHide = [this]() {
+				NeuralFlowPanePtr flowPane = app->getFlowPane();
+				flowPane->update();
+			};
+			layerRegion->onExpand = [this]() {
+				box2px bounds = layerRegion->getBounds();
+				NeuralFlowPanePtr flowPane = app->getFlowPane();
+				int idx = 0;
+				int N = int(getChildren().size());
+				float layoutWidth = 0.0f;
+				float width = 120.0f;
+				float offset = 0.5f*width;
+				layoutWidth = (10.0f + width)*N;
+				for (auto child : getChildren()) {
+					float height=child->getRegion()->setSize(width);
+					float2 pos = pixel2(
+						bounds.position.x + bounds.dimensions.x*0.5f - layoutWidth*0.5f+offset,
+						bounds.position.y + bounds.dimensions.y + 0.5f*height + 10.0f);
+					flowPane->add(child.get(), pos);
+					offset += width + 10.0f;
+				}
+				flowPane->update();
+			};
 		}
 		return layerRegion;
 	}

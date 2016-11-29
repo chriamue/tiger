@@ -78,6 +78,9 @@ namespace tgr {
 				residualError += r;
 				return residualError;
 			}
+			bool hasChildren() const {
+				return (children.size() != 0);
+			}
 			bool isVisited() const {
 				return visited;
 			}

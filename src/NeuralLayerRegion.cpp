@@ -28,7 +28,7 @@ namespace aly {
 	box2px NeuralLayerRegion::getObstacleBounds() const {
 		box2px box = getBounds(false);
 		box.position.y += 26.0f;
-		box.dimensions.y -= 26.0f;
+		box.dimensions.y -= 26.0+30.0f;
 		return box;
 	}
 	NeuralLayerRegion::NeuralLayerRegion(const std::string& name, tgr::NeuralLayer* layer,
@@ -42,7 +42,7 @@ namespace aly {
 		setDragEnabled(true);
 		setClampDragToParentBounds(false);
 		AlloyContext* context = AlloyApplicationContext().get();
-		std::shared_ptr<IconButton> cancelButton = std::shared_ptr<IconButton>(new IconButton(0xf070, CoordPX(0.0f, 2.0f), CoordPX(24, 24), IconType::CIRCLE));
+		cancelButton = std::shared_ptr<IconButton>(new IconButton(0xf070, CoordPX(0.0f, 2.0f), CoordPX(24, 24), IconType::CIRCLE));
 		cancelButton->setOrigin(Origin::TopLeft);
 		cancelButton->setRescaleOnHover(false);
 		cancelButton->borderColor = MakeColor(AlloyApplicationContext()->theme.LIGHTEST);
@@ -52,25 +52,41 @@ namespace aly {
 		cancelButton->borderWidth = UnitPX(0.0f);
 		cancelButton->onMouseDown = [this](AlloyContext* context, const InputEvent& event) {
 			this->setVisible(false);
+			if (onHide) {
+				onHide();
+			}
 			return true;
 		};
 		Composite::add(cancelButton);
+
+		expandButton = std::shared_ptr<IconButton>(new IconButton(0xf0e8, CoordPerPX(0.5f,1.0f,0.0f,-22.0f), CoordPX(26.0f,26.0f), IconType::SQUARE));
+		expandButton->setRoundCorners(true);
+		expandButton->setVisible(false);
+		expandButton->setOrigin(Origin::MiddleCenter);
+		expandButton->borderColor = MakeColor(AlloyApplicationContext()->theme.DARK.toDarker(0.5f));
+		expandButton->iconColor = MakeColor(AlloyApplicationContext()->theme.DARK);
+		expandButton->foregroundColor = MakeColor(COLOR_NONE);
+		expandButton->backgroundColor = MakeColor(COLOR_NONE);
+		expandButton->borderWidth = UnitPX(0.0f);
+		expandButton->onMouseDown = [this](AlloyContext* context, const InputEvent& event) {
+			expandButton->setVisible(false);
+			if (onExpand) {
+				onExpand();
+			}
+			return true;
+		};
+		Composite::add(expandButton);
 	}
 
 	void NeuralLayerRegion::draw(AlloyContext* context) {
-
 		NVGcontext* nvg = context->nvgContext;
 		aly::box2px bounds = getBounds();
-
 		pushScissor(nvg, parent->getCursorBounds());
-		nvgBeginPath(nvg);
-		nvgRoundedRect(nvg, bounds.position.x, bounds.position.y, 26.0f, fontSize + 8.0f, 3.0f);
-		nvgFillColor(nvg, context->theme.DARK.toSemiTransparent(0.5f));
-		nvgFill(nvg);
+			nvgBeginPath(nvg);
+			nvgRoundedRect(nvg, bounds.position.x, bounds.position.y, 26.0f, fontSize + 8.0f, 3.0f);
+			nvgFillColor(nvg, context->theme.DARK.toSemiTransparent(0.5f));
+			nvgFill(nvg);
 		popScissor(nvg);
-		Composite::draw(context);
-
-
 		pushScissor(nvg, parent->getCursorBounds());
 		nvgFontSize(nvg, fontSize);
 		nvgFontFaceId(nvg, context->getFontHandle(FontType::Bold));
@@ -80,8 +96,9 @@ namespace aly {
 		pushScissor(nvg, getCursorBounds());
 
 
+
 		nvgBeginPath(nvg);
-		nvgRoundedRect(nvg, bounds.position.x, bounds.position.y+fontSize+2.0f, bounds.dimensions.x, bounds.dimensions.y-fontSize-2.0f,3.0f);
+		nvgRoundedRect(nvg, bounds.position.x, bounds.position.y+fontSize+2.0f, bounds.dimensions.x, bounds.dimensions.y-fontSize-2.0f - 30.0f,3.0f);
 		if (isFocused()) {
 			nvgFillColor(nvg, context->theme.LIGHTEST);
 		}
@@ -89,7 +106,11 @@ namespace aly {
 			nvgFillColor(nvg, context->theme.LIGHTEST.toDarker(0.8f));
 		}
 		nvgFill(nvg);
-
+		if (expandButton->isVisible()) {
+			nvgBeginPath(nvg);
+			nvgRoundedRect(nvg, bounds.position.x + bounds.dimensions.x*0.5f-15.0f, bounds.position.y + bounds.dimensions.y - 40.0f,30.0f,30.0f,5.0f);
+			nvgFill(nvg);
+		}
 		pixel2 origin = bounds.position;
 		pixel2 padding = getPadding();
 		bounds.position += float2(0.0f,fontSize+8.0f);
@@ -218,7 +239,6 @@ namespace aly {
 			nvgStroke(nvg);
 		}
 		popScissor(context->nvgContext);
-
 		if (selected.x != -1 && selected.y != -1) {
 			Neuron* neuron = layer->get(selected.x, selected.y);
 
@@ -231,6 +251,9 @@ namespace aly {
 			drawText(nvg, cursorPosition + pixel2(0.0f, 10.0f + 32.0f), MakeString() << "out: " << neuron->getOutputNeuronSize(), FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
 
 		}
+
+		Composite::draw(context);
+
 	}
 	bool NeuralLayerRegion::onEventHandler(AlloyContext* context, const InputEvent& e) {
 		if (Composite::onEventHandler(context, e))
@@ -268,6 +291,17 @@ namespace aly {
 		}
 		return false;
 	}
+	float  NeuralLayerRegion::setSize(float w) {
+		AlloyContext* context = AlloyApplicationContext().get();
+		pixel2 padding = getPadding();
+		float aspectRatio = layer->width / (float)layer->height;
+		pixel2 newBounds = aly::round(pixel2(w, w/aspectRatio) + padding);
+		scale = 1.0f;
+		bounds.dimensions = newBounds;
+		dimensions = CoordPX(bounds.dimensions);
+		setDragOffset(pixel2(0, 0));
+		return newBounds.y;
+	}
 	void  NeuralLayerRegion::setScale(float s, pixel2 cursor) {
 		AlloyContext* context = AlloyApplicationContext().get();
 		box2px bounds = getBounds(false);
@@ -275,12 +309,12 @@ namespace aly {
 		scale = clamp(scale * (1.0f + s * 0.1f), 0.1f, 10.0f);
 		float scaling = scale / lastScale;
 		pixel2 padding = getPadding();
-		pixel2 newBounds = (bounds.dimensions - padding)*scaling + padding;
-
+		float aspectRatio = layer->width / (float)layer->height;
+		pixel2 newBounds = aly::round(pixel2(bounds.dimensions.x*aspectRatio, bounds.dimensions.x)*scaling + padding);
 		pixel2 relPos = (cursor - bounds.position) / bounds.dimensions;
 		pixel2 newPos = cursor - relPos*newBounds;
 		bounds.position = aly::round(newPos);
-		bounds.dimensions = aly::round(newBounds);
+		bounds.dimensions = newBounds;
 		setDragOffset(pixel2(0, 0));
 		position = CoordPX(bounds.position - parent->getBoundsPosition());
 		dimensions = CoordPX(bounds.dimensions);

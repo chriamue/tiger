@@ -62,6 +62,9 @@ public:
 	void setSampleRange(int mn, int mx);
 	bool overTarget = false;
 	TigerApp();
+	aly::NeuralFlowPanePtr getFlowPane() const {
+		return flowRegion;
+	}
 	virtual void draw(aly::AlloyContext* context) override;
 	bool init(aly::Composite& rootNode);
 	void evaluate();

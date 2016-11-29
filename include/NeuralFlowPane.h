@@ -41,7 +41,7 @@ namespace aly {
 		}
 		float2 getSourceLocation() const {
 			box2px bounds = source->getBounds(false);
-			return bounds.position + float2(bounds.dimensions.x*0.5f, bounds.dimensions.y);
+			return bounds.position + float2(bounds.dimensions.x*0.5f, bounds.dimensions.y-30.0f);
 		}
 		float2 getDestinationLocation() const {
 			box2px bounds = destination->getBounds(false);
@@ -71,6 +71,7 @@ namespace aly {
 		NeuralFlowPane(const std::string& name, const AUnit2D& pos, const AUnit2D& dims);
 		void add(tgr::NeuralLayer* layer, const pixel2& cursor);
 		virtual void draw(AlloyContext* context) override;
+		void update();
 	};
 	typedef std::shared_ptr<NeuralFlowPane> NeuralFlowPanePtr;
 }

@@ -37,15 +37,26 @@ namespace aly {
 		int selectionRadius;
 		pixel2 cursorPosition;
 		int2 lastSelected;
+		std::shared_ptr<IconButton> cancelButton;
+		std::shared_ptr<IconButton> expandButton;
 		std::list<tgr::Neuron*> activeList;
 	public:
 		pixel2 cursorOffset;
 		float scale;
+		tgr::NeuralLayer* getLayer() const {
+			return layer;
+		}
+		std::function<void()> onExpand;
+		std::function<void()> onHide;
 		bool isFocused(bool recurse=true) const;
 		void setScale(float s,pixel2 cursor);
+		float setSize(float w);
 		void setScale(float s) {
 			scale = s;
 		};
+		void setExpandable(bool t) {
+			expandButton->setVisible(t);
+		}
 		void reset() {
 			cursorPosition=float2(0.0f,0.0f);
 			lastSelected=int2(-1);
@@ -54,7 +65,7 @@ namespace aly {
 			cursorOffset = float2(0.0f, 0.0f);
 		}
 		static float2 getPadding() {
-			return float2(0.0f, 14.0f + fontSize);
+			return float2(0.0f, 14.0f +30.0f+ fontSize);
 		}
 		void setSelectionRadius(int radius) {
 			selectionRadius = radius;
