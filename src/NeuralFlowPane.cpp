@@ -94,12 +94,35 @@ namespace aly{
 		nvgLineTo(nvg, pos.x-dims.x*0.5f, pos.y);
 		nvgLineTo(nvg, pos.x + dims.x*0.5f, pos.y);
 		nvgClosePath(nvg);
+		
 		nvgFill(nvg);
 	}
 
 	NeuralFlowPane::NeuralFlowPane(const std::string& name, const AUnit2D& pos, const AUnit2D& dims) :
 		Composite(name, pos, dims),dragEnabled(false) {
 		router.setBorderSpacing(30.0f);
+		ImageRGBA img;
+		ReadImageFromFile(AlloyApplicationContext()->getFullPath("images/tiger.png"), img);
+		/*
+		float2 center(0.5f*img.width, 0.5f*img.height);
+		float t = 0.4f;
+		for (int j = 0; j < img.height; j++) {
+			for (int i = 0; i < img.width; i++) {
+				RGBA& c = img(i, j);
+				float r = distance(float2(i, j), center);
+
+				if (r < t*img.height) {
+					c.w = 192;
+				}
+				else {
+					float s=1.0f-(r - t*img.height)/((1.0f-t)*img.height);
+					c.w =  uint8_t(std::floor(192 *s*s));
+				}
+			}
+		}
+		WriteImageToFile(GetDesktopDirectory()+ALY_PATH_SEPARATOR+"tiger.png",img);
+		*/
+		backgroundImage = ImageGlyphPtr(new ImageGlyph(img,AlloyApplicationContext().get(),false));
 		Application::addListener(this);
 	}
 	void NeuralFlowPane::pack(const pixel2& pos, const pixel2& dims, const double2& dpmm, double pixelRatio, bool clamp) {
@@ -168,6 +191,19 @@ namespace aly{
 			nvgFill(nvg);
 		}
 		pushScissor(nvg, getCursorBounds());
+
+		box2px imgb = bounds;
+		float imga=backgroundImage->width / (float)backgroundImage->height;
+		float ba = imgb.dimensions.x / imgb.dimensions.y;
+		if (imga < ba) {
+			imgb.dimensions = pixel2(imgb.dimensions.x, imgb.dimensions.x / imga);
+		}
+		else {
+			imgb.dimensions = pixel2(imgb.dimensions.y*imga, imgb.dimensions.y);
+		}
+		imgb.position = bounds.center() -0.5f*imgb.dimensions;
+		backgroundImage->draw(imgb, context->theme.DARK.toSemiTransparent(0.5f), COLOR_NONE, context);
+		
 		for (NeuralConnectionPtr con : connections) {
 			if (con->source->isVisible() && con->destination->isVisible()) {
 				con->draw(context, this);
@@ -198,6 +234,7 @@ namespace aly{
 				}
 			}
 		}
+
 		if (isScrollEnabled()) {
 			popScissor(nvg);
 		}

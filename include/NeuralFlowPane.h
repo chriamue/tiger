@@ -62,7 +62,7 @@ namespace aly {
 	protected:
 		aly::dataflow::AvoidanceRouting router;
 		std::vector<NeuralLayerRegionPtr> layerRegions;
-
+		ImageGlyphPtr backgroundImage;
 		bool dragEnabled;
 	public:
 		std::set<NeuralConnectionPtr> connections;
