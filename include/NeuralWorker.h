@@ -1,0 +1,73 @@
+/*
+* Copyright(C) 2016, Blake C. Lucas, Ph.D. (img.science@gmail.com)
+*
+* Permission is hereby granted, free of charge, to any person obtaining a copy
+* of this software and associated documentation files (the "Software"), to deal
+* in the Software without restriction, including without limitation the rights
+* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+* copies of the Software, and to permit persons to whom the Software is
+* furnished to do so, subject to the following conditions:
+* The above copyright notice and this permission notice shall be included in
+* all copies or substantial portions of the Software.
+*
+* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+* THE SOFTWARE.
+*/
+#ifndef _NEURALWORKER_H_
+#define _NEURALWORKER_H_
+#include <thread>
+#include <mutex>
+#include <chrono>
+#include <AlloyParameterPane.h>
+#include <AlloyWorker.h>
+#include "NeuralSystem.h"
+namespace tgr {
+	class NeuralWorker;
+	class NeuralListener {
+	public:
+		virtual void NeuralEvent(NeuralWorker* simulation, int mSimulationIteration, double time) = 0;
+		virtual ~NeuralListener();
+	};
+	class NeuralWorker : public aly::RecurrentTask {
+	protected:
+		bool paused;
+		bool isInitialized;
+		aly::Number epochs;
+		aly::Number iterationsPerEpoch;
+		aly::Number iterationsPerStep;
+		aly::Number learningRateInitial;
+		aly::Number learningRateDelta;
+		int optimizationMethod;
+		uint64_t iteration;
+		std::thread simulationThread;
+		std::shared_ptr<tgr::NeuralSystem> sys;
+	public:
+		std::function<void(uint64_t iteration, bool lastIteration)> onUpdate;
+		typedef std::chrono::high_resolution_clock Clock;
+		bool step();
+		bool init();
+		void cleanup();
+		void setup(const aly::ParameterPanePtr& pane);
+		NeuralWorker(const std::shared_ptr<tgr::NeuralSystem>& system);
+		uint64_t getMaxIteration() const {
+			return uint64_t(iterationsPerEpoch.toInteger())*epochs.toInteger();
+		}
+		int getIterationsPerEpoch() const {
+			return iterationsPerEpoch.toInteger();
+		}
+		int getIterationsPerStep() const {
+			return iterationsPerStep.toInteger();
+		}
+		uint64_t getIteration() const {
+			return iteration;
+		}
+		virtual ~NeuralWorker() {};
+	};
+	typedef std::shared_ptr<NeuralWorker> NeuralWorkerPtr;
+}
+#endif

@@ -66,10 +66,15 @@ namespace aly {
 		std::vector<NeuralLayerRegionPtr> layerRegions;
 		ImageGlyphPtr backgroundImage;
 		bool dragEnabled;
-		NeuralLayerRegion* selectedRegion;
+		tgr::NeuralLayer* selectedLayer;
 	public:
-		void setSelected(NeuralLayerRegion* region) {
-			selectedRegion = region;
+		std::function<void(tgr::NeuralLayer*, const InputEvent& e)> onSelect;
+		void setSelected(tgr::NeuralLayer* layer, const InputEvent& e) {
+			selectedLayer = layer;
+			if (onSelect)onSelect(layer,e);
+		}
+		void setSelected(tgr::NeuralLayer* layer) {
+			selectedLayer = layer;
 		}
 		std::set<NeuralConnectionPtr> connections;
 		virtual void pack(const pixel2& pos, const pixel2& dims, const double2& dpmm, double pixelRatio, bool clamp) override;

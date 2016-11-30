@@ -22,15 +22,15 @@
 #include "AlloyMath.h"
 using namespace aly;
 namespace tgr {
-	FullyConnectedFilter::FullyConnectedFilter(TigerApp* app, const std::string& name, const std::vector<NeuralLayerPtr>& inputLayers, int width, int height) :NeuralFilter(app,name), width(width), height(height) {
+	FullyConnectedFilter::FullyConnectedFilter(const std::string& name, const std::vector<NeuralLayerPtr>& inputLayers, int width, int height) :NeuralFilter(name), width(width), height(height) {
 		NeuralFilter::inputLayers = inputLayers;
 	}
-	FullyConnectedFilter::FullyConnectedFilter(TigerApp* app, const std::string& name, const NeuralLayerPtr& inputLayer, int width, int height) : NeuralFilter(app, name), width(width), height(height) {
+	FullyConnectedFilter::FullyConnectedFilter(const std::string& name, const NeuralLayerPtr& inputLayer, int width, int height) : NeuralFilter(name), width(width), height(height) {
 		NeuralFilter::inputLayers.push_back(inputLayer);
 	}
 	void FullyConnectedFilter::initialize(NeuralSystem& sys) {
 		std::vector<SignalPtr> signals;
-		outputLayers.push_back(NeuralLayerPtr(new NeuralLayer(app, name, width, height, 1, true)));
+		outputLayers.push_back(NeuralLayerPtr(new NeuralLayer( name, width, height, 1, true)));
 		NeuralLayerPtr outputLayer = outputLayers[0];
 		for (int k = 0; k < inputLayers.size(); k++) {
 			NeuralLayerPtr inputLayer = inputLayers[k];

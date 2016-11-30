@@ -29,24 +29,21 @@
 #include "AlloyExpandTree.h"
 #include "NeuralFlowPane.h"
 #include "AlloyTimeline.h"
+#include "NeuralWorker.h"
 class TigerApp : public aly::Application {
 protected:
 	tgr::NeuralLayer* selectedLayer;
 	bool parametersDirty;
 	bool frameBuffersDirty;
 	bool running = false;
-	tgr::NeuralSystem sys;
+	tgr::NeuralSystemPtr sys;
 	aly::IconButtonPtr playButton, stopButton;
 	aly::ExpandTreePtr expandTree;
 	aly::DrawPtr dragIconPane;
 	aly::NeuralFlowPanePtr flowRegion;
 	aly::TimelineSliderPtr timelineSlider;
-	aly::Number epochs;
 	aly::Number sampleIndex;
 	int minIndex,maxIndex;
-	aly::Number iterationsPerEpoch;
-	aly::Number learningRateInitial;
-	aly::Number learningRateDelta;
 	std::string trainFile;
 	std::string evalFile;
 	std::string trainLabelFile;
@@ -56,7 +53,10 @@ protected:
 	std::vector<uint8_t> trainOutputData;
 	tgr::NeuralLayerPtr inputLayer;
 	tgr::NeuralLayerPtr outputLayer;
+	tgr::NeuralWorkerPtr worker;
+	bool initializeLeNet5();
 	void initialize();
+	void setSelectedLayer(tgr::NeuralLayer* layer);
 public:
 	void setSampleIndex(int idx);
 	void setSampleRange(int mn, int mx);
@@ -67,10 +67,10 @@ public:
 	}
 	virtual void draw(aly::AlloyContext* context) override;
 	bool init(aly::Composite& rootNode);
-	void evaluate();
+
 	void train(const std::vector<int>& sampleIndexes);
 	bool onEventHandler(aly::AlloyContext* context, const aly::InputEvent& e);
-	void setSelectedLayer(tgr::NeuralLayer* layer);
+
 };
 
 #endif

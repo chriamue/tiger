@@ -36,6 +36,7 @@ namespace aly {
 }
 namespace tgr {
 	std::string MakeID(int len=8);
+	class NeuralSystem;
 	class NeuralLayer {
 		protected:
 			std::vector<Neuron> neurons;
@@ -51,8 +52,7 @@ namespace tgr {
 			bool trainable;
 			double residualError;
 			aly::NeuralLayerRegionPtr layerRegion;
-			TigerApp* app;
-
+			NeuralSystem* sys;
 		public:
 			int width;
 			int height;
@@ -97,6 +97,9 @@ namespace tgr {
 			}
 			void setOptimizer(const std::shared_ptr<NeuralOptimization>& opt) {
 				optimizer = opt;
+			}
+			void setSystem(NeuralSystem* s) {
+				sys = s;
 			}
 			bool optimize();
 			void update();
@@ -175,8 +178,8 @@ namespace tgr {
 			void get(aly::Image1f& input);
 			void get(std::vector<float>& input);
 			aly::Vector1f toVector() const;
-			NeuralLayer(TigerApp* app,int width=0,int height=0,int bins=1,bool bias=false, const NeuronFunction& func = ReLU());
-			NeuralLayer(TigerApp* app,const std::string& name,int width = 0, int height = 0, int bins = 1, bool bias = false, const NeuronFunction& func=ReLU());
+			NeuralLayer(int width=0,int height=0,int bins=1,bool bias=false, const NeuronFunction& func = ReLU());
+			NeuralLayer(const std::string& name,int width = 0, int height = 0, int bins = 1, bool bias = false, const NeuronFunction& func=ReLU());
 	};
 	typedef std::shared_ptr<NeuralLayer> NeuralLayerPtr;
 }

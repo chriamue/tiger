@@ -56,9 +56,6 @@ void TigerApp::setSampleRange(int mn, int mx){
 	sampleIndex.setValue(aly::clamp(sampleIndex.toInteger(), mn, mx));
 	tweenRegion->setValue(sampleIndex.toDouble());
 }
-void TigerApp::evaluate() {
-	sys.evaluate();
-}
 bool TigerApp::init(Composite& rootNode) {
 
 	parametersDirty = true;
@@ -78,11 +75,6 @@ bool TigerApp::init(Composite& rootNode) {
 		parametersDirty = true;
 	};
 
-	epochs = Integer(12);
-	iterationsPerEpoch = Integer(100);
-	learningRateInitial = Float(0.8f);
-	learningRateDelta = Float(0.5);
-
 	controls->setAlwaysShowVerticalScrollBar(false);
 	controls->setScrollEnabled(false);
 	controls->backgroundColor = MakeColor(getContext()->theme.DARKER);
@@ -97,12 +89,8 @@ bool TigerApp::init(Composite& rootNode) {
 
 	controls->addFileField("Evaluation Images", evalFile);
 	controls->addFileField("Evaluation Labels", evalLabelFile);
-	initialize();
-	controls->addGroup("Training",true);
-	controls->addNumberField("Epochs",epochs);
-	controls->addNumberField("Iterations",iterationsPerEpoch);
-	controls->addNumberField("Learning Rate", learningRateInitial,Float(0.0f), Float(1.0f));
-	controls->addNumberField("Learning Delta", learningRateDelta, Float(0.0f), Float(1.0f));
+
+	flowRegion = NeuralFlowPanePtr(new NeuralFlowPane("View", CoordPX(0.0f, 40.0f), CoordPerPX(1.0f, 1.0f, 0.0f, -120.0f)));
 
 	toolbar->backgroundColor = MakeColor(getContext()->theme.DARKER);
 	sampleIndex = Integer(10857);
@@ -142,7 +130,7 @@ bool TigerApp::init(Composite& rootNode) {
 	evaluateButton->textColor = MakeColor(HSVtoColor(HSV(0.2f,0.4f,1.0f)));
 	evaluateButton->onMouseDown = [this](AlloyContext* context, const InputEvent& e) {
 		if (e.button == GLFW_MOUSE_BUTTON_LEFT) {
-			evaluate();
+			sys->evaluate();
 			return true;
 		}
 		return false;
@@ -173,7 +161,10 @@ bool TigerApp::init(Composite& rootNode) {
 	toolbar->add(learnButton);
 	controlLayout->backgroundColor = MakeColor(getContext()->theme.DARKER);
 	controlLayout->borderWidth = UnitPX(0.0f);
-	flowRegion = NeuralFlowPanePtr(new NeuralFlowPane("View", CoordPX(0.0f, 40.0f), CoordPerPX(1.0f, 1.0f, 0.0f, -120.0f)));
+	flowRegion->onSelect=[this](NeuralLayer* layer,const InputEvent& e) {
+		setSelectedLayer(layer);
+		onEventHandler(AlloyDefaultContext().get(), e);
+	};
 	layout->setWest(controlLayout, UnitPX(400.0f));
 	layout->setEast(expandTree, UnitPX(400.0f));
 	controlLayout->setCenter(controls);
@@ -207,6 +198,7 @@ bool TigerApp::init(Composite& rootNode) {
 	infoComposite->borderWidth = UnitPX(0.0f);
 	playButton = IconButtonPtr(new IconButton(0xf144, CoordPerPX(0.5f, 0.5f, -35.0f, -35.0f), CoordPX(70.0f, 70.0f)));
 	stopButton = IconButtonPtr(new IconButton(0xf28d, CoordPerPX(0.5f, 0.5f, -35.0f, -35.0f), CoordPX(70.0f, 70.0f)));
+
 	playButton->borderWidth = UnitPX(0.0f);
 	stopButton->borderWidth = UnitPX(0.0f);
 	playButton->backgroundColor = MakeColor(getContext()->theme.DARKER);
@@ -221,7 +213,15 @@ bool TigerApp::init(Composite& rootNode) {
 		if (e.button == GLFW_MOUSE_BUTTON_LEFT) {
 			stopButton->setVisible(true);
 			playButton->setVisible(false);
-			
+			timelineSlider->setTimeValue(0);
+			timelineSlider->setMinorTick(worker->getIterationsPerStep());
+			timelineSlider->setMajorTick(worker->getIterationsPerEpoch());
+			timelineSlider->setMaxValue((int)worker->getMaxIteration());
+			timelineSlider->setVisible(true);
+			context->addDeferredTask([this]() {
+				worker->init();
+				running = true;
+			});
 			return true;
 		}
 		return false;
@@ -310,8 +310,12 @@ bool TigerApp::init(Composite& rootNode) {
 		flowRegion->add(outputLayer.get(), bounds.position + pixel2(0.75f*bounds.dimensions.x,0.25f*bounds.dimensions.y));
 		
 	});
-	setSampleIndex(sampleIndex.toInteger());
-	sys.evaluate();
+	initialize();
+	worker->setup(controls);
+	timelineSlider->setTimeValue(0);
+	timelineSlider->setMinorTick(worker->getIterationsPerStep());
+	timelineSlider->setMajorTick(worker->getIterationsPerEpoch());
+	timelineSlider->setMaxValue((int)worker->getMaxIteration());
 	return true;
 }
 void TigerApp::setSelectedLayer(tgr::NeuralLayer* layer) {
@@ -320,14 +324,14 @@ void TigerApp::setSelectedLayer(tgr::NeuralLayer* layer) {
 void TigerApp::train(const std::vector<int>& sampleIndexes) {
 	NeuralOptimizationPtr optimizer;
 	int iterations = 100;
-		for (auto layer : sys.getLayers()) {
+		for (auto layer : sys->getLayers()) {
 			if (layer->isTrainable()) {
 				layer->setOptimizer(optimizer);
 			}
 		}
 		std::vector<float> outputData(10);//10 digits for MNIST
 		for (int iter = 0; iter < iterations; iter++) {
-			sys.resetChange(outputLayer);
+			sys->resetChange(outputLayer);
 			for (int idx : sampleIndexes) {
 				aly::Image1f& inputData=trainInputData[idx];
 				int out=trainOutputData[idx];
@@ -336,13 +340,13 @@ void TigerApp::train(const std::vector<int>& sampleIndexes) {
 				}
 				inputLayer->set(inputData);
 				outputLayer->set(outputData);
-				sys.evaluate();
-				double err=sys.accumulateChange(outputLayer,outputData);
+				sys->evaluate();
+				double err=sys->accumulateChange(outputLayer,outputData);
 				std::cout << "Residual " << idx << ": " << err << std::endl;
 			}
-			sys.backpropagate();
-			sys.optimize();
-			sys.evaluate();
+			sys->backpropagate();
+			sys->optimize();
+			sys->evaluate();
 		}
 }
 bool TigerApp::onEventHandler(AlloyContext* context, const aly::InputEvent& e) {
@@ -375,52 +379,75 @@ bool TigerApp::onEventHandler(AlloyContext* context, const aly::InputEvent& e) {
 	}
 	return false;
 }
-void TigerApp::initialize() {
-	parse_mnist_images(trainFile,trainInputData,0.0f,1.0f,2, 2);
+bool TigerApp::initializeLeNet5() {
+	parse_mnist_images(trainFile, trainInputData, 0.0f, 1.0f, 2, 2);
 	parse_mnist_labels(trainLabelFile, trainOutputData);
-	minIndex = 0;
-	maxIndex = (int)trainInputData.size() - 1;
-	int K = 4;
 	if (trainInputData.size() > 0) {
 		const Image1f& ref = trainInputData[0];
-		ConvolutionFilterPtr conv1(new ConvolutionFilter(this,ref.width, ref.height, 5, 6));
-		sys.add(conv1);
-		inputLayer =conv1->getInputLayer(0);
+		ConvolutionFilterPtr conv1(new ConvolutionFilter(ref.width, ref.height, 5, 6));
+		sys->add(conv1);
 		std::vector<NeuralLayerPtr> all;
 		for (int i = 0; i < conv1->getOutputSize(); i++) {
-			AveragePoolFilterPtr avg1(new AveragePoolFilter(this, conv1->getOutputLayer(i), 2));
-			avg1->setName(MakeString()<<"Sub-Sample [" << i << "]");
-			sys.add(avg1);
+			AveragePoolFilterPtr avg1(new AveragePoolFilter(conv1->getOutputLayer(i), 2));
+			avg1->setName(MakeString() << "Sub-Sample [" << i << "]");
+			sys->add(avg1);
 			all.push_back(avg1->getOutputLayer(0));
 		}
-	
-		ConvolutionFilterPtr conv2(new ConvolutionFilter(this, all, 5, 16));
+
+		ConvolutionFilterPtr conv2(new ConvolutionFilter(all, 5, 16));
 		std::vector<std::pair<int, int>> connectionTable;
 		for (int ii = 0; ii < 6; ii++) {
 			for (int jj = 0; jj < 16; jj++) {
 				if (MNIST_TABLE[jj + ii * 16]) {
-					connectionTable.push_back(std::pair<int,int>(ii, jj));
+					connectionTable.push_back(std::pair<int, int>(ii, jj));
 				}
 			}
 		}
 		conv2->setConnectionMap(connectionTable);
-		sys.add(conv2);
-		
+		sys->add(conv2);
 		all.clear();
 		for (int i = 0; i < conv2->getOutputSize(); i++) {
-			AveragePoolFilterPtr avg2(new AveragePoolFilter(this, conv2->getOutputLayer(i), 2));
+			AveragePoolFilterPtr avg2(new AveragePoolFilter(conv2->getOutputLayer(i), 2));
 			avg2->setName(MakeString() << "Sub-Sample [" << i << "]");
-			sys.add(avg2);
-			ConvolutionFilterPtr conv3(new ConvolutionFilter(this, avg2->getOutputLayer(0), 5,1));
-			sys.add(conv3);
+			sys->add(avg2);
+			ConvolutionFilterPtr conv3(new ConvolutionFilter(avg2->getOutputLayer(0), 5, 1));
+			sys->add(conv3);
 			all.push_back(conv3->getOutputLayer(0));
 		}
-		FullyConnectedFilterPtr decisionFilter(new FullyConnectedFilter(this,"Decision Layer",all,10,1));
-		sys.add(decisionFilter);
+		FullyConnectedFilterPtr decisionFilter(new FullyConnectedFilter("Decision Layer", all, 10, 1));
+		sys->add(decisionFilter);
+		inputLayer = conv1->getInputLayer(0);
 		outputLayer = decisionFilter->getOutputLayer(0);
-		sys.initialize(expandTree);
-		sys.setOptimizer(std::shared_ptr<NeuralOptimization>(new GradientDescentOptimizer(0.5f)));
+		return true;
 	}
+	return false;
+}
+void TigerApp::initialize() {
+	sys.reset(new NeuralSystem(flowRegion));
+	if (initializeLeNet5()) {
+		sys->initialize(expandTree);
+		setSampleRange(0, (int)trainInputData.size() - 1);
+		setSampleIndex(sampleIndex.toInteger());
+		worker.reset(new NeuralWorker(sys));
+		worker->onUpdate = [this](uint64_t iteration, bool lastIteration) {
+			std::cout << "Iterate " << iteration << std::endl;
+			if (lastIteration || (int)iteration == timelineSlider->getMaxValue().toInteger()) {
+				stopButton->setVisible(false);
+				playButton->setVisible(true);
+				running = false;
+			}
+			AlloyApplicationContext()->addDeferredTask([this]() {
+				timelineSlider->setUpperValue((int)worker->getIteration());
+				timelineSlider->setTimeValue((int)worker->getIteration());
+			});
+		};
+	}
+
 }
 void TigerApp::draw(AlloyContext* context) {
+	if (running) {
+		if (!worker->step()) {
+			running = false;
+		}
+	}
 }

@@ -25,9 +25,9 @@ namespace tgr {
 		int kernelSize;
 		std::vector<std::pair<int,int>> connectionMap;
 	public:
-		ConvolutionFilter(TigerApp* app,  int width, int height, int kernelSize, int features);
-		ConvolutionFilter(TigerApp* app, const NeuralLayerPtr& inputLayer, int kernelSize, int features);
-		ConvolutionFilter(TigerApp* app, const std::vector<NeuralLayerPtr>& inputLayers, int kernelSize, int features);
+		ConvolutionFilter( int width, int height, int kernelSize, int features);
+		ConvolutionFilter(const NeuralLayerPtr& inputLayer, int kernelSize, int features);
+		ConvolutionFilter(const std::vector<NeuralLayerPtr>& inputLayers, int kernelSize, int features);
 		void setConnectionMap(const std::vector<std::pair<int, int>>& mapping) {
 			connectionMap = mapping;
 		}

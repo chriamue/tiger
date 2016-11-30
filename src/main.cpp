@@ -22,8 +22,8 @@
 #include "TigerApp.h"
 int main(int argc, char *argv[]) {
 	try {
-		TigerApp app;
-		app.run(1);
+		TigerApp flowPane;
+		flowPane.run(1);
 	} catch (std::exception& e) {
 		std::cout << "Main Error: " << e.what() << std::endl;
 		std::getchar();

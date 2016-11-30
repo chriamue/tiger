@@ -20,6 +20,7 @@
 */
 #include "NeuralSystem.h"
 #include "NeuralFilter.h"
+#include "NeuralFlowPane.h"
 using namespace aly;
 namespace tgr {
 	void NeuralSystem::backpropagate() {
@@ -98,7 +99,9 @@ namespace tgr {
 	void NeuralSystem::getLayer(const NeuralLayerPtr& layer, std::vector<float>& input) {	
 		layer->get(input);
 	}
+	NeuralSystem::NeuralSystem(const std::shared_ptr<aly::NeuralFlowPane>& pane):flowPane(pane){
 
+	}
 
 	void NeuralSystem::evaluate() {
 		for (NeuralLayerPtr layer:layers) {
@@ -166,6 +169,12 @@ namespace tgr {
 		filter->initialize(*this);
 		auto inputs= filter->getInputLayers();
 		auto output = filter->getOutputLayers();
+		for (auto layer : inputs) {
+			layer->setSystem(this);
+		}
+		for (auto layer : output) {
+			layer->setSystem(this);
+		}
 		layers.insert(layers.end(), inputs.begin(), inputs.end());
 		layers.insert(layers.end(), output.begin(), output.end());
 	}

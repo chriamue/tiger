@@ -24,8 +24,8 @@ namespace tgr {
 	protected:
 		int kernelSize;
 	public:
-		AveragePoolFilter(TigerApp* app, const std::vector<NeuralLayerPtr>& inputLayers, int kernelSize);
-		AveragePoolFilter(TigerApp* app, const NeuralLayerPtr& inputLayer, int kernelSize);
+		AveragePoolFilter(const std::vector<NeuralLayerPtr>& inputLayers, int kernelSize);
+		AveragePoolFilter(const NeuralLayerPtr& inputLayer, int kernelSize);
 
 		virtual void initialize(NeuralSystem& sys) override;
 	};

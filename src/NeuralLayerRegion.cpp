@@ -200,8 +200,8 @@ namespace aly {
 				}
 			}
 			lastSelected = selected;
-			if (selected.x != -1) {
-				layer->getFlow()->setSelected(this);
+			if (selected.x != -1&& layer->getFlow()!=nullptr) {
+				layer->getFlow()->setSelected(layer);
 			}
 		}
 		std::list<int2> highlight;

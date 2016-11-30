@@ -33,7 +33,7 @@ namespace tgr {
 		}
 		return ss.str();
 	}
-	NeuralLayer::NeuralLayer(TigerApp* app,int width, int height, int bins, bool bias, const NeuronFunction& func) :app(app),width(width), height(height), bins(bins),bias(bias),id(-1),visited(false),trainable(true),residualError(0.0) {
+	NeuralLayer::NeuralLayer(int width, int height, int bins, bool bias, const NeuronFunction& func) :width(width), height(height), bins(bins),bias(bias),id(-1),visited(false),trainable(true),residualError(0.0) {
 		neurons.resize(width*height*bins, Neuron(func));
 		if (bias) {
 			biasNeurons.resize(width*height*bins, Bias());
@@ -42,10 +42,10 @@ namespace tgr {
 			}
 		}
 	}
-	std::shared_ptr<NeuralFlowPane> NeuralLayer::getFlow() const {
-		return app->getFlowPane();
+	std::shared_ptr<aly::NeuralFlowPane> NeuralLayer::getFlow() const {
+		return sys->getFlow();
 	}
-	NeuralLayer::NeuralLayer(TigerApp* app, const std::string& name,int width, int height, int bins,bool bias, const NeuronFunction& func) :app(app), name(name), width(width), height(height), bins(bins),bias(bias), id(-1) {
+	NeuralLayer::NeuralLayer(const std::string& name,int width, int height, int bins,bool bias, const NeuronFunction& func) :name(name), width(width), height(height), bins(bins),bias(bias), id(-1) {
 		neurons.resize(width*height*bins,Neuron(func));
 		if (bias) {
 			biasNeurons.resize(width*height*bins, Bias());
@@ -191,6 +191,7 @@ namespace tgr {
 	}
 	aly::NeuralLayerRegionPtr NeuralLayer::getRegion() {
 		if (layerRegion.get() == nullptr) {
+			
 			float2 dims=float2(240.0f,240.0f/ getAspect())+ NeuralLayerRegion::getPadding();
 			layerRegion = NeuralLayerRegionPtr(new NeuralLayerRegion(name,this, CoordPerPX(0.5f, 0.5f, -dims.x*0.5f, -dims.y*0.5f), CoordPX(dims.x, dims.y)));
 			if (hasChildren()) {
@@ -200,12 +201,11 @@ namespace tgr {
 				}
 			}
 			layerRegion->onHide = [this]() {
-				NeuralFlowPanePtr flowPane = app->getFlowPane();
-				flowPane->update();
+				sys->getFlow()->update();
 			};
 			layerRegion->onExpand = [this]() {
+				std::shared_ptr<NeuralFlowPane> flowPane = sys->getFlow();
 				box2px bounds = layerRegion->getBounds();
-				NeuralFlowPanePtr flowPane = app->getFlowPane();
 				int idx = 0;
 				int N = int(getChildren().size());
 				float layoutWidth = 0.0f;
@@ -282,8 +282,8 @@ namespace tgr {
 
 		}, pixel2(180, lines*(fontSize + 2) + 2))));
 		item->onSelect = [this](TreeItem* item, const InputEvent& e) {
-			app->setSelectedLayer(this);
-			app->onEventHandler(AlloyDefaultContext().get(),e);
+			sys->getFlow()->setSelected(this,e);
+
 		};
 		for (auto child : children) {
 			child->initialize(tree, item);

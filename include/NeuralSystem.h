@@ -23,6 +23,9 @@
 #include "NeuralLayer.h"
 #include "AlloyExpandTree.h"
 #include <map>
+namespace aly {
+	class NeuralFlowPane;
+}
 namespace tgr {
 	class NeuralFilter;
 	class NeuralSystem {
@@ -31,6 +34,7 @@ namespace tgr {
 		std::vector<NeuralLayer*> backpropLayers;
 		std::vector<NeuralLayerPtr> roots;
 		std::vector<NeuralLayerPtr> leafs;
+		std::shared_ptr<aly::NeuralFlowPane> flowPane;
 	public:
 		void evaluate();
 		void backpropagate();
@@ -42,6 +46,9 @@ namespace tgr {
 		void computeChange(const NeuralLayerPtr& layer, const std::vector<float>& output);
 		void resetChange(const NeuralLayerPtr& layer);
 		void initialize();
+		std::shared_ptr<aly::NeuralFlowPane> getFlow() const {
+			return flowPane;
+		}
 		Neuron* getNeuron(const Terminal& t) const;
 		void initialize(const aly::ExpandTreePtr& tree);
 		const std::vector<NeuralLayerPtr>& getRoots() const {
@@ -56,11 +63,13 @@ namespace tgr {
 		std::vector<NeuralLayerPtr>& getLayers() {
 			return layers;
 		}
+		NeuralSystem(const std::shared_ptr<aly::NeuralFlowPane>& pane);
 		void setLayer(const NeuralLayerPtr& layer,const aly::Image1f& input);
 		void setLayer(const NeuralLayerPtr& layer, const std::vector<float>& input);
 		void getLayer(const NeuralLayerPtr& layer, aly::Image1f& input);
 		void getLayer(const NeuralLayerPtr& layer, std::vector<float>& input);
 		void add(const std::shared_ptr<NeuralFilter>& filter);
 	};
+	typedef std::shared_ptr<NeuralSystem> NeuralSystemPtr;
 }
 #endif

@@ -101,7 +101,7 @@ namespace aly{
 	NeuralFlowPane::NeuralFlowPane(const std::string& name, const AUnit2D& pos, const AUnit2D& dims) :
 		Composite(name, pos, dims),dragEnabled(false) {
 		router.setBorderSpacing(30.0f);
-		selectedRegion = nullptr;
+		selectedLayer = nullptr;
 		ImageRGBA img;
 		ReadImageFromFile(AlloyApplicationContext()->getFullPath("images/tiger.png"), img);
 		/*
@@ -260,10 +260,10 @@ namespace aly{
 			nvgStroke(nvg);
 			nvgLineJoin(nvg, NVG_MITER);
 		}
-		if (selectedRegion != nullptr) {
-			int2 selected = selectedRegion->getSelected();
-			NeuralLayer* layer = selectedRegion->getLayer();
-			pixel2 cursorPosition = selectedRegion->cursorPosition;
+		if (selectedLayer != nullptr) {
+			int2 selected = selectedLayer->getRegion()->getSelected();
+			NeuralLayer* layer = selectedLayer;
+			pixel2 cursorPosition = selectedLayer->getRegion()->cursorPosition;
 			if (selected.x != -1 && selected.y != -1) {
 				Neuron* neuron = layer->get(selected.x, selected.y);
 				context->setCursor(&Cursor::CrossHairs);
