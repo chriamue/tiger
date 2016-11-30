@@ -21,6 +21,8 @@
 #ifndef _NEURALFLOWPANE_H_
 #define _NEURALFLOWPANE_H_
 #include "NeuralLayer.h"
+#include "NeuralLayerRegion.h"
+
 #include "AlloyUI.h"
 #include "AvoidanceRouting.h"
 namespace aly {
@@ -64,7 +66,11 @@ namespace aly {
 		std::vector<NeuralLayerRegionPtr> layerRegions;
 		ImageGlyphPtr backgroundImage;
 		bool dragEnabled;
+		NeuralLayerRegion* selectedRegion;
 	public:
+		void setSelected(NeuralLayerRegion* region) {
+			selectedRegion = region;
+		}
 		std::set<NeuralConnectionPtr> connections;
 		virtual void pack(const pixel2& pos, const pixel2& dims, const double2& dpmm, double pixelRatio, bool clamp) override;
 		virtual bool NeuralFlowPane::onEventHandler(AlloyContext* context, const InputEvent& e) override;

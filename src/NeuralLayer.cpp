@@ -22,6 +22,7 @@
 #include "AlloyUnits.h"
 #include "AlloyDrawUtil.h"
 #include "TigerApp.h"
+#include "NeuralFlowPane.h"
 using namespace aly;
 namespace tgr {
 	std::string MakeID(int len) {
@@ -40,6 +41,9 @@ namespace tgr {
 				MakeConnection(&biasNeurons[idx], SignalPtr(new Signal(1.0f)), &neurons[idx]);
 			}
 		}
+	}
+	std::shared_ptr<NeuralFlowPane> NeuralLayer::getFlow() const {
+		return app->getFlowPane();
 	}
 	NeuralLayer::NeuralLayer(TigerApp* app, const std::string& name,int width, int height, int bins,bool bias, const NeuronFunction& func) :app(app), name(name), width(width), height(height), bins(bins),bias(bias), id(-1) {
 		neurons.resize(width*height*bins,Neuron(func));
@@ -86,7 +90,9 @@ namespace tgr {
 			Neuron& neuron = neurons[n];
 			neuron.evaluate();
 		}
-
+		if (layerRegion.get() != nullptr) {
+			layerRegion->setDirty(true);
+		}
 	}
 	aly::Vector1f NeuralLayer::toVector() const{
 		int N = (int)neurons.size();
@@ -125,82 +131,7 @@ namespace tgr {
 	int NeuralLayer::getBin(const Neuron& n) const {
 		return clamp((int)std::floor(n.value*bins), 0, bins-1);
 	}
-	void NeuralLayer::draw(aly::AlloyContext* context, const aly::box2px& bounds) {
-
-		float scale = bounds.dimensions.x / width;
-		NVGcontext* nvg = context->nvgContext;
-		float rOuter = 0.5f*scale;
-		float rInner = 0.25f*scale;
-		float lineWidth = scale*0.01f;
-		nvgStrokeWidth(nvg, lineWidth);
-		
-		for (int j = 0; j < height; j++) {
-			for (int i = 0; i < width; i++) {
-				float2 center = float2(bounds.position.x + (i + 0.5f)*scale, bounds.position.y + (j + 0.5f)*scale);
-				nvgFillColor(nvg, Color(92, 92, 92));
-				nvgBeginPath(nvg);
-				nvgCircle(nvg, center.x, center.y, scale*0.5f);
-				nvgFill(nvg);
-				Neuron& n = operator()(i, j);
-				if (bins > 1) {
-					int b = getBin(n);
-					float aeps = 0.5f / rOuter;
-					float a0 = (float)(b - 0.5f) / bins * NVG_PI * 2.0f - NVG_PI*0.5f;
-					float a1 = (float)(b + 0.5f) / bins * NVG_PI * 2.0f - NVG_PI*0.5f;
-
-					nvgFillColor(nvg, Color(160, 160, 160));
-					nvgBeginPath(nvg);
-					nvgArc(nvg, center.x, center.y, rInner, a0, a1, NVG_CW);
-					nvgArc(nvg, center.x, center.y, rOuter, a1, a0, NVG_CCW);
-					nvgClosePath(nvg);
-					nvgFill(nvg);
-				}
-				if (lineWidth > 0.5f) {
-					int N = (int)n.input.size();
-					nvgLineCap(nvg,NVG_SQUARE);
-					for (int i = 0; i < N; i++) {
-						SignalPtr& sig = n.input[i];
-						float a = 2.0f*i*NVG_PI / N-0.5f*NVG_PI;
-						float cosa = std::cos(a);
-						float sina = std::sin(a);
-						float sx = center.x + rInner*cosa;
-						float sy = center.y + rInner*sina;
-						float tw = mix(rInner, rOuter-lineWidth, sig->value);
-						float wx = center.x + tw*cosa;
-						float wy = center.y + tw*sina;
-						float ex = center.x + (rOuter - lineWidth)*cosa;
-						float ey = center.y + (rOuter - lineWidth)*sina;
-						nvgStrokeColor(nvg, Color(128,128,128));
-						nvgStrokeWidth(nvg, lineWidth);
-						nvgBeginPath(nvg);
-						nvgMoveTo(nvg, sx, sy);
-						nvgLineTo(nvg, ex, ey);
-						nvgStroke(nvg);
-
-						nvgStrokeColor(nvg, Color(220,220,220));
-						nvgBeginPath(nvg);
-						nvgMoveTo(nvg, sx, sy);
-						nvgLineTo(nvg, wx, wy);
-						nvgStrokeWidth(nvg, 3*lineWidth);
-						nvgStroke(nvg);
-
-					}
-				}
-				nvgStrokeColor(nvg, Color(220, 220, 220));
-				nvgStrokeWidth(nvg, lineWidth);
-				nvgFillColor(nvg, Color(ColorMapToRGB(n.value, ColorMap::RedToBlue)));
-				nvgBeginPath(nvg);
-				nvgCircle(nvg, center.x, center.y, rInner);
-				nvgFill(nvg);
-				nvgStroke(nvg);
-
-				nvgStrokeColor(nvg, Color(92, 92, 92));
-				nvgBeginPath(nvg);
-				nvgCircle(nvg, center.x, center.y, scale*0.5f);
-				nvgStroke(nvg);
-			}
-		}
-	}
+	
 	const Neuron& NeuralLayer::operator[](const size_t i) const {
 		return neurons[i];
 	}
@@ -302,10 +233,16 @@ namespace tgr {
 				get(i, j)->value = input(i, j).x;
 			}
 		}
+		if (layerRegion.get() != nullptr) {
+			layerRegion->setDirty(true);
+		}
 	}
 	void NeuralLayer::set(const std::vector<float>& input) {
 		for (size_t i = 0; i < input.size(); i++) {
 			get(i)->value = input[i];
+		}
+		if (layerRegion.get() != nullptr) {
+			layerRegion->setDirty(true);
 		}
 	}
 	void NeuralLayer::get( Image1f& input) {

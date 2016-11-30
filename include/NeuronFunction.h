@@ -26,7 +26,24 @@ namespace tgr {
 		Sigmoid, Tanh, ReLU, LeakyReLU, Linear, Constant
 	};
 
-
+	template<class C, class R> std::basic_ostream<C, R> & operator <<(
+		std::basic_ostream<C, R> & ss, const NeuronFunctionType& type) {
+		switch (type) {
+			case NeuronFunctionType::Sigmoid:
+				return ss << "Sigmoid";
+			case NeuronFunctionType::Tanh:
+				return ss << "Tanh";
+			case NeuronFunctionType::ReLU:
+				return ss << "ReLU";
+			case NeuronFunctionType::LeakyReLU:
+				return ss << "LeakyReLU";
+			case NeuronFunctionType::Linear:
+				return ss << "Linear";
+			case NeuronFunctionType::Constant:
+				return ss << "Constant";
+		}
+		return ss;
+	}
 	class NeuronFunction {
 	public:
 		struct Interface {

@@ -97,6 +97,7 @@ namespace tgr {
 			}
 			return count;
 		}
+		std::string getType() const;
 		size_t getOutputNeuronSize() const {
 			return output.size();
 		}

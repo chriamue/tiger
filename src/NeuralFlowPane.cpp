@@ -101,6 +101,7 @@ namespace aly{
 	NeuralFlowPane::NeuralFlowPane(const std::string& name, const AUnit2D& pos, const AUnit2D& dims) :
 		Composite(name, pos, dims),dragEnabled(false) {
 		router.setBorderSpacing(30.0f);
+		selectedRegion = nullptr;
 		ImageRGBA img;
 		ReadImageFromFile(AlloyApplicationContext()->getFullPath("images/tiger.png"), img);
 		/*
@@ -166,7 +167,6 @@ namespace aly{
 		return false;
 	}
 	void NeuralFlowPane::draw(AlloyContext* context) {
-
 		NVGcontext* nvg = context->nvgContext;
 		box2px bounds = getBounds();
 		float w = bounds.dimensions.x;
@@ -259,6 +259,21 @@ namespace aly{
 			nvgStrokeWidth(nvg, lineWidth);
 			nvgStroke(nvg);
 			nvgLineJoin(nvg, NVG_MITER);
+		}
+		if (selectedRegion != nullptr) {
+			int2 selected = selectedRegion->getSelected();
+			NeuralLayer* layer = selectedRegion->getLayer();
+			pixel2 cursorPosition = selectedRegion->cursorPosition;
+			if (selected.x != -1 && selected.y != -1) {
+				Neuron* neuron = layer->get(selected.x, selected.y);
+				context->setCursor(&Cursor::CrossHairs);
+				nvgFontFaceId(nvg, context->getFontHandle(FontType::Bold));
+				nvgFontSize(nvg, 16.0f);
+				nvgTextAlign(nvg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
+				drawText(nvg, cursorPosition + pixel2(0.0f, 10.0f), MakeString() << neuron->getType() << " " << selected, FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
+				drawText(nvg, cursorPosition + pixel2(0.0f, 10.0f + 16.0f), MakeString() << "in: " << neuron->getInputNeuronSize() << " / " << neuron->getInputWeightSize(), FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
+				drawText(nvg, cursorPosition + pixel2(0.0f, 10.0f + 32.0f), MakeString() << "out: " << neuron->getOutputNeuronSize(), FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
+			}
 		}
 	}
 	void NeuralFlowPane::update() {

@@ -35,7 +35,6 @@ namespace aly {
 	class NeuralFlowPane;
 }
 namespace tgr {
-
 	std::string MakeID(int len=8);
 	class NeuralLayer {
 		protected:
@@ -53,6 +52,7 @@ namespace tgr {
 			double residualError;
 			aly::NeuralLayerRegionPtr layerRegion;
 			TigerApp* app;
+
 		public:
 			int width;
 			int height;
@@ -62,6 +62,8 @@ namespace tgr {
 			typedef typename std::vector<ValueType>::iterator iterator;
 			typedef typename std::vector<ValueType>::const_iterator const_iterator;
 			typedef typename std::vector<ValueType>::reverse_iterator reverse_iterator;
+
+			std::shared_ptr<aly::NeuralFlowPane> getFlow() const;
 			iterator begin() {
 				return neurons.begin();
 			}
@@ -168,7 +170,6 @@ namespace tgr {
 			const Neuron& operator()(const size_t i, const size_t j) const;
 			const Neuron& operator()(const aly::int2 ij) const;
 			const Neuron& operator()(const Terminal ij) const;
-			void draw(aly::AlloyContext* context, const aly::box2px& bounds);
 			void set(const aly::Image1f& input);
 			void set(const std::vector<float>& input);
 			void get(aly::Image1f& input);

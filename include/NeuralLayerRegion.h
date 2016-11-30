@@ -23,6 +23,7 @@
 
 #include "AlloyWidget.h"
 #include "AvoidanceRouting.h"
+#include "GLFrameBuffer.h"
 namespace tgr {
 	class NeuralLayer;
 	class Neuron;
@@ -35,16 +36,26 @@ namespace aly {
 		tgr::NeuralLayer* layer;
 		TextLabelPtr textLabel;
 		int selectionRadius;
-		pixel2 cursorPosition;
 		int2 lastSelected;
 		std::shared_ptr<IconButton> cancelButton;
 		std::shared_ptr<IconButton> expandButton;
 		std::list<tgr::Neuron*> activeList;
+		aly::ImageRGBA cacheImage;
+
+		aly::ImageGlyphPtr cacheGlyph;
+		bool cacheDirty;
+		aly::GLFrameBuffer renderBuffer;
+		void drawCache(AlloyContext* context);
 	public:
+
+		pixel2 cursorPosition;
 		pixel2 cursorOffset;
 		float scale;
 		tgr::NeuralLayer* getLayer() const {
 			return layer;
+		}
+		void setDirty(bool d) {
+			cacheDirty = d;
 		}
 		std::function<void()> onExpand;
 		std::function<void()> onHide;
@@ -54,6 +65,9 @@ namespace aly {
 		void setScale(float s) {
 			scale = s;
 		};
+		aly::int2 getSelected() const {
+			return lastSelected;
+		}
 		void setExpandable(bool t) {
 			expandButton->setVisible(t);
 		}

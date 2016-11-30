@@ -67,6 +67,9 @@ namespace tgr {
 			}
 		}
 	}
+	std::string Neuron::getType() const {
+		return aly::MakeString() << transform.type();
+	}
 	float Neuron::backpropagate() {
 		float sum1 = 0.0f,sum2;
 		if (output.size() > 0) {
