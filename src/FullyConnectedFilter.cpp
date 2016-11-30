@@ -22,10 +22,10 @@
 #include "AlloyMath.h"
 using namespace aly;
 namespace tgr {
-	FullyConnectedFilter::FullyConnectedFilter(TigerApp* app, const std::vector<NeuralLayerPtr>& inputLayers, int width, int height) :NeuralFilter(app, "Average Pool"), width(width), height(height) {
+	FullyConnectedFilter::FullyConnectedFilter(TigerApp* app, const std::string& name, const std::vector<NeuralLayerPtr>& inputLayers, int width, int height) :NeuralFilter(app,name), width(width), height(height) {
 		NeuralFilter::inputLayers = inputLayers;
 	}
-	FullyConnectedFilter::FullyConnectedFilter(TigerApp* app, const NeuralLayerPtr& inputLayer, int width, int height) : NeuralFilter(app, "Fully Connected"), width(width), height(height) {
+	FullyConnectedFilter::FullyConnectedFilter(TigerApp* app, const std::string& name, const NeuralLayerPtr& inputLayer, int width, int height) : NeuralFilter(app, name), width(width), height(height) {
 		NeuralFilter::inputLayers.push_back(inputLayer);
 	}
 	void FullyConnectedFilter::initialize(NeuralSystem& sys) {

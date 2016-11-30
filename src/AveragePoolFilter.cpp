@@ -43,7 +43,7 @@ namespace tgr {
 		outputLayers.resize(inputLayers.size());
 		for (int k = 0; k < inputLayers.size(); k++) {
 			NeuralLayerPtr inputLayer = inputLayers[k];
-			outputLayers[k] = NeuralLayerPtr(new NeuralLayer(app,MakeString()<<name<<" ["<<kernelSize<<"]",inputLayer->width/kernelSize,inputLayer->height/kernelSize,1,true));
+			outputLayers[k] = NeuralLayerPtr(new NeuralLayer(app,name,inputLayer->width/kernelSize,inputLayer->height/kernelSize,1,true));
 			NeuralLayerPtr outputLayer = outputLayers[k];
 			inputLayer->addChild(outputLayer);
 			for (int j = 0; j < outputLayer->height; j++) {

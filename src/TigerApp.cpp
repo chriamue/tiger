@@ -105,11 +105,11 @@ bool TigerApp::init(Composite& rootNode) {
 	controls->addNumberField("Learning Delta", learningRateDelta, Float(0.0f), Float(1.0f));
 
 	toolbar->backgroundColor = MakeColor(getContext()->theme.DARKER);
-	sampleIndex = Integer(0);
+	sampleIndex = Integer(10857);
 	const float numAspect = 2.0f;
 	const float entryHeight = 40.0f;
 	const float aspect = 6.0f;
-	TextLabelPtr labelRegion = TextLabelPtr(new TextLabel("Selection:", CoordPX(0.0f, 0.0f), CoordPX(105.0f,entryHeight)));
+	TextLabelPtr labelRegion = TextLabelPtr(new TextLabel("Example:", CoordPX(0.0f, 0.0f), CoordPX(105.0f,entryHeight)));
 	
 	tweenRegion = HorizontalSliderPtr(new HorizontalSlider("sample tween", CoordPX(0.0f,0.0f), CoordPX(aspect * entryHeight, entryHeight),false,Integer(minIndex), Integer(maxIndex), sampleIndex));
 	ModifiableNumberPtr valueRegion = ModifiableNumberPtr(new ModifiableNumber("sample field", CoordPX(0.0f, 0.0f), CoordPX(numAspect * entryHeight, entryHeight), sampleIndex.type()));
@@ -305,7 +305,10 @@ bool TigerApp::init(Composite& rootNode) {
 		return onEventHandler(context, event);
 	};
 	getContext()->addDeferredTask([=]() {
-		flowRegion->add(inputLayer.get(), flowRegion->getBounds().center());
+		box2px bounds=flowRegion->getBounds();
+		flowRegion->add(inputLayer.get(), bounds.position + pixel2(0.25f*bounds.dimensions.x, 0.25f*bounds.dimensions.y));
+		flowRegion->add(outputLayer.get(), bounds.position + pixel2(0.75f*bounds.dimensions.x,0.25f*bounds.dimensions.y));
+		
 	});
 	return true;
 }
@@ -369,7 +372,7 @@ bool TigerApp::onEventHandler(AlloyContext* context, const aly::InputEvent& e) {
 	return false;
 }
 void TigerApp::initialize() {
-	parse_mnist_images(trainFile,trainInputData);
+	parse_mnist_images(trainFile,trainInputData,0.0f,1.0f,2, 2);
 	parse_mnist_labels(trainLabelFile, trainOutputData);
 	minIndex = 0;
 	maxIndex = (int)trainInputData.size() - 1;
@@ -382,7 +385,7 @@ void TigerApp::initialize() {
 		std::vector<NeuralLayerPtr> all;
 		for (int i = 0; i < conv1->getOutputSize(); i++) {
 			AveragePoolFilterPtr avg1(new AveragePoolFilter(this, conv1->getOutputLayer(i), 2));
-			avg1->setName(MakeString()<<"First Sub-Sample [" << i << "]");
+			avg1->setName(MakeString()<<"Sub-Sample [" << i << "]");
 			sys.add(avg1);
 			all.push_back(avg1->getOutputLayer(0));
 		}
@@ -398,19 +401,19 @@ void TigerApp::initialize() {
 		}
 		conv2->setConnectionMap(connectionTable);
 		sys.add(conv2);
-		/*
-		for (int i = 0; i < all.size(); i++) {
-
-
-			
-			for (int i = 0; i < conv2->getOutputSize(); i++) {
-				AveragePoolFilterPtr avg2(new AveragePoolFilter(this, conv2->getOutputLayer(i), 2));
-				avg2->setName(MakeString() << "Second Sub-Sample [" << i << "]");
-				sys.add(avg2);
-			}	
+		
+		all.clear();
+		for (int i = 0; i < conv2->getOutputSize(); i++) {
+			AveragePoolFilterPtr avg2(new AveragePoolFilter(this, conv2->getOutputLayer(i), 2));
+			avg2->setName(MakeString() << "Sub-Sample [" << i << "]");
+			sys.add(avg2);
+			ConvolutionFilterPtr conv3(new ConvolutionFilter(this, avg2->getOutputLayer(0), 5,1));
+			sys.add(conv3);
+			all.push_back(conv3->getOutputLayer(0));
 		}
-		*/
-		//FullyConnectedFilterPtr indicatorFilter(new FullyConnectedFilter(this,"Output Layer",,10,1));
+		FullyConnectedFilterPtr decisionFilter(new FullyConnectedFilter(this,"Decision Layer",all,10,1));
+		sys.add(decisionFilter);
+		outputLayer = decisionFilter->getOutputLayer(0);
 		sys.initialize(expandTree);
 		sys.evaluate();
 	}

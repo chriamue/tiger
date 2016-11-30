@@ -260,7 +260,7 @@ namespace tgr {
 	}
 	aly::NeuralLayerRegionPtr NeuralLayer::getRegion() {
 		if (layerRegion.get() == nullptr) {
-			float2 dims=float2(240.0f*getAspect(),240.0f)+ NeuralLayerRegion::getPadding();
+			float2 dims=float2(240.0f,240.0f/ getAspect())+ NeuralLayerRegion::getPadding();
 			layerRegion = NeuralLayerRegionPtr(new NeuralLayerRegion(name,this, CoordPerPX(0.5f, 0.5f, -dims.x*0.5f, -dims.y*0.5f), CoordPX(dims.x, dims.y)));
 			if (hasChildren()) {
 				layerRegion->setExpandable(true);
