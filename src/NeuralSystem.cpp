@@ -34,6 +34,11 @@ namespace tgr {
 		}
 		return ret;
 	}
+	void NeuralSystem::setOptimizer(const NeuralOptimizationPtr& opt) {
+		for (auto layer : layers) {
+			layer->setOptimizer(opt);
+		}
+	}
 	double NeuralSystem::accumulateChange(const NeuralLayerPtr& layer, const Image1f& output) {
 		double residual=0;
 		for (int j = 0; j <output.height; j++) {
@@ -99,7 +104,7 @@ namespace tgr {
 		for (NeuralLayerPtr layer:layers) {
 			layer->evaluate();
 			Vector1f data=layer->toVector();
-			std::cout << layer->getName() << ":: Sum: " << data.sum() << " Std. Dev: " << data.stdDev() << std::endl;
+			//std::cout << layer->getName() << ":: Sum: " << data.sum() << " Std. Dev: " << data.stdDev() << std::endl;
 		}
 	}
 	void NeuralSystem::initialize() {

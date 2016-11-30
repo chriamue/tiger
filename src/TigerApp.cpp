@@ -145,6 +145,7 @@ bool TigerApp::init(Composite& rootNode) {
 			evaluate();
 			return true;
 		}
+		return false;
 	};
 
 	TextLinkPtr learnButton = TextLinkPtr(new TextLink("Learning Step", CoordPX(0.0f, 0.0f), CoordPX(170.0f, entryHeight)));
@@ -170,7 +171,6 @@ bool TigerApp::init(Composite& rootNode) {
 	toolbar->add(valueRegion);
 	toolbar->add(evaluateButton);
 	toolbar->add(learnButton);
-	setSampleIndex(0);
 	controlLayout->backgroundColor = MakeColor(getContext()->theme.DARKER);
 	controlLayout->borderWidth = UnitPX(0.0f);
 	flowRegion = NeuralFlowPanePtr(new NeuralFlowPane("View", CoordPX(0.0f, 40.0f), CoordPerPX(1.0f, 1.0f, 0.0f, -120.0f)));
@@ -310,6 +310,8 @@ bool TigerApp::init(Composite& rootNode) {
 		flowRegion->add(outputLayer.get(), bounds.position + pixel2(0.75f*bounds.dimensions.x,0.25f*bounds.dimensions.y));
 		
 	});
+	setSampleIndex(sampleIndex.toInteger());
+	sys.evaluate();
 	return true;
 }
 void TigerApp::setSelectedLayer(tgr::NeuralLayer* layer) {
@@ -317,7 +319,7 @@ void TigerApp::setSelectedLayer(tgr::NeuralLayer* layer) {
 }
 void TigerApp::train(const std::vector<int>& sampleIndexes) {
 	NeuralOptimizationPtr optimizer;
-	int iterations = 10;
+	int iterations = 100;
 		for (auto layer : sys.getLayers()) {
 			if (layer->isTrainable()) {
 				layer->setOptimizer(optimizer);
@@ -335,10 +337,12 @@ void TigerApp::train(const std::vector<int>& sampleIndexes) {
 				inputLayer->set(inputData);
 				outputLayer->set(outputData);
 				sys.evaluate();
-				sys.accumulateChange(outputLayer,outputData);
+				double err=sys.accumulateChange(outputLayer,outputData);
+				std::cout << "Residual " << idx << ": " << err << std::endl;
 			}
 			sys.backpropagate();
 			sys.optimize();
+			sys.evaluate();
 		}
 }
 bool TigerApp::onEventHandler(AlloyContext* context, const aly::InputEvent& e) {
@@ -415,7 +419,7 @@ void TigerApp::initialize() {
 		sys.add(decisionFilter);
 		outputLayer = decisionFilter->getOutputLayer(0);
 		sys.initialize(expandTree);
-		sys.evaluate();
+		sys.setOptimizer(std::shared_ptr<NeuralOptimization>(new GradientDescentOptimizer(0.5f)));
 	}
 }
 void TigerApp::draw(AlloyContext* context) {

@@ -98,7 +98,7 @@ namespace tgr {
 				index = 0;
 				for (int jj = 0; jj < kernelSize; jj++) {
 					for (int ii = 0; ii < kernelSize; ii++) {
-						SignalPtr sig = SignalPtr(new Signal(RandomUniform(0.0f, 1.0f)));
+						SignalPtr sig = SignalPtr(new Signal(RandomUniform(0.0f,1.0f)));
 						signals[index++] = sig;
 					}
 				}

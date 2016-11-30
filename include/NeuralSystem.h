@@ -35,6 +35,7 @@ namespace tgr {
 		void evaluate();
 		void backpropagate();
 		bool optimize();
+		void setOptimizer(const NeuralOptimizationPtr& opt);
 		double accumulateChange(const NeuralLayerPtr& layer,const aly::Image1f& output);
 		double accumulateChange(const NeuralLayerPtr& layer, const std::vector<float>& output);
 		void computeChange(const NeuralLayerPtr& layer, const aly::Image1f& output);

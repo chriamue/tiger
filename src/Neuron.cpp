@@ -105,7 +105,6 @@ namespace tgr {
 				std::vector<Neuron*>& input = sig->get(this);
 				for (Neuron* inner : input) {
 					sum2 += inner->value;
-
 				}
 				sum1 += sig->value*sum2 / (float(input.size()));
 			}
