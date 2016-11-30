@@ -35,16 +35,45 @@ namespace tgr {
 		std::vector<NeuralLayerPtr> roots;
 		std::vector<NeuralLayerPtr> leafs;
 		std::shared_ptr<aly::NeuralFlowPane> flowPane;
+		NeuralLayerPtr inputLayer, outputLayer;
 	public:
 		void evaluate();
 		void backpropagate();
 		bool optimize();
+
+		void setInput(const NeuralLayerPtr& layer) {
+			inputLayer = layer;
+		}
+		void setOutput(const NeuralLayerPtr& layer) {
+			outputLayer = layer;
+		}
+		NeuralLayerPtr getInput() const {
+			return inputLayer;
+		}
+		NeuralLayerPtr getOutput() const {
+			return outputLayer;
+		}
 		void setOptimizer(const NeuralOptimizationPtr& opt);
-		double accumulateChange(const NeuralLayerPtr& layer,const aly::Image1f& output);
+		double accumulateChange(const NeuralLayerPtr& layer, const aly::Image1f& output);
 		double accumulateChange(const NeuralLayerPtr& layer, const std::vector<float>& output);
 		void computeChange(const NeuralLayerPtr& layer, const aly::Image1f& output);
 		void computeChange(const NeuralLayerPtr& layer, const std::vector<float>& output);
 		void resetChange(const NeuralLayerPtr& layer);
+		inline void resetChange() {
+			resetChange(outputLayer);
+		}
+		inline double accumulateChange(const aly::Image1f& output) {
+			return accumulateChange(outputLayer, output);
+		}
+		inline double accumulateChange(const std::vector<float>& output) {
+			return accumulateChange(outputLayer, output);
+		}
+		inline double computeChange(const aly::Image1f& output) {
+			computeChange(outputLayer, output);
+		}
+		inline double computeChange(const std::vector<float>& output) {
+			computeChange(outputLayer, output);
+		}
 		void initialize();
 		std::shared_ptr<aly::NeuralFlowPane> getFlow() const {
 			return flowPane;
@@ -64,10 +93,23 @@ namespace tgr {
 			return layers;
 		}
 		NeuralSystem(const std::shared_ptr<aly::NeuralFlowPane>& pane);
-		void setLayer(const NeuralLayerPtr& layer,const aly::Image1f& input);
+		void setLayer(const NeuralLayerPtr& layer, const aly::Image1f& input);
 		void setLayer(const NeuralLayerPtr& layer, const std::vector<float>& input);
 		void getLayer(const NeuralLayerPtr& layer, aly::Image1f& input);
 		void getLayer(const NeuralLayerPtr& layer, std::vector<float>& input);
+
+		inline void setInput(const aly::Image1f& input) {
+			setLayer(inputLayer, input);
+		}
+		inline void setInput(const std::vector<float>& input) {
+			setLayer(inputLayer, input);
+		}
+		inline void getOutput(aly::Image1f& out) {
+			getLayer(outputLayer, out);
+		}
+		inline void getOutput(std::vector<float>& out) {
+			getLayer(outputLayer, out);
+		}
 		void add(const std::shared_ptr<NeuralFilter>& filter);
 	};
 	typedef std::shared_ptr<NeuralSystem> NeuralSystemPtr;

@@ -43,15 +43,22 @@ namespace tgr {
 		aly::Number learningRateInitial;
 		aly::Number learningRateDelta;
 		int optimizationMethod;
+		std::vector<float> outputData;
 		uint64_t iteration;
 		std::thread simulationThread;
 		std::shared_ptr<tgr::NeuralSystem> sys;
+		std::vector<int> sampleIndexes;
 	public:
 		std::function<void(uint64_t iteration, bool lastIteration)> onUpdate;
+		std::function<void(const NeuralLayerPtr& input,int idx)> inputSampler;
+		std::function<void(std::vector<float>& outputData, int idx)> outputSampler;
 		typedef std::chrono::high_resolution_clock Clock;
 		bool step();
 		bool init();
 		void cleanup();
+		void setSamples(const std::vector<int>& idx) {
+			sampleIndexes = idx;
+		}
 		void setup(const aly::ParameterPanePtr& pane);
 		NeuralWorker(const std::shared_ptr<tgr::NeuralSystem>& system);
 		uint64_t getMaxIteration() const {

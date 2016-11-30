@@ -51,9 +51,8 @@ protected:
 	aly::HorizontalSliderPtr tweenRegion;
 	std::vector<aly::Image1f> trainInputData;
 	std::vector<uint8_t> trainOutputData;
-	tgr::NeuralLayerPtr inputLayer;
-	tgr::NeuralLayerPtr outputLayer;
 	tgr::NeuralWorkerPtr worker;
+	bool initializeXOR();
 	bool initializeLeNet5();
 	void initialize();
 	void setSelectedLayer(tgr::NeuralLayer* layer);

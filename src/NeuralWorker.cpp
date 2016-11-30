@@ -28,9 +28,10 @@ namespace tgr {
 
 	}
 	bool NeuralWorker::init() {
-		sys->setOptimizer(std::shared_ptr<NeuralOptimization>(new GradientDescentOptimizer(0.5f)));
+		std::cout << "Intialize " << std::endl;
+		sys->setOptimizer(std::shared_ptr<NeuralOptimization>(new GradientDescentOptimizer(0.8f)));
 		iteration = 0;
-		return false;
+		return true;
 	}
 	void NeuralWorker::cleanup(){
 	}
@@ -47,11 +48,25 @@ namespace tgr {
 	bool NeuralWorker::step() {
 		uint64_t iter =iteration;
 		bool ret = true;
-
+		sys->resetChange();
+		for (int idx : sampleIndexes) {
+			if(inputSampler)inputSampler(sys->getInput(), idx);
+			sys->evaluate();
+			if (outputSampler) {
+				outputSampler(outputData, idx);
+				double err = sys->accumulateChange(outputData);
+				std::cout << "Residual " << idx << ": " << err << std::endl;
+			}
+		}
+		sys->backpropagate();
+		sys->optimize();
 		if (iter%uint64_t(iterationsPerStep.toInteger())==0&&onUpdate) {
 			onUpdate(iter, !ret);
 		}
 		iteration++;
+		if (iteration >= getMaxIteration()) {
+			ret = false;
+		}
 		return ret;
 	}
 	NeuralWorker::NeuralWorker(const std::shared_ptr<tgr::NeuralSystem>& system) :

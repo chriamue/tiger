@@ -37,7 +37,9 @@ namespace tgr {
 	}
 	void NeuralSystem::setOptimizer(const NeuralOptimizationPtr& opt) {
 		for (auto layer : layers) {
-			layer->setOptimizer(opt);
+			if (layer->isTrainable()) {
+				layer->setOptimizer(opt);
+			}
 		}
 	}
 	double NeuralSystem::accumulateChange(const NeuralLayerPtr& layer, const Image1f& output) {

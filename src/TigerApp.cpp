@@ -46,7 +46,8 @@ TigerApp::TigerApp() :
 }
 void TigerApp::setSampleIndex(int idx){
 	sampleIndex.setValue(idx);
-	inputLayer->set(trainInputData[idx]);
+	sys->getInput()->set(trainInputData[idx]);
+	worker->setSamples(std::vector<int>{idx});
 }
 void TigerApp::setSampleRange(int mn, int mx){
 	minIndex = mn;
@@ -306,8 +307,8 @@ bool TigerApp::init(Composite& rootNode) {
 	};
 	getContext()->addDeferredTask([=]() {
 		box2px bounds=flowRegion->getBounds();
-		flowRegion->add(inputLayer.get(), bounds.position + pixel2(0.25f*bounds.dimensions.x, 0.25f*bounds.dimensions.y));
-		flowRegion->add(outputLayer.get(), bounds.position + pixel2(0.75f*bounds.dimensions.x,0.25f*bounds.dimensions.y));
+		flowRegion->add(sys->getInput().get(), bounds.position + pixel2(0.25f*bounds.dimensions.x, 0.25f*bounds.dimensions.y));
+		flowRegion->add(sys->getOutput().get(), bounds.position + pixel2(0.75f*bounds.dimensions.x,0.25f*bounds.dimensions.y));
 		
 	});
 	initialize();
@@ -322,32 +323,8 @@ void TigerApp::setSelectedLayer(tgr::NeuralLayer* layer) {
 	selectedLayer = layer;
 }
 void TigerApp::train(const std::vector<int>& sampleIndexes) {
-	NeuralOptimizationPtr optimizer;
-	int iterations = 100;
-		for (auto layer : sys->getLayers()) {
-			if (layer->isTrainable()) {
-				layer->setOptimizer(optimizer);
-			}
-		}
-		std::vector<float> outputData(10);//10 digits for MNIST
-		for (int iter = 0; iter < iterations; iter++) {
-			sys->resetChange(outputLayer);
-			for (int idx : sampleIndexes) {
-				aly::Image1f& inputData=trainInputData[idx];
-				int out=trainOutputData[idx];
-				for (int i = 0; i < outputData.size(); i++) {
-					outputData[i] = (out == i) ? 1.0f : 0.0f;
-				}
-				inputLayer->set(inputData);
-				outputLayer->set(outputData);
-				sys->evaluate();
-				double err=sys->accumulateChange(outputLayer,outputData);
-				std::cout << "Residual " << idx << ": " << err << std::endl;
-			}
-			sys->backpropagate();
-			sys->optimize();
-			sys->evaluate();
-		}
+	worker->setSamples(sampleIndexes);
+	worker->step();
 }
 bool TigerApp::onEventHandler(AlloyContext* context, const aly::InputEvent& e) {
 	if (selectedLayer != nullptr) {
@@ -378,6 +355,9 @@ bool TigerApp::onEventHandler(AlloyContext* context, const aly::InputEvent& e) {
 		overTarget = false;
 	}
 	return false;
+}
+bool TigerApp::initializeXOR() {
+	return true;
 }
 bool TigerApp::initializeLeNet5() {
 	parse_mnist_images(trainFile, trainInputData, 0.0f, 1.0f, 2, 2);
@@ -416,18 +396,8 @@ bool TigerApp::initializeLeNet5() {
 		}
 		FullyConnectedFilterPtr decisionFilter(new FullyConnectedFilter("Decision Layer", all, 10, 1));
 		sys->add(decisionFilter);
-		inputLayer = conv1->getInputLayer(0);
-		outputLayer = decisionFilter->getOutputLayer(0);
-		return true;
-	}
-	return false;
-}
-void TigerApp::initialize() {
-	sys.reset(new NeuralSystem(flowRegion));
-	if (initializeLeNet5()) {
-		sys->initialize(expandTree);
-		setSampleRange(0, (int)trainInputData.size() - 1);
-		setSampleIndex(sampleIndex.toInteger());
+		sys->setInput(conv1->getInputLayer(0));
+		sys->setOutput(decisionFilter->getOutputLayer(0));
 		worker.reset(new NeuralWorker(sys));
 		worker->onUpdate = [this](uint64_t iteration, bool lastIteration) {
 			std::cout << "Iterate " << iteration << std::endl;
@@ -441,6 +411,29 @@ void TigerApp::initialize() {
 				timelineSlider->setTimeValue((int)worker->getIteration());
 			});
 		};
+		worker->inputSampler = [this](const NeuralLayerPtr& input, int idx) {
+			aly::Image1f& inputData = trainInputData[idx];
+			input->set(inputData);
+		};
+		worker->outputSampler = [this](std::vector<float>& outputData, int idx) {
+			int out = trainOutputData[idx];
+			outputData.resize(10);
+			for (int i = 0; i <10; i++) {
+				outputData[i] = (out == i) ? 1.0f : 0.0f;
+			}
+		};
+		setSampleRange(0, (int)trainInputData.size() - 1);
+		setSampleIndex(sampleIndex.toInteger());
+
+		return true;
+	}
+	return false;
+}
+void TigerApp::initialize() {
+	sys.reset(new NeuralSystem(flowRegion));
+	if (initializeLeNet5()) {
+		sys->initialize(expandTree);
+
 	}
 
 }
