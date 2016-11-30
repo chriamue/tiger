@@ -28,8 +28,8 @@ namespace tgr {
 	FullyConnectedFilter::FullyConnectedFilter(const std::string& name, const NeuralLayerPtr& inputLayer, int width, int height) : NeuralFilter(name), width(width), height(height) {
 		NeuralFilter::inputLayers.push_back(inputLayer);
 	}
-	FullyConnectedFilter::FullyConnectedFilter(const std::string& name, int inWidth,int inHeight,int width, int height) : NeuralFilter("Feature"), width(width),height(height) {
-		inputLayers.push_back(NeuralLayerPtr(new NeuralLayer("Input Layer",inWidth,inHeight)));
+	FullyConnectedFilter::FullyConnectedFilter(const std::string& name, int inWidth,int inHeight,int width, int height) : NeuralFilter(name), width(width),height(height) {
+		inputLayers.push_back(NeuralLayerPtr(new NeuralLayer("Input Layer",inWidth,inHeight,true)));
 	}
 	void FullyConnectedFilter::initialize(NeuralSystem& sys) {
 		std::vector<SignalPtr> signals;

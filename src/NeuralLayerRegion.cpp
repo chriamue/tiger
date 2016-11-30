@@ -234,7 +234,16 @@ namespace aly {
 						nvgLineTo(nvg, ex, ey);
 						nvgStroke(nvg);
 
-						nvgStrokeColor(nvg, Color(220, 220, 220));
+						float valSum = 0.0f;
+						int sz=(int)sig->mapping.size();
+						if (sz > 0) {
+							for (Neuron* ne : sig->get(&n)) {
+								valSum += ne->value;
+							}
+							nvgStrokeColor(nvg, Color(ColorMapToRGB(valSum/sz, ColorMap::RedToBlue)));
+						} else {
+							nvgStrokeColor(nvg, Color(220, 220, 220));
+						}
 						nvgBeginPath(nvg);
 						nvgMoveTo(nvg, sx, sy);
 						nvgLineTo(nvg, wx, wy);
