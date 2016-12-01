@@ -21,8 +21,18 @@
 
 #include "TigerApp.h"
 int main(int argc, char *argv[]) {
+	int index = -1;
 	try {
-		TigerApp flowPane;
+		if (argc == 1) {
+			std::cout << "Usage: " << argv[0] << " [example index]\nToy Examples:" << std::endl;
+			std::cout << "[0] XOR" << std::endl;
+			std::cout << "[1] LeNET5" << std::endl;
+			std::cout << ">> Enter Example Number: ";
+			std::cin >> index;
+		} else {
+			index = std::atoi(argv[1]);
+		}
+		TigerApp flowPane(index);
 		flowPane.run(1);
 	} catch (std::exception& e) {
 		std::cout << "Main Error: " << e.what() << std::endl;

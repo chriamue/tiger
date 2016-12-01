@@ -42,6 +42,7 @@ protected:
 	aly::DrawPtr dragIconPane;
 	aly::NeuralFlowPanePtr flowRegion;
 	aly::TimelineSliderPtr timelineSlider;
+	aly::ModifiableNumberPtr valueRegion;
 	aly::Number sampleIndex;
 	int minIndex,maxIndex;
 	std::string trainFile;
@@ -52,6 +53,7 @@ protected:
 	std::vector<aly::Image1f> trainInputData;
 	std::vector<uint8_t> trainOutputData;
 	tgr::NeuralRuntimePtr worker;
+	int exampleIndex;
 	bool initializeXOR();
 	bool initializeLeNet5();
 	void initialize();
@@ -60,7 +62,7 @@ public:
 	void setSampleIndex(int idx);
 	void setSampleRange(int mn, int mx);
 	bool overTarget = false;
-	TigerApp();
+	TigerApp(int example);
 	aly::NeuralFlowPanePtr getFlowPane() const {
 		return flowRegion;
 	}

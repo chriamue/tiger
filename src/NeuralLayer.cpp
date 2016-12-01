@@ -211,29 +211,30 @@ namespace tgr {
 				sys->getFlow()->update();
 			};
 			layerRegion->onExpand = [this]() {
-				std::shared_ptr<NeuralFlowPane> flowPane = sys->getFlow();
-				box2px bounds = layerRegion->getBounds();
-				int idx = 0;
-				int N = int(getChildren().size());
-				float layoutWidth = 0.0f;
-				float width = 120.0f;
-				float offset = 0.5f*width;
-				layoutWidth = (10.0f + width)*N;
-				for (auto child : getChildren()) {
-					float height=child->getRegion()->setSize(width);
-					float2 pos = pixel2(
-						bounds.position.x + bounds.dimensions.x*0.5f - layoutWidth*0.5f+offset,
-						bounds.position.y + bounds.dimensions.y + 0.5f*height + 10.0f);
-					flowPane->add(child.get(), pos);
-					offset += width + 10.0f;
-				}
-				flowPane->update();
+				expand();
 			};
 		}
 		return layerRegion;
 	}
-
-
+	void NeuralLayer::expand() {
+		std::shared_ptr<NeuralFlowPane> flowPane = sys->getFlow();
+		box2px bounds = layerRegion->getBounds();
+		int idx = 0;
+		int N = int(getChildren().size());
+		float layoutWidth = 0.0f;
+		float width = 120.0f;
+		float offset = 0.5f*width;
+		layoutWidth = (10.0f + width)*N - 10.0f;
+		for (auto child : getChildren()) {
+			float height = child->getRegion()->setSize(width);
+			float2 pos = pixel2(
+				bounds.position.x + bounds.dimensions.x*0.5f - layoutWidth*0.5f + offset,
+				bounds.position.y + bounds.dimensions.y + 0.5f*height + 10.0f);
+			flowPane->add(child.get(), pos);
+			offset += width + 10.0f;
+		}
+		flowPane->update();
+	}
 	void NeuralLayer::set(const Image1f& input) {
 		for (int j = 0; j < input.height; j++) {
 			for (int i = 0; i < input.width; i++) {

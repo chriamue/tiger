@@ -29,11 +29,11 @@ namespace tgr {
 		NeuralFilter::inputLayers.push_back(inputLayer);
 	}
 	FullyConnectedFilter::FullyConnectedFilter(const std::string& name, int inWidth,int inHeight,int width, int height) : NeuralFilter(name), width(width),height(height) {
-		inputLayers.push_back(NeuralLayerPtr(new NeuralLayer("Input Layer",inWidth,inHeight,true)));
+		inputLayers.push_back(NeuralLayerPtr(new NeuralLayer("Input Layer",inWidth,inHeight, 1, true, Sigmoid())));
 	}
 	void FullyConnectedFilter::initialize(NeuralSystem& sys) {
 		std::vector<SignalPtr> signals;
-		outputLayers.push_back(NeuralLayerPtr(new NeuralLayer( name, width, height, 1, true)));
+		outputLayers.push_back(NeuralLayerPtr(new NeuralLayer( name, width, height, 1, true, Sigmoid())));
 		NeuralLayerPtr outputLayer = outputLayers[0];
 		for (int k = 0; k < inputLayers.size(); k++) {
 			NeuralLayerPtr inputLayer = inputLayers[k];

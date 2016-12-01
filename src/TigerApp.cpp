@@ -41,11 +41,12 @@ static const bool MNIST_TABLE[] = {
 };
 #undef O
 #undef X
-TigerApp::TigerApp() :
-	Application(1800, 800, "Tiger Machine",true), selectedLayer(nullptr){
+TigerApp::TigerApp(int example) :
+	Application(1800, 800, "Tiger Machine",true),exampleIndex(example), selectedLayer(nullptr){
 }
 void TigerApp::setSampleIndex(int idx){
 	sampleIndex.setValue(idx);
+	valueRegion->setNumberValue(sampleIndex);
 	sys->getInput()->set(trainInputData[idx]);
 	worker->setSamples(std::vector<int>{idx});
 }
@@ -94,14 +95,14 @@ bool TigerApp::init(Composite& rootNode) {
 	flowRegion = NeuralFlowPanePtr(new NeuralFlowPane("View", CoordPX(0.0f, 40.0f), CoordPerPX(1.0f, 1.0f, 0.0f, -120.0f)));
 
 	toolbar->backgroundColor = MakeColor(getContext()->theme.DARKER);
-	sampleIndex = Integer(10857);
+	sampleIndex = Integer(0);
 	const float numAspect = 2.0f;
 	const float entryHeight = 40.0f;
 	const float aspect = 6.0f;
 	TextLabelPtr labelRegion = TextLabelPtr(new TextLabel("Example:", CoordPX(0.0f, 0.0f), CoordPX(105.0f,entryHeight)));
 	
 	tweenRegion = HorizontalSliderPtr(new HorizontalSlider("sample tween", CoordPX(0.0f,0.0f), CoordPX(aspect * entryHeight, entryHeight),false,Integer(minIndex), Integer(maxIndex), sampleIndex));
-	ModifiableNumberPtr valueRegion = ModifiableNumberPtr(new ModifiableNumber("sample field", CoordPX(0.0f, 0.0f), CoordPX(numAspect * entryHeight, entryHeight), sampleIndex.type()));
+	valueRegion = ModifiableNumberPtr(new ModifiableNumber("sample field", CoordPX(0.0f, 0.0f), CoordPX(numAspect * entryHeight, entryHeight), sampleIndex.type()));
 	valueRegion->setAlignment(HorizontalAlignment::Center, VerticalAlignment::Middle);
 	valueRegion->fontSize = UnitPX(30.0f);
 	labelRegion->textColor = MakeColor(AlloyDefaultContext()->theme.LIGHTER);
@@ -121,7 +122,7 @@ bool TigerApp::init(Composite& rootNode) {
 		tweenRegion->setValue(val);
 		setSampleIndex(val);
 	};
-	tweenRegion->setOnChangeEvent([this,valueRegion](const aly::Number& value) {
+	tweenRegion->setOnChangeEvent([this](const aly::Number& value) {
 		valueRegion->setNumberValue(value);
 		setSampleIndex(value.toInteger());
 	});
@@ -305,13 +306,25 @@ bool TigerApp::init(Composite& rootNode) {
 	rootNode.onEvent = [this](AlloyContext* context, const InputEvent& event) {
 		return onEventHandler(context, event);
 	};
-	getContext()->addDeferredTask([=]() {
+	getContext()->addDeferredTask([this]() {
 		box2px bounds=flowRegion->getBounds();
 		flowRegion->add(sys->getInput().get(), bounds.position + pixel2(0.25f*bounds.dimensions.x, 0.25f*bounds.dimensions.y));
 		flowRegion->add(sys->getOutput().get(), bounds.position + pixel2(0.75f*bounds.dimensions.x,0.25f*bounds.dimensions.y));
 		
 	});
 	initialize();
+	worker->onUpdate = [this](uint64_t iteration, bool lastIteration) {
+		std::cout << "Iterate " << iteration << std::endl;
+		if (lastIteration || (int)iteration == timelineSlider->getMaxValue().toInteger()) {
+			stopButton->setVisible(false);
+			playButton->setVisible(true);
+			running = false;
+		}
+		AlloyApplicationContext()->addDeferredTask([this]() {
+			timelineSlider->setUpperValue((int)worker->getIteration());
+			timelineSlider->setTimeValue((int)worker->getIteration());
+		});
+	};
 	worker->setup(controls);
 	timelineSlider->setTimeValue(0);
 	timelineSlider->setMinorTick(worker->getIterationsPerStep());
@@ -358,6 +371,49 @@ bool TigerApp::onEventHandler(AlloyContext* context, const aly::InputEvent& e) {
 	return false;
 }
 bool TigerApp::initializeXOR() {
+	FullyConnectedFilterPtr firstFilter(new FullyConnectedFilter("First Layer",2,2, 2, 2));
+	sys->add(firstFilter);
+
+	FullyConnectedFilterPtr secondFilter(new FullyConnectedFilter("Second Layer",firstFilter->getOutputLayer(0), 2, 2));
+	sys->add(secondFilter);
+
+	FullyConnectedFilterPtr thirdFilter(new FullyConnectedFilter("Output Layer", secondFilter->getOutputLayer(0), 1, 1));
+	sys->add(thirdFilter);
+
+	sys->setInput(firstFilter->getInputLayer(0));
+	sys->setOutput(thirdFilter->getOutputLayer(0));
+	worker.reset(new NeuralRuntime(sys));
+	worker->inputSampler = [this](const NeuralLayerPtr& input, int idx) {
+		aly::Image1f& inputData = trainInputData[idx];
+		input->set(inputData);
+	};
+	worker->outputSampler = [this](std::vector<float>& outputData, int idx) {
+		int out = trainOutputData[idx];
+		outputData.resize(2);
+		for (int i = 0; i <(int)outputData.size(); i++) {
+			outputData[i] = (out == i) ? 1.0f : 0.0f;
+		}
+	};
+	Image1f img(2, 2);
+	for (int i = 0; i < 2; i++) {
+		for (int j = 0; j < 2; j++) {
+			int b = i^j;
+			for (int ii = 0; ii < 2; ii++) {
+				for (int jj = 0; jj < 2; jj++) {
+					if (ii == i&&jj == j) {
+						img(ii, jj).x = 1.0f;
+					}
+					else {
+						img(ii, jj).x = 0.0f;
+					}
+				}
+			}
+			trainInputData.push_back(img);
+			trainOutputData.push_back(b);
+		}
+	}
+	setSampleRange(0, (int)trainInputData.size() - 1);
+	setSampleIndex(0);
 	return true;
 }
 bool TigerApp::initializeLeNet5() {
@@ -400,18 +456,6 @@ bool TigerApp::initializeLeNet5() {
 		sys->setInput(conv1->getInputLayer(0));
 		sys->setOutput(decisionFilter->getOutputLayer(0));
 		worker.reset(new NeuralRuntime(sys));
-		worker->onUpdate = [this](uint64_t iteration, bool lastIteration) {
-			std::cout << "Iterate " << iteration << std::endl;
-			if (lastIteration || (int)iteration == timelineSlider->getMaxValue().toInteger()) {
-				stopButton->setVisible(false);
-				playButton->setVisible(true);
-				running = false;
-			}
-			AlloyApplicationContext()->addDeferredTask([this]() {
-				timelineSlider->setUpperValue((int)worker->getIteration());
-				timelineSlider->setTimeValue((int)worker->getIteration());
-			});
-		};
 		worker->inputSampler = [this](const NeuralLayerPtr& input, int idx) {
 			aly::Image1f& inputData = trainInputData[idx];
 			input->set(inputData);
@@ -419,7 +463,7 @@ bool TigerApp::initializeLeNet5() {
 		worker->outputSampler = [this](std::vector<float>& outputData, int idx) {
 			int out = trainOutputData[idx];
 			outputData.resize(10);
-			for (int i = 0; i <10; i++) {
+			for (int i = 0; i <(int)outputData.size(); i++) {
 				outputData[i] = (out == i) ? 1.0f : 0.0f;
 			}
 		};
@@ -432,11 +476,11 @@ bool TigerApp::initializeLeNet5() {
 }
 void TigerApp::initialize() {
 	sys.reset(new NeuralSystem(flowRegion));
-	if (initializeLeNet5()) {
-		sys->initialize(expandTree);
-
+	switch (exampleIndex) {
+		case 0: initializeXOR(); break;
+		case 1: initializeLeNet5(); break;
 	}
-
+	sys->initialize(expandTree);
 }
 void TigerApp::draw(AlloyContext* context) {
 	if (running) {

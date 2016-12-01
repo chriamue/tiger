@@ -70,6 +70,7 @@ namespace tgr {
 			iterator end() {
 				return neurons.end();
 			}
+			void expand();
 			void setResidual(float r) {
 				residualError = r;
 			}
@@ -180,8 +181,8 @@ namespace tgr {
 			void get(aly::Image1f& input);
 			void get(std::vector<float>& input);
 			aly::Vector1f toVector() const;
-			NeuralLayer(int width=0,int height=0,int bins=1,bool bias=false, const NeuronFunction& func = ReLU());
-			NeuralLayer(const std::string& name,int width = 0, int height = 0, int bins = 1, bool bias = false, const NeuronFunction& func=ReLU());
+			NeuralLayer(int width,int height,int bins,bool bias=false, const NeuronFunction& func = ReLU());
+			NeuralLayer(const std::string& name,int width, int height, int bins, bool bias = false, const NeuronFunction& func=ReLU());
 	};
 	typedef std::shared_ptr<NeuralLayer> NeuralLayerPtr;
 }

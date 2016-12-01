@@ -27,7 +27,7 @@ namespace tgr {
 		if (kernelSize % 2 == 0) {
 			throw std::runtime_error("Kernel size must be odd.");
 		}
-		inputLayers.push_back(NeuralLayerPtr(new NeuralLayer( "Input Layer", width, height)));
+		inputLayers.push_back(NeuralLayerPtr(new NeuralLayer( "Input Layer", width, height,1)));
 		outputLayers.resize(features);
 	}
 	ConvolutionFilter::ConvolutionFilter( const NeuralLayerPtr& layer, int kernelSize, int features) :NeuralFilter("Feature"), kernelSize(kernelSize) {
@@ -56,7 +56,7 @@ namespace tgr {
 
 		if (connectionMap.size() == 0) {
 			for (int f = 0; f < outputLayers.size(); f++) {
-				NeuralLayerPtr outputLayer = NeuralLayerPtr(new NeuralLayer( MakeString() << name << " [" << f << "]", ow, oh));
+				NeuralLayerPtr outputLayer = NeuralLayerPtr(new NeuralLayer( MakeString() << name << " [" << f << "]", ow, oh,1));
 				outputLayers[f] = outputLayer;
 				outputLayer->setFunction(Tanh());
 
@@ -88,7 +88,7 @@ namespace tgr {
 				int outIdx = pr.second;
 				NeuralLayerPtr outputLayer;
 				if (outputLayers[outIdx].get() == nullptr) {
-					outputLayer = NeuralLayerPtr(new NeuralLayer( MakeString() << name << " [" << outIdx << "]", ow, oh));
+					outputLayer = NeuralLayerPtr(new NeuralLayer( MakeString() << name << " [" << outIdx << "]", ow, oh,1));
 					outputLayers[outIdx] = outputLayer;
 					outputLayer->setFunction(Tanh());
 				}
