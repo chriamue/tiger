@@ -323,6 +323,7 @@ void TigerApp::setSelectedLayer(tgr::NeuralLayer* layer) {
 	selectedLayer = layer;
 }
 void TigerApp::train(const std::vector<int>& sampleIndexes) {
+	worker->init();
 	worker->setSamples(sampleIndexes);
 	worker->step();
 }
@@ -398,7 +399,7 @@ bool TigerApp::initializeLeNet5() {
 		sys->add(decisionFilter);
 		sys->setInput(conv1->getInputLayer(0));
 		sys->setOutput(decisionFilter->getOutputLayer(0));
-		worker.reset(new NeuralWorker(sys));
+		worker.reset(new NeuralRuntime(sys));
 		worker->onUpdate = [this](uint64_t iteration, bool lastIteration) {
 			std::cout << "Iterate " << iteration << std::endl;
 			if (lastIteration || (int)iteration == timelineSlider->getMaxValue().toInteger()) {

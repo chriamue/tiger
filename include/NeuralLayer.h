@@ -123,7 +123,9 @@ namespace tgr {
 			std::vector<NeuralLayer*>& getDependencies() {
 				return dependencies;
 			}
-			bool ready() const;
+			bool visitedChildren() const;
+			bool visitedDependencies() const;
+
 			const std::vector<std::shared_ptr<NeuralLayer>>& getChildren() const {
 				return children;
 			}

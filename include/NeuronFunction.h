@@ -49,6 +49,8 @@ namespace tgr {
 		struct Interface {
 			virtual float forward(float t) const = 0;
 			virtual float change(float t) const = 0;
+			virtual float min() const = 0;
+			virtual float max() const = 0;
 			virtual NeuronFunctionType type() const = 0;
 		};
 	private:
@@ -65,7 +67,12 @@ namespace tgr {
 			virtual float change(float t) const {
 				return value.change(t);
 			}
-
+			virtual float min() const {
+				return value.min();
+			}
+			virtual float max() const {
+				return value.max();
+			}
 		};
 		std::shared_ptr<Interface> impl;
 	public:
@@ -115,6 +122,16 @@ namespace tgr {
 				throw std::runtime_error("NeuronFunction type has not been defined.");
 			return impl->change(t);
 		}
+		virtual float min() const {
+			if (impl.get() == nullptr)
+				throw std::runtime_error("NeuronFunction type has not been defined.");
+			return impl->min();
+		}
+		virtual float max() const {
+			if (impl.get() == nullptr)
+				throw std::runtime_error("NeuronFunction type has not been defined.");
+			return impl->max();
+		}
 		virtual inline ~NeuronFunction() {
 		}
 	};
@@ -130,6 +147,12 @@ namespace tgr {
 		}
 		float change(float f_t) const {
 			return f_t*(1 - f_t);
+		}
+		float min() const {
+			return 0.0f;
+		}
+		float max() const {
+			return 1.0f;
 		}
 		Sigmoid(const NeuronFunction& r) {
 		}
@@ -148,6 +171,12 @@ namespace tgr {
 		}
 		float change(float f_t) const {
 			return 1.0f - f_t*f_t;
+		}
+		float min() const {
+			return -1.0f;
+		}
+		float max() const {
+			return 1.0f;
 		}
 		Tanh(const NeuronFunction& r) {
 		}
@@ -168,6 +197,12 @@ namespace tgr {
 		float change(float f_t) const {
 			return (f_t > 0.0f) ? 1.0f : 0.0f;
 		}
+		float min() const {
+			return 0.0f;
+		}
+		float max() const {
+			return 1.0f;
+		}
 		ReLU(const NeuronFunction& r) {
 		}
 		virtual ~ReLU() {
@@ -185,7 +220,12 @@ namespace tgr {
 		float change(float f_t) const {
 			return 1.0f;
 		}
-
+		float min() const {
+			return -1.0f;
+		}
+		float max() const {
+			return 1.0f;
+		}
 		Linear(const NeuronFunction& r) {
 		}
 		virtual ~Linear() {
@@ -207,7 +247,12 @@ namespace tgr {
 		float change(float f_t) const {
 			return 0.0f;
 		}
-
+		float min() const {
+			return *value;
+		}
+		float max() const {
+			return *value;
+		}
 		Constant(float* val):value(val) {
 		}
 		Constant(const NeuronFunction& func):value(static_cast<Constant>(func).value){
@@ -229,7 +274,12 @@ namespace tgr {
 		float change(float f_t) const {
 			return (f_t > 0.0f) ? 1.0f : eps;
 		}
-
+		float min() const {
+			return 0.0f;
+		}
+		float max() const {
+			return 1.0f;
+		}
 		LeakyReLU(const NeuronFunction& func):eps(0.01f) {
 		}
 		virtual ~LeakyReLU() {

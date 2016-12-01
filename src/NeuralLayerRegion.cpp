@@ -59,7 +59,7 @@ namespace aly {
 
 				nvgStrokeColor(nvg, Color(220, 220, 220));
 				nvgStrokeWidth(nvg, lineWidth);
-				nvgFillColor(nvg, Color(ColorMapToRGB(n.value, ColorMap::RedToBlue)));
+				nvgFillColor(nvg, Color(ColorMapToRGB(n.normalizedValue(), ColorMap::RedToBlue)));
 				nvgBeginPath(nvg);
 				nvgCircle(nvg, center.x, center.y, rInner);
 				nvgFill(nvg);
@@ -238,9 +238,9 @@ namespace aly {
 						int sz=(int)sig->mapping.size();
 						if (sz > 0) {
 							for (Neuron* ne : sig->get(&n)) {
-								valSum += ne->value;
+								valSum += ne->normalizedValue();
 							}
-							nvgStrokeColor(nvg, Color(ColorMapToRGB(valSum/sz, ColorMap::RedToBlue)));
+							nvgStrokeColor(nvg, Color(ColorMapToRGB(clamp(valSum/sz,0.0f,1.0f), ColorMap::RedToBlue)));
 						} else {
 							nvgStrokeColor(nvg, Color(220, 220, 220));
 						}

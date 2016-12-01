@@ -84,6 +84,9 @@ namespace tgr {
 		float change;
 		bool active;
 		friend class NeuralLayer;
+		float normalizedValue() const {
+			return aly::clamp((value - transform.min()) / (transform.max() - transform.min()),0.0f,1.0f);
+		}
 		size_t getInputWeightSize() const {
 			return input.size();
 		}
@@ -157,7 +160,7 @@ namespace tgr {
 	};
 	class Bias : public Neuron {
 		public:		
-			Bias(float val=0.0f) :Neuron(Constant(&value), val) {
+			Bias(float val=1.0f) :Neuron(Constant(&value), val) {
 
 			}
 	};

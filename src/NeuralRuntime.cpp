@@ -18,7 +18,7 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 * THE SOFTWARE.
 */
-#include "NeuralWorker.h"
+#include "NeuralRuntime.h"
 #include <sstream>
 #include <fstream>
 #include <ostream>
@@ -27,15 +27,15 @@ namespace tgr {
 	NeuralListener::~NeuralListener() {
 
 	}
-	bool NeuralWorker::init() {
+	bool NeuralRuntime::init() {
 		std::cout << "Intialize " << std::endl;
 		sys->setOptimizer(std::shared_ptr<NeuralOptimization>(new GradientDescentOptimizer(0.8f)));
 		iteration = 0;
 		return true;
 	}
-	void NeuralWorker::cleanup(){
+	void NeuralRuntime::cleanup(){
 	}
-	void NeuralWorker::setup(const aly::ParameterPanePtr& controls) {
+	void NeuralRuntime::setup(const aly::ParameterPanePtr& controls) {
 		controls->addGroup("Training", true);
 		controls->addSelectionField("Optimizer", optimizationMethod, std::vector<std::string>{"Gradient Descent", "Momentum"},6.0f);
 		controls->addNumberField("Epochs", epochs);
@@ -45,7 +45,7 @@ namespace tgr {
 		controls->addNumberField("Learning Delta", learningRateDelta, Float(0.0f), Float(1.0f));
 		
 	}
-	bool NeuralWorker::step() {
+	bool NeuralRuntime::step() {
 		uint64_t iter =iteration;
 		bool ret = true;
 		sys->resetChange();
@@ -59,6 +59,7 @@ namespace tgr {
 			}
 		}
 		sys->backpropagate();
+		std::cout << "Optimize ..." << std::endl;
 		sys->optimize();
 		if (iter%uint64_t(iterationsPerStep.toInteger())==0&&onUpdate) {
 			onUpdate(iter, !ret);
@@ -69,7 +70,7 @@ namespace tgr {
 		}
 		return ret;
 	}
-	NeuralWorker::NeuralWorker(const std::shared_ptr<tgr::NeuralSystem>& system) :
+	NeuralRuntime::NeuralRuntime(const std::shared_ptr<tgr::NeuralSystem>& system) :
 		RecurrentTask([this](uint64_t iteration) {return step();}, 5),sys(system),paused(false) {
 		optimizationMethod = 0;
 		epochs = Integer(12);

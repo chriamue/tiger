@@ -29,7 +29,7 @@
 #include "AlloyExpandTree.h"
 #include "NeuralFlowPane.h"
 #include "AlloyTimeline.h"
-#include "NeuralWorker.h"
+#include "NeuralRuntime.h"
 class TigerApp : public aly::Application {
 protected:
 	tgr::NeuralLayer* selectedLayer;
@@ -51,7 +51,7 @@ protected:
 	aly::HorizontalSliderPtr tweenRegion;
 	std::vector<aly::Image1f> trainInputData;
 	std::vector<uint8_t> trainOutputData;
-	tgr::NeuralWorkerPtr worker;
+	tgr::NeuralRuntimePtr worker;
 	bool initializeXOR();
 	bool initializeLeNet5();
 	void initialize();

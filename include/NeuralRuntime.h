@@ -18,8 +18,8 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 * THE SOFTWARE.
 */
-#ifndef _NEURALWORKER_H_
-#define _NEURALWORKER_H_
+#ifndef _NeuralRuntime_H_
+#define _NeuralRuntime_H_
 #include <thread>
 #include <mutex>
 #include <chrono>
@@ -27,13 +27,13 @@
 #include <AlloyWorker.h>
 #include "NeuralSystem.h"
 namespace tgr {
-	class NeuralWorker;
+	class NeuralRuntime;
 	class NeuralListener {
 	public:
-		virtual void NeuralEvent(NeuralWorker* simulation, int mSimulationIteration, double time) = 0;
+		virtual void NeuralEvent(NeuralRuntime* simulation, int mSimulationIteration, double time) = 0;
 		virtual ~NeuralListener();
 	};
-	class NeuralWorker : public aly::RecurrentTask {
+	class NeuralRuntime : public aly::RecurrentTask {
 	protected:
 		bool paused;
 		bool isInitialized;
@@ -60,7 +60,7 @@ namespace tgr {
 			sampleIndexes = idx;
 		}
 		void setup(const aly::ParameterPanePtr& pane);
-		NeuralWorker(const std::shared_ptr<tgr::NeuralSystem>& system);
+		NeuralRuntime(const std::shared_ptr<tgr::NeuralSystem>& system);
 		uint64_t getMaxIteration() const {
 			return uint64_t(iterationsPerEpoch.toInteger())*epochs.toInteger();
 		}
@@ -73,8 +73,8 @@ namespace tgr {
 		uint64_t getIteration() const {
 			return iteration;
 		}
-		virtual ~NeuralWorker() {};
+		virtual ~NeuralRuntime() {};
 	};
-	typedef std::shared_ptr<NeuralWorker> NeuralWorkerPtr;
+	typedef std::shared_ptr<NeuralRuntime> NeuralRuntimePtr;
 }
 #endif

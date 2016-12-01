@@ -38,19 +38,19 @@ namespace tgr {
 		if (bias) {
 			biasNeurons.resize(width*height*bins, Bias());
 			for (size_t idx = 0; idx < neurons.size(); idx++) {
-				MakeConnection(&biasNeurons[idx], SignalPtr(new Signal(1.0f)), &neurons[idx]);
+				MakeConnection(&biasNeurons[idx], SignalPtr(new Signal(RandomUniform(0.0f,0.1f))), &neurons[idx]);
 			}
 		}
 	}
 	std::shared_ptr<aly::NeuralFlowPane> NeuralLayer::getFlow() const {
 		return sys->getFlow();
 	}
-	NeuralLayer::NeuralLayer(const std::string& name,int width, int height, int bins,bool bias, const NeuronFunction& func) :name(name), width(width), height(height), bins(bins),bias(bias), id(-1) {
+	NeuralLayer::NeuralLayer(const std::string& name,int width, int height, int bins,bool bias, const NeuronFunction& func) :name(name), width(width), height(height), bins(bins),bias(bias), id(-1), visited(false), trainable(true), residualError(0.0) {
 		neurons.resize(width*height*bins,Neuron(func));
 		if (bias) {
 			biasNeurons.resize(width*height*bins, Bias());
 			for (size_t idx = 0; idx < neurons.size(); idx++) {
-				MakeConnection(&biasNeurons[idx], SignalPtr(new Signal(1.0f)), &neurons[idx]);
+				MakeConnection(&biasNeurons[idx], SignalPtr(new Signal(RandomUniform(0.0f, 0.1f))), &neurons[idx]);
 			}
 		}
 	}
@@ -59,7 +59,7 @@ namespace tgr {
 		if (bias) {
 			biasNeurons.resize(width*height*bins, Bias());
 			for (size_t idx = 0; idx < neurons.size(); idx++) {
-				MakeConnection(&biasNeurons[idx], SignalPtr(new Signal(1.0f)), &neurons[idx]);
+				MakeConnection(&biasNeurons[idx], SignalPtr(new Signal(RandomUniform(0.0f, 0.1f))), &neurons[idx]);
 			}
 		}
 		neurons.shrink_to_fit();
@@ -77,18 +77,18 @@ namespace tgr {
 	}
 	void NeuralLayer::backpropagate() {
 		int N = (int)neurons.size();
+		double residual = 0.0;
+		//std::cout << "Back-propagate [" << getName() << "|" << N << "]" << std::endl;
 #pragma omp parallel for
 		for (int n = 0; n < N; n++) {
-			Neuron& neuron = neurons[n];
-			neuron.backpropagate();
+			neurons[n].backpropagate();
 		}
 	}
 	void NeuralLayer::evaluate() {
 		int N = (int)neurons.size();
 #pragma omp parallel for
 		for (int n = 0; n < N; n++) {
-			Neuron& neuron = neurons[n];
-			neuron.evaluate();
+			neurons[n].evaluate();
 		}
 		if (layerRegion.get() != nullptr) {
 			layerRegion->setDirty(true);
@@ -113,6 +113,7 @@ namespace tgr {
 			return optimizer->optimize(signals);
 		}
 		else {
+			std::cerr << "No optimizer for " << getName() << std::endl;
 			return false;
 		}
 	}
@@ -175,7 +176,13 @@ namespace tgr {
 	const Neuron& NeuralLayer::operator()(const Terminal ij) const {
 		return neurons[aly::clamp(ij.x, 0, width - 1) + aly::clamp(ij.y, 0, height - 1) * width];
 	}
-	bool NeuralLayer::ready() const {
+	bool NeuralLayer::visitedChildren() const {
+		for (NeuralLayerPtr layer : children) {
+			if (!layer->isVisited())return false;
+		}
+		return true;
+	}
+	bool NeuralLayer::visitedDependencies() const {
 		for (NeuralLayer* layer : dependencies) {
 			if (!layer->isVisited())return false;
 		}

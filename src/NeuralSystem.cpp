@@ -25,7 +25,7 @@ using namespace aly;
 namespace tgr {
 	void NeuralSystem::backpropagate() {
 		for (NeuralLayer* layer : backpropLayers) {
-			layer->evaluate();
+			layer->backpropagate();
 		}
 	}
 	bool NeuralSystem::optimize() {
@@ -49,7 +49,7 @@ namespace tgr {
 				Neuron* neuron = layer->get(i, j);
 				float err = output(i, j).x - neuron->value;
 				neuron->change+=err;
-				residual += err*err;
+				residual += std::abs(err);
 			}
 		}
 		residual /= double(output.size());
@@ -119,7 +119,6 @@ namespace tgr {
 		std::list<NeuralLayer*> q2;
 		for (NeuralLayerPtr layer : layers) {
 			layer->update();
-			
 			layer->setVisited(false);
 			if (layer->isRoot()) {
 				roots.push_back(layer);
@@ -137,7 +136,7 @@ namespace tgr {
 			layer->setVisited(true);
 			order.push_back(layer);
 			for (NeuralLayerPtr child:layer->getChildren()) {
-				if (child->ready()) {
+				if (child->visitedDependencies()) {
 					q.push_back(child);
 				}
 			}
@@ -153,14 +152,13 @@ namespace tgr {
 				q2.push_back(layer.get());
 			}
 		}
-
 		while (!q2.empty()) {
 			NeuralLayer* layer = q2.front();
 			q2.pop_front();
 			layer->setVisited(true);
 			backpropLayers.push_back(layer);
 			for (NeuralLayer* dep : layer->getDependencies()) {
-				if (dep->ready()) {
+				if (dep->visitedChildren()) {
 					q2.push_back(dep);
 				}
 			}

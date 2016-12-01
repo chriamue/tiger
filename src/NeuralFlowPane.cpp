@@ -21,6 +21,7 @@
 #include "NeuralFlowPane.h"
 #include "AlloyApplication.h"
 #include "AlloyDrawUtil.h"
+#include <iomanip>
 using namespace tgr;
 namespace aly{
 
@@ -270,9 +271,24 @@ namespace aly{
 				nvgFontFaceId(nvg, context->getFontHandle(FontType::Bold));
 				nvgFontSize(nvg, 16.0f);
 				nvgTextAlign(nvg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
-				drawText(nvg, cursorPosition + pixel2(0.0f, 10.0f), MakeString() << neuron->getType() << " " << selected, FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
-				drawText(nvg, cursorPosition + pixel2(0.0f, 10.0f + 16.0f), MakeString() << "in: " << neuron->getInputNeuronSize() << " / " << neuron->getInputWeightSize(), FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
-				drawText(nvg, cursorPosition + pixel2(0.0f, 10.0f + 32.0f), MakeString() << "out: " << neuron->getOutputNeuronSize(), FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
+				float yoffset = 10.0f;
+				drawText(nvg, cursorPosition + pixel2(0.0f, yoffset), MakeString() << neuron->getType() << " " << selected, FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
+				yoffset += 16.0f;
+				drawText(nvg, cursorPosition + pixel2(0.0f, yoffset), MakeString() << "value: " <<std::setw(4)<<std::setprecision(3)<<neuron->value, FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
+				yoffset += 16.0f;
+				drawText(nvg, cursorPosition + pixel2(0.0f, yoffset), MakeString() << "change: " << std::setprecision(4) << neuron->change, FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
+				yoffset += 16.0f;
+				if (neuron->getInputNeuronSize() > 0) {
+					drawText(nvg, cursorPosition + pixel2(0.0f, yoffset), MakeString() << "in neurons: " << neuron->getInputNeuronSize(), FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
+					yoffset += 16.0f;
+				}
+				if (neuron->getInputWeightSize() > 0) {
+					drawText(nvg, cursorPosition + pixel2(0.0f, yoffset), MakeString() << "in weights: " <<  neuron->getInputWeightSize(), FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
+					yoffset += 16.0f;
+				}
+				if (neuron->getOutputNeuronSize() > 0) {
+					drawText(nvg, cursorPosition + pixel2(0.0f, yoffset), MakeString() << "outputs: " << neuron->getOutputNeuronSize(), FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
+				}
 			}
 		}
 	}

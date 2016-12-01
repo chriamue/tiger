@@ -54,10 +54,7 @@
     <ClInclude Include="..\..\include\NeuralOptimization.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\include\NeuralProcessor.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\include\NeuralWorker.h">
+    <ClInclude Include="..\..\include\NeuralRuntime.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -104,10 +101,7 @@
     <ClCompile Include="..\..\src\NeuralOptimization.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\NeuralProcessor.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\NeuralWorker.cpp">
+    <ClCompile Include="..\..\src\NeuralRuntime.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

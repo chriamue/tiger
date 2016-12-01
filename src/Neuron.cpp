@@ -72,15 +72,17 @@ namespace tgr {
 	}
 	float Neuron::backpropagate() {
 		float sum1 = 0.0f,sum2;
+		int count = 0;
 		if (output.size() > 0) {
 			for (SignalPtr sig : output) {
 				sum2 = 0.0f;
 				for (auto pr : sig->mapping) {
 					sum2 += pr.first->change;
+					count++;
 				}
-				sum1 += sig->value*sum2 / float(sig->mapping.size());
+				sum1 += sig->value*sum2;
 			}
-			change = sum1*transform.change(value);
+			change = sum1*transform.change(value) / count;
 		}
 		else {
 			//Must be leaf node, error term is stored in the change variable.
@@ -88,28 +90,30 @@ namespace tgr {
 		}
 		for (SignalPtr sig : input) {
 			sum2 = 0.0f;
-			std::vector<Neuron*>& input = sig->get(this);
-			for (Neuron* inner : input) {
+			std::vector<Neuron*>& input2 = sig->get(this);
+			for (Neuron* inner : input2) {
 				sum2 += inner->value;
 			}
-			sig->change=change*sum2 / (float(input.size()));
+			sig->change=change*sum2/(input2.size());
 		}
 		return change;
 	}
 
 	float Neuron::evaluate() {
 		float sum1 = 0.0f, sum2;
+		int count = 0;
 		if (input.size() > 0) {
 			for (SignalPtr sig : input) {
 				sum2 = 0.0f;
-				std::vector<Neuron*>& input = sig->get(this);
-				for (Neuron* inner : input) {
+				std::vector<Neuron*>& input2 = sig->get(this);
+				for (Neuron* inner : input2) {
 					sum2 += inner->value;
+					count++;
 				}
-				sum1 += sig->value*sum2 / (float(input.size()));
+				sum1 += sig->value*sum2;
 			}
 			change = 0.0f;
-			value = transform.forward(sum1);
+			value = transform.forward(sum1/count);
 		}
 		return value;
 	}

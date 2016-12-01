@@ -146,10 +146,9 @@
     <ClInclude Include="..\..\include\NeuralFlowPane.h" />
     <ClInclude Include="..\..\include\NeuralLayerRegion.h" />
     <ClInclude Include="..\..\include\NeuralOptimization.h" />
-    <ClInclude Include="..\..\include\NeuralProcessor.h" />
     <ClInclude Include="..\..\include\NeuralSystem.h" />
     <ClInclude Include="..\..\include\NeuralLayer.h" />
-    <ClInclude Include="..\..\include\NeuralWorker.h" />
+    <ClInclude Include="..\..\include\NeuralRuntime.h" />
     <ClInclude Include="..\..\include\Neuron.h" />
     <ClInclude Include="..\..\include\NeuronFunction.h" />
     <ClInclude Include="..\..\include\TigerApp.h" />
@@ -163,11 +162,10 @@
     <ClCompile Include="..\..\src\NeuralFlowPane.cpp" />
     <ClCompile Include="..\..\src\NeuralLayerRegion.cpp" />
     <ClCompile Include="..\..\src\NeuralOptimization.cpp" />
-    <ClCompile Include="..\..\src\NeuralProcessor.cpp" />
     <ClCompile Include="..\..\src\NeuralSystem.cpp" />
     <ClCompile Include="..\..\src\NeuralLayer.cpp" />
     <ClCompile Include="..\..\src\main.cpp" />
-    <ClCompile Include="..\..\src\NeuralWorker.cpp" />
+    <ClCompile Include="..\..\src\NeuralRuntime.cpp" />
     <ClCompile Include="..\..\src\Neuron.cpp" />
     <ClCompile Include="..\..\src\NeuronFunction.cpp" />
     <ClCompile Include="..\..\src\TigerApp.cpp" />
