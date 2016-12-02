@@ -45,10 +45,11 @@ TigerApp::TigerApp(int example) :
 	Application(1800, 800, "Tiger Machine",true),exampleIndex(example), selectedLayer(nullptr){
 }
 void TigerApp::setSampleIndex(int idx){
+	bool dirty = (sampleIndex.toInteger() != idx);
 	sampleIndex.setValue(idx);
 	valueRegion->setNumberValue(sampleIndex);
 	sys->getInput()->set(trainInputData[idx]);
-	worker->setSamples(std::vector<int>{idx});
+	sys->evaluate();
 }
 void TigerApp::setSampleRange(int mn, int mx){
 	minIndex = mn;
@@ -379,7 +380,7 @@ bool TigerApp::initializeXOR() {
 
 	FullyConnectedFilterPtr thirdFilter(new FullyConnectedFilter("Output Layer", secondFilter->getOutputLayer(0), 1, 1));
 	sys->add(thirdFilter);
-
+	thirdFilter->getOutputLayer(0)->setFunction(tgr::Linear());
 	sys->setInput(firstFilter->getInputLayer(0));
 	sys->setOutput(thirdFilter->getOutputLayer(0));
 	worker.reset(new NeuralRuntime(sys));
@@ -389,31 +390,27 @@ bool TigerApp::initializeXOR() {
 	};
 	worker->outputSampler = [this](std::vector<float>& outputData, int idx) {
 		int out = trainOutputData[idx];
-		outputData.resize(2);
-		for (int i = 0; i <(int)outputData.size(); i++) {
-			outputData[i] = (out == i) ? 1.0f : 0.0f;
-		}
+		outputData.resize(1);
+		outputData[0] = float(out);
 	};
 	Image1f img(2, 2);
+	std::vector<int> samples;
 	for (int i = 0; i < 2; i++) {
 		for (int j = 0; j < 2; j++) {
 			int b = i^j;
 			for (int ii = 0; ii < 2; ii++) {
 				for (int jj = 0; jj < 2; jj++) {
-					if (ii == i&&jj == j) {
-						img(ii, jj).x = 1.0f;
-					}
-					else {
-						img(ii, jj).x = 0.0f;
-					}
+					img(ii, jj).x = (ii == i&&jj == j)?1.0f:-1.0f;
 				}
 			}
+			samples.push_back(int(samples.size()));
 			trainInputData.push_back(img);
 			trainOutputData.push_back(b);
 		}
 	}
 	setSampleRange(0, (int)trainInputData.size() - 1);
 	setSampleIndex(0);
+	worker->setSamples(samples);
 	return true;
 }
 bool TigerApp::initializeLeNet5() {

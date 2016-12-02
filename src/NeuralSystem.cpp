@@ -30,7 +30,7 @@ namespace tgr {
 	}
 	bool NeuralSystem::optimize() {
 		bool ret = false;
-		for (NeuralLayerPtr layer : layers) {
+		for (NeuralLayer* layer : backpropLayers) {
 			ret|=layer->optimize();
 		}
 		return ret;
@@ -42,13 +42,14 @@ namespace tgr {
 			}
 		}
 	}
-	double NeuralSystem::accumulateChange(const NeuralLayerPtr& layer, const Image1f& output) {
+	double NeuralSystem::accumulate(const NeuralLayerPtr& layer, const Image1f& output) {
 		double residual=0;
 		for (int j = 0; j <output.height; j++) {
 			for (int i = 0; i < output.width; i++) {
 				Neuron* neuron = layer->get(i, j);
-				float err = output(i, j).x - neuron->value;
+				float err = neuron->value- output(i, j).x;
 				neuron->change+=err;
+
 				residual += std::abs(err);
 			}
 		}
@@ -56,11 +57,11 @@ namespace tgr {
 		layer->accumulateResidual(residual);
 		return layer->getResidual();
 	}
-	double NeuralSystem::accumulateChange(const NeuralLayerPtr& layer, const std::vector<float>& output) {
+	double NeuralSystem::accumulate(const NeuralLayerPtr& layer, const std::vector<float>& output) {
 		double residual = 0;
 		for (size_t i = 0; i < output.size(); i++) {
 			Neuron* neuron = layer->get(i);
-			float err = output[i] - neuron->value;
+			float err = neuron->value- output[i];
 			neuron->change +=  err;
 			residual += err*err;
 		}
@@ -68,25 +69,9 @@ namespace tgr {
 		layer->accumulateResidual(residual);
 		return layer->getResidual();
 	}
-	void NeuralSystem::computeChange(const NeuralLayerPtr& layer, const Image1f& output) {
-		for (int j = 0; j <output.height; j++) {
-			for (int i = 0; i < output.width; i++) {
-				Neuron* neuron = layer->get(i, j);
-				neuron->change = output(i, j).x- neuron->value;
-			}
-		}
-	}
-	void NeuralSystem::computeChange(const NeuralLayerPtr& layer, const std::vector<float>& output) {
-		for (size_t i = 0; i < output.size(); i++) {
-			Neuron* neuron = layer->get(i);
-			neuron->change = output[i]- neuron->value;
-		}
-	}
-	void NeuralSystem::resetChange(const NeuralLayerPtr& layer) {
-		layer->setResidual(0.0);
-		for (size_t i = 0; i < layer->size(); i++) {
-			Neuron* neuron = layer->get(i);
-			neuron->change = 0.0f;
+	void NeuralSystem::reset() {
+		for (NeuralLayerPtr layer : layers) {
+			layer->reset();
 		}
 	}
 	void NeuralSystem::setLayer(const NeuralLayerPtr& layer, const Image1f& input) {

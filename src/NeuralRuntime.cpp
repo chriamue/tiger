@@ -48,18 +48,22 @@ namespace tgr {
 	bool NeuralRuntime::step() {
 		uint64_t iter =iteration;
 		bool ret = true;
-		sys->resetChange();
+		double res = 0;
+		sys->reset();
 		for (int idx : sampleIndexes) {
-			if(inputSampler)inputSampler(sys->getInput(), idx);
+			if (inputSampler)inputSampler(sys->getInput(), idx);
 			sys->evaluate();
 			if (outputSampler) {
 				outputSampler(outputData, idx);
-				double err = sys->accumulateChange(outputData);
-				std::cout << "Residual " << idx << ": " << err << std::endl;
+				double err= sys->accumulate(outputData);
+				res += err;
+				//std::cout << "Index " << idx << ": " << err << std::endl;
 			}
+			sys->backpropagate();
 		}
-		sys->backpropagate();
-		std::cout << "Optimize ..." << std::endl;
+		
+		res /= (sampleIndexes.size());
+		std::cout << "Residual " <<res << std::endl;
 		sys->optimize();
 		if (iter%uint64_t(iterationsPerStep.toInteger())==0&&onUpdate) {
 			onUpdate(iter, !ret);

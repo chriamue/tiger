@@ -45,12 +45,24 @@ namespace tgr {
 	std::shared_ptr<aly::NeuralFlowPane> NeuralLayer::getFlow() const {
 		return sys->getFlow();
 	}
+	void NeuralLayer::reset() {
+		residualError = 0.0;
+		for (Neuron& neuron : neurons) {
+			neuron.change = 0.0f;
+		}
+		for (Neuron& neuron : biasNeurons) {
+			neuron.change = 0.0f;
+		}
+		for (SignalPtr sig : signals) {
+			sig->change = 0.0f;
+		}
+	}
 	NeuralLayer::NeuralLayer(const std::string& name,int width, int height, int bins,bool bias, const NeuronFunction& func) :name(name), width(width), height(height), bins(bins),bias(bias), id(-1), visited(false), trainable(true), residualError(0.0) {
 		neurons.resize(width*height*bins,Neuron(func));
 		if (bias) {
 			biasNeurons.resize(width*height*bins, Bias());
 			for (size_t idx = 0; idx < neurons.size(); idx++) {
-				MakeConnection(&biasNeurons[idx], SignalPtr(new Signal(RandomUniform(0.0f, 0.1f))), &neurons[idx]);
+				MakeConnection(&biasNeurons[idx], SignalPtr(new Signal(RandomUniform(0.0f, 1.0f))), &neurons[idx]);
 			}
 		}
 	}
@@ -59,7 +71,7 @@ namespace tgr {
 		if (bias) {
 			biasNeurons.resize(width*height*bins, Bias());
 			for (size_t idx = 0; idx < neurons.size(); idx++) {
-				MakeConnection(&biasNeurons[idx], SignalPtr(new Signal(RandomUniform(0.0f, 0.1f))), &neurons[idx]);
+				MakeConnection(&biasNeurons[idx], SignalPtr(new Signal(RandomUniform(0.0f, 1.0f))), &neurons[idx]);
 			}
 		}
 		neurons.shrink_to_fit();
@@ -110,10 +122,11 @@ namespace tgr {
 	}
 	bool NeuralLayer::optimize() {
 		if (optimizer.get() != nullptr) {
+			//std::cout << "Optimize " << getName() << std::endl;
 			return optimizer->optimize(signals);
 		}
 		else {
-			std::cerr << "No optimizer for " << getName() << std::endl;
+			//std::cerr << "No optimizer for " << getName() << std::endl;
 			return false;
 		}
 	}

@@ -269,22 +269,22 @@ namespace aly{
 				Neuron* neuron = layer->get(selected.x, selected.y);
 				context->setCursor(&Cursor::CrossHairs);
 				nvgFontFaceId(nvg, context->getFontHandle(FontType::Bold));
-				nvgFontSize(nvg, 16.0f);
+				nvgFontSize(nvg, 20.0f);
 				nvgTextAlign(nvg, NVG_ALIGN_LEFT | NVG_ALIGN_TOP);
 				float yoffset = 10.0f;
 				drawText(nvg, cursorPosition + pixel2(0.0f, yoffset), MakeString() << neuron->getType() << " " << selected, FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
-				yoffset += 16.0f;
+				yoffset += 20.0f;
 				drawText(nvg, cursorPosition + pixel2(0.0f, yoffset), MakeString() << "value: " <<std::setw(4)<<std::setprecision(3)<<neuron->value, FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
-				yoffset += 16.0f;
+				yoffset += 20.0f;
 				drawText(nvg, cursorPosition + pixel2(0.0f, yoffset), MakeString() << "change: " << std::setprecision(4) << neuron->change, FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
-				yoffset += 16.0f;
+				yoffset += 20.0f;
 				if (neuron->getInputNeuronSize() > 0) {
 					drawText(nvg, cursorPosition + pixel2(0.0f, yoffset), MakeString() << "in neurons: " << neuron->getInputNeuronSize(), FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
-					yoffset += 16.0f;
+					yoffset += 20.0f;
 				}
 				if (neuron->getInputWeightSize() > 0) {
 					drawText(nvg, cursorPosition + pixel2(0.0f, yoffset), MakeString() << "in weights: " <<  neuron->getInputWeightSize(), FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
-					yoffset += 16.0f;
+					yoffset += 20.0f;
 				}
 				if (neuron->getOutputNeuronSize() > 0) {
 					drawText(nvg, cursorPosition + pixel2(0.0f, yoffset), MakeString() << "outputs: " << neuron->getOutputNeuronSize(), FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);

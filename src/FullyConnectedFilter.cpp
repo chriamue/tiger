@@ -29,11 +29,11 @@ namespace tgr {
 		NeuralFilter::inputLayers.push_back(inputLayer);
 	}
 	FullyConnectedFilter::FullyConnectedFilter(const std::string& name, int inWidth,int inHeight,int width, int height) : NeuralFilter(name), width(width),height(height) {
-		inputLayers.push_back(NeuralLayerPtr(new NeuralLayer("Input Layer",inWidth,inHeight, 1, true, Sigmoid())));
+		inputLayers.push_back(NeuralLayerPtr(new NeuralLayer("Input Layer",inWidth,inHeight, 1,false, Tanh())));
 	}
-	void FullyConnectedFilter::initialize(NeuralSystem& sys) {
+	void FullyConnectedFilter::initialize(NeuralSystem& sys, const NeuronFunction& func) {
 		std::vector<SignalPtr> signals;
-		outputLayers.push_back(NeuralLayerPtr(new NeuralLayer( name, width, height, 1, true, Sigmoid())));
+		outputLayers.push_back(NeuralLayerPtr(new NeuralLayer( name, width, height, 1, true, func)));
 		NeuralLayerPtr outputLayer = outputLayers[0];
 		for (int k = 0; k < inputLayers.size(); k++) {
 			NeuralLayerPtr inputLayer = inputLayers[k];
@@ -43,7 +43,7 @@ namespace tgr {
 					Neuron* src = inputLayer->get(i, j);
 					for (int jj = 0; jj < outputLayer->height; jj++) {
 						for (int ii = 0; ii < outputLayer->width; ii++) {
-							SignalPtr sig = SignalPtr(new Signal(RandomUniform(0.0f, 0.1f)));
+							SignalPtr sig = SignalPtr(new Signal(RandomUniform(-1.0f, 1.0f)));
 							Neuron* dest = outputLayer->get(ii, jj);
 							MakeConnection(src, sig, dest);
 						}

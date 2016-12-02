@@ -74,7 +74,7 @@ namespace tgr {
 			}
 			NeuralFilter(const std::string& name):name(name) {}
 			virtual ~NeuralFilter() {}
-			virtual void initialize(NeuralSystem& sys) = 0;
+			virtual void initialize(NeuralSystem& sys, const NeuronFunction& func=Tanh()) = 0;
 	};
 
 	typedef std::shared_ptr<NeuralFilter> NeuralFilterPtr;

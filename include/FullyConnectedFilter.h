@@ -29,7 +29,7 @@ namespace tgr {
 		FullyConnectedFilter(const std::string& name, const NeuralLayerPtr& inputLayer, int width, int height);
 		FullyConnectedFilter(const std::string& name,int inWidth,int inHeight, int width, int height);
 
-		virtual void initialize(NeuralSystem& sys) override;
+		virtual void initialize(NeuralSystem& sys, const NeuronFunction& func) override;
 	};
 	typedef std::shared_ptr<FullyConnectedFilter> FullyConnectedFilterPtr;
 }

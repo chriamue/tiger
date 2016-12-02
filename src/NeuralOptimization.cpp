@@ -8,9 +8,9 @@ namespace tgr {
 		for (int n = 0; n < N;n++) {
 			SignalPtr sig = signals[n];
 			delta += std::abs(sig->change);
-			sig->value -= sig->change*learningRate;
+			sig->value = aly::clamp(sig->value-sig->change*learningRate,-1.0f,1.0f);
 		}
-		std::cout << "Optimize Signals " << signals.size() <<" "<<delta<< std::endl;
+		//std::cout << "Weight change="<<delta<< std::endl;
 		return true;
 	}
 }

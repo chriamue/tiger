@@ -54,26 +54,17 @@ namespace tgr {
 			return outputLayer;
 		}
 		void setOptimizer(const NeuralOptimizationPtr& opt);
-		double accumulateChange(const NeuralLayerPtr& layer, const aly::Image1f& output);
-		double accumulateChange(const NeuralLayerPtr& layer, const std::vector<float>& output);
-		void computeChange(const NeuralLayerPtr& layer, const aly::Image1f& output);
-		void computeChange(const NeuralLayerPtr& layer, const std::vector<float>& output);
-		void resetChange(const NeuralLayerPtr& layer);
-		inline void resetChange() {
-			resetChange(outputLayer);
+		double accumulate(const NeuralLayerPtr& layer, const aly::Image1f& output);
+		double accumulate(const NeuralLayerPtr& layer, const std::vector<float>& output);
+
+		void reset();
+		inline double accumulate(const aly::Image1f& output) {
+			return accumulate(outputLayer, output);
 		}
-		inline double accumulateChange(const aly::Image1f& output) {
-			return accumulateChange(outputLayer, output);
+		inline double accumulate(const std::vector<float>& output) {
+			return accumulate(outputLayer, output);
 		}
-		inline double accumulateChange(const std::vector<float>& output) {
-			return accumulateChange(outputLayer, output);
-		}
-		inline double computeChange(const aly::Image1f& output) {
-			computeChange(outputLayer, output);
-		}
-		inline double computeChange(const std::vector<float>& output) {
-			computeChange(outputLayer, output);
-		}
+
 		void initialize();
 		std::shared_ptr<aly::NeuralFlowPane> getFlow() const {
 			return flowPane;

@@ -105,6 +105,7 @@ namespace tgr {
 			bool optimize();
 			void update();
 			void evaluate();
+			void reset();
 			void backpropagate();
 			aly::NeuralLayerRegionPtr getRegion();
 			bool hasRegion() const {

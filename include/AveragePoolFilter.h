@@ -27,7 +27,7 @@ namespace tgr {
 		AveragePoolFilter(const std::vector<NeuralLayerPtr>& inputLayers, int kernelSize);
 		AveragePoolFilter(const NeuralLayerPtr& inputLayer, int kernelSize);
 
-		virtual void initialize(NeuralSystem& sys) override;
+		virtual void initialize(NeuralSystem& sys, const NeuronFunction& func) override;
 	};
 	typedef std::shared_ptr<AveragePoolFilter> AveragePoolFilterPtr;
 }

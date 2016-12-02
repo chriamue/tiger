@@ -74,6 +74,7 @@ namespace tgr {
 		float sum1 = 0.0f,sum2;
 		int count = 0;
 		if (output.size() > 0) {
+			//std::cout << "dw= [";
 			for (SignalPtr sig : output) {
 				sum2 = 0.0f;
 				for (auto pr : sig->mapping) {
@@ -81,8 +82,10 @@ namespace tgr {
 					count++;
 				}
 				sum1 += sig->value*sum2;
+				//std::cout << std::setfill(' ') << std::setw(5) << aly::round(sig->value, 3) << " * [" << aly::round(sum2, 3) << "] ";
 			}
-			change = sum1*transform.change(value) / count;
+			change += sum1*transform.change(value) / count;
+			//std::cout << "] " << change << std::endl;
 		}
 		else {
 			//Must be leaf node, error term is stored in the change variable.
@@ -94,7 +97,7 @@ namespace tgr {
 			for (Neuron* inner : input2) {
 				sum2 += inner->value;
 			}
-			sig->change=change*sum2/(input2.size());
+			sig->change +=change*sum2/(input2.size());
 		}
 		return change;
 	}
@@ -102,7 +105,9 @@ namespace tgr {
 	float Neuron::evaluate() {
 		float sum1 = 0.0f, sum2;
 		int count = 0;
+		
 		if (input.size() > 0) {
+			//std::cout << "w= [";
 			for (SignalPtr sig : input) {
 				sum2 = 0.0f;
 				std::vector<Neuron*>& input2 = sig->get(this);
@@ -111,10 +116,14 @@ namespace tgr {
 					count++;
 				}
 				sum1 += sig->value*sum2;
+				//std::cout <<std::setfill(' ')<< std::setw(5) << aly::round(sig->value,3) << " * [" << aly::round(sum2, 3) << "] ";
 			}
 			change = 0.0f;
-			value = transform.forward(sum1/count);
+			sum1 /= count;
+			value = transform.forward(sum1);
+			//std::cout << "] T(" <<sum1<<") = "<< value << std::endl;
 		}
+		
 		return value;
 	}
 	void MakeConnection(Neuron* src,const std::shared_ptr<Signal>& signal, Neuron* dest) {

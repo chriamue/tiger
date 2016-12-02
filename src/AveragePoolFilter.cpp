@@ -38,12 +38,12 @@ namespace tgr {
 			}
 		}
 	}
-	void AveragePoolFilter::initialize(NeuralSystem& sys) {
+	void AveragePoolFilter::initialize(NeuralSystem& sys, const NeuronFunction& func) {
 		std::vector<SignalPtr> signals;
 		outputLayers.resize(inputLayers.size());
 		for (int k = 0; k < inputLayers.size(); k++) {
 			NeuralLayerPtr inputLayer = inputLayers[k];
-			outputLayers[k] = NeuralLayerPtr(new NeuralLayer(name,inputLayer->width/kernelSize,inputLayer->height/kernelSize,1,true));
+			outputLayers[k] = NeuralLayerPtr(new NeuralLayer(name,inputLayer->width/kernelSize,inputLayer->height/kernelSize,1,true, func));
 			NeuralLayerPtr outputLayer = outputLayers[k];
 			inputLayer->addChild(outputLayer);
 			for (int j = 0; j < outputLayer->height; j++) {

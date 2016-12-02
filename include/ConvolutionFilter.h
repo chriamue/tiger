@@ -31,7 +31,7 @@ namespace tgr {
 		void setConnectionMap(const std::vector<std::pair<int, int>>& mapping) {
 			connectionMap = mapping;
 		}
-		virtual void initialize(NeuralSystem& sys) override;
+		virtual void initialize(NeuralSystem& sys, const NeuronFunction& func) override;
 	};
 	typedef std::shared_ptr<ConvolutionFilter> ConvolutionFilterPtr;
 }

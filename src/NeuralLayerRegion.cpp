@@ -204,17 +204,14 @@ namespace aly {
 				layer->getFlow()->setSelected(layer);
 			}
 		}
-		std::list<int2> highlight;
 		for (int j = 0; j < height; j++) {
 			for (int i = 0; i < width; i++) {
 				float2 center = float2(bounds.position.x + (i + 0.5f)*scale, bounds.position.y + (j + 0.5f)*scale);
 				Neuron& n = (*layer)(i, j);
-				if (n.active) {
-					highlight.push_back(int2(i, j));
-				}
 				if (lineWidth > 0.1f&&selected.x != -1 && std::abs(i - selected.x) <= selectionRadius&&std::abs(j - selected.y) <= selectionRadius) {
 					int N = (int)n.getInputWeightSize();
-					nvgLineCap(nvg, NVG_SQUARE);
+					nvgLineCap(nvg, NVG_ROUND);
+
 					for (int i = 0; i < N; i++) {
 						SignalPtr& sig = n.getInput(i);
 						float a = 2.0f*i*NVG_PI / N - 0.5f*NVG_PI;
@@ -222,11 +219,19 @@ namespace aly {
 						float sina = std::sin(a);
 						float sx = center.x + rInner*cosa;
 						float sy = center.y + rInner*sina;
-						float tw = mix(rInner, rOuter - lineWidth, sig->value);
+						float tw =(rOuter-lineWidth) * clamp(0.5f+0.5f*sig->value,0.0f,1.0f);
 						float wx = center.x + tw*cosa;
 						float wy = center.y + tw*sina;
-						float ex = center.x + (rOuter - lineWidth)*cosa;
-						float ey = center.y + (rOuter - lineWidth)*sina;
+						float ex; 
+						float ey;
+						if (sig->value >= 0) {
+							ex = center.x + (rOuter - lineWidth)*cosa;
+							ey = center.y + (rOuter - lineWidth)*sina;
+						}
+						else {
+							ex = center.x;
+							ey = center.y;
+						}
 						nvgStrokeColor(nvg, Color(128, 128, 128));
 						nvgStrokeWidth(nvg, lineWidth);
 						nvgBeginPath(nvg);
@@ -245,36 +250,39 @@ namespace aly {
 							nvgStrokeColor(nvg, Color(220, 220, 220));
 						}
 						nvgBeginPath(nvg);
-						nvgMoveTo(nvg, sx, sy);
+						if (sig->value >= 0) {
+							nvgMoveTo(nvg, sx + lineWidth*cosa, sy + lineWidth*sina);
+						}
+						else {
+							nvgMoveTo(nvg, sx - lineWidth*cosa, sy - lineWidth*sina);
+
+						}
 						nvgLineTo(nvg, wx, wy);
 						nvgStrokeWidth(nvg, 3 * lineWidth);
 						nvgStroke(nvg);
 
 					}
+
+					nvgStrokeWidth(nvg, 2.0f* lineWidth);
+					nvgStrokeColor(nvg, Color(200, 200, 200));
+					nvgBeginPath(nvg);
+					nvgCircle(nvg, center.x, center.y, rOuter);
+					nvgStroke(nvg);
+					nvgBeginPath(nvg);
+					nvgCircle(nvg, center.x, center.y, rInner);
+					nvgStroke(nvg);
 				}
-				nvgStrokeWidth(nvg, lineWidth);
-				nvgStrokeColor(nvg, Color(92, 92, 92));
-				nvgBeginPath(nvg);
-				nvgCircle(nvg, center.x, center.y, scale*0.5f - lineWidth);
-				nvgStroke(nvg);
+				else if (n.active) {
+					nvgStrokeWidth(nvg, 2.0f* lineWidth);
+					nvgStrokeColor(nvg, Color(200, 200, 200));
+					nvgBeginPath(nvg);
+					nvgCircle(nvg, center.x, center.y, rInner);
+					nvgStroke(nvg);
+				}
+
 			}
 		}
-		if (selected.x != -1 && selected.y != -1) {
-			nvgStrokeWidth(nvg, 2.0f);
-			float2 center = float2(bounds.position.x + (selected.x + 0.5f)*scale, bounds.position.y + (selected.y + 0.5f)*scale);
-			nvgStrokeColor(nvg, Color(200, 200, 200));
-			nvgBeginPath(nvg);
-			nvgCircle(nvg, center.x, center.y, scale*0.5f - lineWidth);
-			nvgStroke(nvg);
-		}
-		for (int2 pos : highlight) {
-			nvgStrokeWidth(nvg, 2.0f);
-			float2 center = float2(bounds.position.x + (pos.x + 0.5f)*scale, bounds.position.y + (pos.y + 0.5f)*scale);
-			nvgStrokeColor(nvg, Color(200, 200, 200));
-			nvgBeginPath(nvg);
-			nvgCircle(nvg, center.x, center.y, scale*0.5f - lineWidth);
-			nvgStroke(nvg);
-		}
+
 		popScissor(context->nvgContext);
 		
 		Composite::draw(context);
