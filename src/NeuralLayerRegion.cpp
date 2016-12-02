@@ -218,11 +218,11 @@ namespace aly {
 						float sina = std::sin(a);
 						float sx = center.x + rInner*cosa;
 						float sy = center.y + rInner*sina;
-						float tw =mix(rInner+lineWidth,rOuter-lineWidth, clamp(0.5f+0.5f*sig->value,0.0f,1.0f));
+						float tw =mix(rInner+lineWidth,rOuter-2*lineWidth, clamp(0.5f+0.5f*sig->value,0.0f,1.0f));
 						float wx = center.x + tw*cosa;
 						float wy = center.y + tw*sina;
-						float ex = center.x + (rOuter - lineWidth)*cosa;
-						float ey = center.y + (rOuter - lineWidth)*sina;
+						float ex = center.x + (rOuter - 2 * lineWidth)*cosa;
+						float ey = center.y + (rOuter - 2 * lineWidth)*sina;
 						nvgStrokeColor(nvg, Color(128, 128, 128));
 						nvgStrokeWidth(nvg, lineWidth);
 						nvgBeginPath(nvg);
@@ -242,13 +242,7 @@ namespace aly {
 							nvgStrokeColor(nvg, Color(200,200,200));
 						}
 						nvgBeginPath(nvg);
-						if (sig->value >= 0) {
-							nvgMoveTo(nvg, sx + lineWidth*cosa, sy + lineWidth*sina);
-						}
-						else {
-							nvgMoveTo(nvg, sx - lineWidth*cosa, sy - lineWidth*sina);
-
-						}
+						nvgMoveTo(nvg, sx + lineWidth*cosa, sy + lineWidth*sina);
 						nvgLineTo(nvg, wx, wy);
 						nvgStrokeWidth(nvg, 3 * lineWidth);
 						nvgStroke(nvg);
@@ -258,10 +252,11 @@ namespace aly {
 					nvgStrokeWidth(nvg, 2.0f* lineWidth);
 					nvgStrokeColor(nvg, Color(200, 200, 200));
 					nvgBeginPath(nvg);
-					nvgCircle(nvg, center.x, center.y, rOuter - 0.5f*lineWidth);
+					nvgCircle(nvg, center.x, center.y, rOuter - lineWidth);
 					nvgStroke(nvg);
+
 					nvgBeginPath(nvg);
-					nvgCircle(nvg, center.x, center.y, rInner- lineWidth);
+					nvgCircle(nvg, center.x, center.y, rInner - lineWidth);
 					nvgStroke(nvg);
 				}
 				if (n.active||(selected.x==i&&selected.y==j)) {
