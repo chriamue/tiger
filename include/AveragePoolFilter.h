@@ -23,9 +23,10 @@ namespace tgr {
 	class AveragePoolFilter :public NeuralFilter {
 	protected:
 		int kernelSize;
+		bool bias;
 	public:
-		AveragePoolFilter(const std::vector<NeuralLayerPtr>& inputLayers, int kernelSize);
-		AveragePoolFilter(const NeuralLayerPtr& inputLayer, int kernelSize);
+		AveragePoolFilter(const std::vector<NeuralLayerPtr>& inputLayers, int kernelSize,bool bias);
+		AveragePoolFilter(const NeuralLayerPtr& inputLayer, int kernelSize,bool bias);
 
 		virtual void initialize(NeuralSystem& sys, const NeuronFunction& func) override;
 	};

@@ -21,6 +21,9 @@
 #include "NeuralSystem.h"
 #include "NeuralFilter.h"
 #include "NeuralFlowPane.h"
+#include <cereal/archives/xml.hpp>
+#include <cereal/archives/json.hpp>
+#include <cereal/archives/portable_binary.hpp>
 using namespace aly;
 namespace tgr {
 	void NeuralSystem::backpropagate() {
@@ -31,7 +34,7 @@ namespace tgr {
 	bool NeuralSystem::optimize() {
 		bool ret = false;
 		for (NeuralLayer* layer : backpropLayers) {
-			ret|=layer->optimize();
+			ret |= layer->optimize();
 		}
 		return ret;
 	}
@@ -43,12 +46,12 @@ namespace tgr {
 		}
 	}
 	double NeuralSystem::accumulate(const NeuralLayerPtr& layer, const Image1f& output) {
-		double residual=0;
-		for (int j = 0; j <output.height; j++) {
+		double residual = 0;
+		for (int j = 0; j < output.height; j++) {
 			for (int i = 0; i < output.width; i++) {
 				Neuron* neuron = layer->get(i, j);
-				float err = neuron->value- output(i, j).x;
-				neuron->change+=err;
+				float err = neuron->value - output(i, j).x;
+				neuron->change += err;
 
 				residual += std::abs(err);
 			}
@@ -61,8 +64,8 @@ namespace tgr {
 		double residual = 0;
 		for (size_t i = 0; i < output.size(); i++) {
 			Neuron* neuron = layer->get(i);
-			float err = neuron->value- output[i];
-			neuron->change +=  err;
+			float err = neuron->value - output[i];
+			neuron->change += err;
 			residual += err*err;
 		}
 		residual /= double(output.size());
@@ -83,17 +86,17 @@ namespace tgr {
 	void NeuralSystem::getLayer(const NeuralLayerPtr& layer, Image1f& input) {
 		layer->get(input);
 	}
-	void NeuralSystem::getLayer(const NeuralLayerPtr& layer, std::vector<float>& input) {	
+	void NeuralSystem::getLayer(const NeuralLayerPtr& layer, std::vector<float>& input) {
 		layer->get(input);
 	}
-	NeuralSystem::NeuralSystem(const std::shared_ptr<aly::NeuralFlowPane>& pane):flowPane(pane){
+	NeuralSystem::NeuralSystem(const std::shared_ptr<aly::NeuralFlowPane>& pane) :flowPane(pane) {
 
 	}
 
 	void NeuralSystem::evaluate() {
-		for (NeuralLayerPtr layer:layers) {
+		for (NeuralLayerPtr layer : layers) {
 			layer->evaluate();
-			Vector1f data=layer->toVector();
+			Vector1f data = layer->toVector();
 			//std::cout << layer->getName() << ":: Sum: " << data.sum() << " Std. Dev: " << data.stdDev() << std::endl;
 		}
 	}
@@ -110,7 +113,7 @@ namespace tgr {
 				q.push_back(layer);
 			}
 		}
-		
+
 		backpropLayers.clear();
 		std::vector<NeuralLayerPtr> order;
 		int index = 0;
@@ -120,7 +123,7 @@ namespace tgr {
 			layer->id = index++;
 			layer->setVisited(true);
 			order.push_back(layer);
-			for (NeuralLayerPtr child:layer->getChildren()) {
+			for (NeuralLayerPtr child : layer->getChildren()) {
 				if (child->visitedDependencies()) {
 					q.push_back(child);
 				}
@@ -149,10 +152,14 @@ namespace tgr {
 			}
 		}
 	}
-
-	void NeuralSystem::add(const std::shared_ptr<NeuralFilter>& filter) {
-		filter->initialize(*this);
-		auto inputs= filter->getInputLayers();
+	void NeuralSystem::initializeWeights(float minW, float maxW) {
+		for (NeuralLayerPtr layer : layers) {
+			layer->initializeWeights(minW, maxW);
+		}
+	}
+	void NeuralSystem::add(const std::shared_ptr<NeuralFilter>& filter, const NeuronFunction& func) {
+		filter->initialize(*this, func);
+		auto inputs = filter->getInputLayers();
 		auto output = filter->getOutputLayers();
 		for (auto layer : inputs) {
 			layer->setSystem(this);
@@ -165,7 +172,7 @@ namespace tgr {
 	}
 	void NeuralSystem::initialize(const aly::ExpandTreePtr& tree) {
 		initialize();
-		TreeItemPtr root=TreeItemPtr(new TreeItem("Neural Layers"));
+		TreeItemPtr root = TreeItemPtr(new TreeItem("Neural Layers"));
 		tree->addItem(root);
 		root->setExpanded(true);
 		for (NeuralLayerPtr n : roots) {
@@ -177,4 +184,41 @@ namespace tgr {
 	Neuron* NeuralSystem::getNeuron(const Terminal& t) const {
 		return t.layer->get(t.x, t.y);
 	}
+	void WriteNeuralSystemToFile(const std::string& file, const NeuralSystem& params) {
+		std::string ext = GetFileExtension(file);
+		if (ext == "json") {
+			std::ofstream os(file);
+			cereal::JSONOutputArchive archive(os);
+			archive(cereal::make_nvp("tigernet", params));
+		}
+		else if (ext == "xml") {
+			std::ofstream os(file);
+			cereal::XMLOutputArchive archive(os);
+			archive(cereal::make_nvp("tigernet", params));
+		}
+		else {
+			std::ofstream os(file, std::ios::binary);
+			cereal::PortableBinaryOutputArchive archive(os);
+			archive(cereal::make_nvp("tigernet", params));
+		}
+	}
+	void ReadNeuralSystemFromFile(const std::string& file, NeuralSystem& params) {
+		std::string ext = GetFileExtension(file);
+		if (ext == "json") {
+			std::ifstream os(file);
+			cereal::JSONInputArchive archive(os);
+			archive(cereal::make_nvp("tigernet", params));
+		}
+		else if (ext == "xml") {
+			std::ifstream os(file);
+			cereal::XMLInputArchive archive(os);
+			archive(cereal::make_nvp("tigernet", params));
+		}
+		else {
+			std::ifstream os(file, std::ios::binary);
+			cereal::PortableBinaryInputArchive archive(os);
+			archive(cereal::make_nvp("tigernet", params));
+		}
+	}
+
 }

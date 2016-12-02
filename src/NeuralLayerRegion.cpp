@@ -264,7 +264,7 @@ namespace aly {
 					nvgCircle(nvg, center.x, center.y, rInner- lineWidth);
 					nvgStroke(nvg);
 				}
-				if (n.active) {
+				if (n.active||(selected.x==i&&selected.y==j)) {
 					nvgStrokeWidth(nvg, 2.0f);
 					nvgStrokeColor(nvg, Color(200, 200, 200));
 					nvgBeginPath(nvg);
@@ -343,4 +343,5 @@ namespace aly {
 		position = CoordPX(bounds.position - parent->getBoundsPosition());
 		dimensions = CoordPX(bounds.dimensions);
 	}
+
 }

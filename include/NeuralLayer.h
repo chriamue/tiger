@@ -31,6 +31,9 @@
 
 #include <vector>
 #include <set>
+#include <cereal/cereal.hpp>
+#include <cereal/types/vector.hpp>
+#include <cereal/types/string.hpp>
 class TigerApp;
 namespace aly {
 	class NeuralFlowPane;
@@ -64,6 +67,23 @@ namespace tgr {
 			typedef typename std::vector<ValueType>::iterator iterator;
 			typedef typename std::vector<ValueType>::const_iterator const_iterator;
 			typedef typename std::vector<ValueType>::reverse_iterator reverse_iterator;
+			template<class Archive> void save(Archive & ar) const
+			{
+				std::vector<float> weights(signals.size());
+				for (int i = 0; i <(int)weights.size(); i++) {
+					weights[i] = signals[i]->value;
+				}
+				ar(CEREAL_NVP(name),CEREAL_NVP(weights));
+			}
+			template<class Archive> void load(Archive & ar)
+			{
+				std::vector<float> weights;
+				ar(CEREAL_NVP(name), CEREAL_NVP(weights));
+				int N =(int)std::min(weights.size(), signals.size());
+				for (int i = 0; i < N; i++) {
+					signals[i]->value= weights[i];
+				}
+			}
 
 			std::shared_ptr<aly::NeuralFlowPane> getFlow() const;
 			iterator begin() {
@@ -108,6 +128,8 @@ namespace tgr {
 			void update();
 			void evaluate();
 			void reset();
+			void initializeWeights(float minW=0.0f, float maxW=1.0f);
+
 			void backpropagate();
 			aly::NeuralLayerRegionPtr getRegion();
 			bool hasRegion() const {
@@ -184,6 +206,7 @@ namespace tgr {
 			void get(aly::Image1f& input);
 			void get(std::vector<float>& input);
 			aly::Vector1f toVector() const;
+			NeuralLayer() {}
 			NeuralLayer(int width,int height,int bins,bool bias=false, const NeuronFunction& func = ReLU());
 			NeuralLayer(const std::string& name,int width, int height, int bins, bool bias = false, const NeuronFunction& func=ReLU());
 	};

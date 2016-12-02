@@ -46,6 +46,11 @@ namespace tgr {
 	std::shared_ptr<aly::NeuralFlowPane> NeuralLayer::getFlow() const {
 		return sys->getFlow();
 	}
+	void NeuralLayer::initializeWeights(float minW, float maxW) {
+		for (SignalPtr sig : signals) {
+			sig->value = RandomUniform(minW, maxW);
+		}
+	}
 	void NeuralLayer::reset() {
 		residualError = 0.0;
 		for (Neuron& neuron : neurons) {
@@ -129,8 +134,7 @@ namespace tgr {
 	}
 	bool NeuralLayer::optimize() {
 		if (optimizer.get() != nullptr) {
-			//std::cout << "Optimize " << getName() << std::endl;
-			return optimizer->optimize(signals);
+			return optimizer->optimize(id,signals);
 		}
 		else {
 			//std::cerr << "No optimizer for " << getName() << std::endl;

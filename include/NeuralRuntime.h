@@ -41,7 +41,10 @@ namespace tgr {
 		aly::Number iterationsPerEpoch;
 		aly::Number iterationsPerStep;
 		aly::Number learningRateInitial;
+		aly::Number weightDecay;
+		aly::Number momentum;
 		aly::Number learningRateDelta;
+		aly::Number batchSize;
 		std::shared_ptr<NeuralOptimization> opt;
 		int optimizationMethod;
 		std::vector<float> outputData;

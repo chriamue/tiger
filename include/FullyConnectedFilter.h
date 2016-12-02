@@ -24,10 +24,11 @@ namespace tgr {
 	protected:
 		int width;
 		int height;
+		bool bias;
 	public:
-		FullyConnectedFilter(const std::string& name, const std::vector<NeuralLayerPtr>& inputLayers, int width,int height);
-		FullyConnectedFilter(const std::string& name, const NeuralLayerPtr& inputLayer, int width, int height);
-		FullyConnectedFilter(const std::string& name,int inWidth,int inHeight, int width, int height);
+		FullyConnectedFilter(const std::string& name, const std::vector<NeuralLayerPtr>& inputLayers, int width,int height,bool bias);
+		FullyConnectedFilter(const std::string& name, const NeuralLayerPtr& inputLayer, int width, int height, bool bias);
+		FullyConnectedFilter(const std::string& name,int inWidth,int inHeight, int width, int height, bool bias);
 
 		virtual void initialize(NeuralSystem& sys, const NeuronFunction& func) override;
 	};

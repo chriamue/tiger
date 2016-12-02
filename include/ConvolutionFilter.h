@@ -23,11 +23,12 @@ namespace tgr {
 	class ConvolutionFilter :public NeuralFilter {
 	protected:
 		int kernelSize;
+		bool bias;
 		std::vector<std::pair<int,int>> connectionMap;
 	public:
-		ConvolutionFilter( int width, int height, int kernelSize, int features);
-		ConvolutionFilter(const NeuralLayerPtr& inputLayer, int kernelSize, int features);
-		ConvolutionFilter(const std::vector<NeuralLayerPtr>& inputLayers, int kernelSize, int features);
+		ConvolutionFilter( int width, int height, int kernelSize,int features, bool bias);
+		ConvolutionFilter(const NeuralLayerPtr& inputLayer, int kernelSize,int features, bool bias);
+		ConvolutionFilter(const std::vector<NeuralLayerPtr>& inputLayers, int kernelSize, int features, bool bias);
 		void setConnectionMap(const std::vector<std::pair<int, int>>& mapping) {
 			connectionMap = mapping;
 		}

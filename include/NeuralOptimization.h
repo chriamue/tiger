@@ -36,17 +36,33 @@ namespace tgr {
 		NeuralOptimization(float learningRate) :learningRate(learningRate) {
 		}
 		virtual NeuralOptimizer getType() const = 0;
-		virtual bool optimize(const std::vector<std::shared_ptr<Signal>>& signals) = 0;
+		virtual bool optimize(int id,const std::vector<std::shared_ptr<Signal>>& signals) = 0;
 	};
 	typedef std::shared_ptr<NeuralOptimization> NeuralOptimizationPtr;
 	class GradientDescentOptimizer:public NeuralOptimization {
+	protected:
+		float weightDecay;
 	public:
-		GradientDescentOptimizer(float learningRate) :NeuralOptimization(learningRate) {
+		GradientDescentOptimizer(float learningRate,float weightDecay=0.0f) :NeuralOptimization(learningRate),weightDecay(weightDecay) {
 		}
 		NeuralOptimizer getType() const {
 			return NeuralOptimizer::GradientDescent;
 		}
-		virtual bool optimize(const std::vector<std::shared_ptr<Signal>>& signals) override;
+		virtual bool optimize(int id, const std::vector<std::shared_ptr<Signal>>& signals) override;
+	};
+
+	class MomentumOptimizer :public NeuralOptimization {
+	protected:
+		float weightDecay;
+		float momentum;
+		std::map<int,std::vector<float>> velocityBufferMap;
+	public:
+		MomentumOptimizer(float learningRate, float weightDecay=0.0f,float momentum =0.9f) :NeuralOptimization(learningRate), weightDecay(weightDecay), momentum(momentum) {
+		}
+		NeuralOptimizer getType() const {
+			return NeuralOptimizer::GradientDescent;
+		}
+		virtual bool optimize(int id, const std::vector<std::shared_ptr<Signal>>& signals) override;
 	};
 }
 #endif

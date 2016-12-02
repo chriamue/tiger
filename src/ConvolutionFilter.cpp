@@ -23,21 +23,21 @@
 
 using namespace aly;
 namespace tgr {
-	ConvolutionFilter::ConvolutionFilter( int width, int height, int kernelSize, int features) :NeuralFilter("Feature"), kernelSize(kernelSize) {
+	ConvolutionFilter::ConvolutionFilter( int width, int height, int kernelSize, int features, bool bias) :NeuralFilter("Feature"), kernelSize(kernelSize),bias(bias) {
 		if (kernelSize % 2 == 0) {
 			throw std::runtime_error("Kernel size must be odd.");
 		}
 		inputLayers.push_back(NeuralLayerPtr(new NeuralLayer( "Input Layer", width, height,1,false,Linear())));
 		outputLayers.resize(features);
 	}
-	ConvolutionFilter::ConvolutionFilter( const NeuralLayerPtr& layer, int kernelSize, int features) :NeuralFilter("Feature"), kernelSize(kernelSize) {
+	ConvolutionFilter::ConvolutionFilter( const NeuralLayerPtr& layer, int kernelSize, int features, bool bias) :NeuralFilter("Feature"), kernelSize(kernelSize), bias(bias) {
 		if (kernelSize % 2 == 0) {
 			throw std::runtime_error("Kernel size must be odd.");
 		}
 		inputLayers.push_back(layer);
 		outputLayers.resize(features);
 	}
-	ConvolutionFilter::ConvolutionFilter( const std::vector<NeuralLayerPtr>& layers, int kernelSize, int features) :NeuralFilter("Feature"), kernelSize(kernelSize) {
+	ConvolutionFilter::ConvolutionFilter( const std::vector<NeuralLayerPtr>& layers, int kernelSize, int features, bool bias) :NeuralFilter("Feature"), kernelSize(kernelSize), bias(bias) {
 		if (kernelSize % 2 == 0) {
 			throw std::runtime_error("Kernel size must be odd.");
 		}
@@ -56,10 +56,8 @@ namespace tgr {
 
 		if (connectionMap.size() == 0) {
 			for (int f = 0; f < outputLayers.size(); f++) {
-				NeuralLayerPtr outputLayer = NeuralLayerPtr(new NeuralLayer( MakeString() << name << " [" << f << "]", ow, oh,1,false,func));
+				NeuralLayerPtr outputLayer = NeuralLayerPtr(new NeuralLayer( MakeString() << name << " [" << f << "]", ow, oh,1,bias,func));
 				outputLayers[f] = outputLayer;
-				outputLayer->setFunction(Tanh());
-
 				index = 0;
 				for (int jj = 0; jj < kernelSize; jj++) {
 					for (int ii = 0; ii < kernelSize; ii++) {
@@ -88,9 +86,8 @@ namespace tgr {
 				int outIdx = pr.second;
 				NeuralLayerPtr outputLayer;
 				if (outputLayers[outIdx].get() == nullptr) {
-					outputLayer = NeuralLayerPtr(new NeuralLayer( MakeString() << name << " [" << outIdx << "]", ow, oh,1));
+					outputLayer = NeuralLayerPtr(new NeuralLayer( MakeString() << name << " [" << outIdx << "]", ow, oh,1,bias,func));
 					outputLayers[outIdx] = outputLayer;
-					outputLayer->setFunction(Tanh());
 				}
 				else {
 					outputLayer = outputLayers[outIdx];

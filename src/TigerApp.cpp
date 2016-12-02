@@ -65,7 +65,7 @@ bool TigerApp::init(Composite& rootNode) {
 	frameBuffersDirty = true;
 
 	CompositePtr toolbar = CompositePtr(new Composite("Toolbar",CoordPX(0.0f,0.0f),CoordPerPX(1.0f,0.0f,0.0f,40.0f)));
-
+	
 	BorderCompositePtr layout = BorderCompositePtr(new BorderComposite("UI Layout", CoordPX(0.0f, 0.0f), CoordPercent(1.0f, 1.0f), true));
 	ParameterPanePtr controls = ParameterPanePtr(new ParameterPane("Controls", CoordPX(0.0f, 0.0f), CoordPercent(1.0f, 1.0f)));
 	expandTree = ExpandTreePtr(new ExpandTree("Expand Tree", CoordPX(0.0f, 0.0f), CoordPercent(1.0f, 1.0f)));
@@ -93,9 +93,9 @@ bool TigerApp::init(Composite& rootNode) {
 	controls->addFileField("Evaluation Images", evalFile);
 	controls->addFileField("Evaluation Labels", evalLabelFile);
 
-	flowRegion = NeuralFlowPanePtr(new NeuralFlowPane("View", CoordPX(0.0f, 40.0f), CoordPerPX(1.0f, 1.0f, 0.0f, -120.0f)));
+	flowRegion = NeuralFlowPanePtr(new NeuralFlowPane("View", CoordPX(0.0f, 0.0f), CoordPerPX(1.0f, 1.0f, 0.0f, -80.0f)));
 
-	toolbar->backgroundColor = MakeColor(getContext()->theme.DARKER);
+	toolbar->backgroundColor = MakeColor(getContext()->theme.DARKER.toSemiTransparent(0.5f));
 	sampleIndex = Integer(0);
 	const float numAspect = 2.0f;
 	const float entryHeight = 40.0f;
@@ -127,6 +127,7 @@ bool TigerApp::init(Composite& rootNode) {
 		valueRegion->setNumberValue(value);
 		setSampleIndex(value.toInteger());
 	});
+	/*
 	TextLinkPtr initWeightsButton = TextLinkPtr(new TextLink("Initialize Weights", CoordPX(0.0f, 0.0f), CoordPX(205.0f, entryHeight)));
 	initWeightsButton->fontSize = UnitPX(30.0f);
 	initWeightsButton->setAlignment(HorizontalAlignment::Center, VerticalAlignment::Middle);
@@ -138,7 +139,7 @@ bool TigerApp::init(Composite& rootNode) {
 		}
 		return false;
 	};
-	/*
+
 	TextLinkPtr learnButton = TextLinkPtr(new TextLink("Learning Step", CoordPX(0.0f, 0.0f), CoordPX(170.0f, entryHeight)));
 	learnButton->fontSize = UnitPX(30.0f);
 	learnButton->setAlignment(HorizontalAlignment::Center, VerticalAlignment::Middle);
@@ -160,7 +161,7 @@ bool TigerApp::init(Composite& rootNode) {
 	toolbar->add(labelRegion);
 	toolbar->add(tweenRegion);
 	toolbar->add(valueRegion);
-	toolbar->add(initWeightsButton);
+	//toolbar->add(initWeightsButton);
 	//toolbar->add(learnButton);
 	controlLayout->backgroundColor = MakeColor(getContext()->theme.DARKER);
 	controlLayout->borderWidth = UnitPX(0.0f);
@@ -197,8 +198,9 @@ bool TigerApp::init(Composite& rootNode) {
 	timelineSlider->setMaxValue(1000);
 	timelineSlider->setVisible(true);
 	timelineSlider->setModifiable(false);
-	viewRegion->add(toolbar);
+
 	viewRegion->add(flowRegion);
+	viewRegion->add(toolbar);
 	viewRegion->add(timelineSlider);
 
 	
@@ -318,8 +320,8 @@ bool TigerApp::init(Composite& rootNode) {
 	};
 	getContext()->addDeferredTask([this]() {
 		box2px bounds=flowRegion->getBounds();
-		flowRegion->add(sys->getInput().get(), bounds.position + pixel2(0.25f*bounds.dimensions.x, 0.25f*bounds.dimensions.y));
-		flowRegion->add(sys->getOutput().get(), bounds.position + pixel2(0.75f*bounds.dimensions.x,0.25f*bounds.dimensions.y));
+		flowRegion->add(sys->getInput().get(), bounds.position + pixel2(0.25f*bounds.dimensions.x, 0.3f*bounds.dimensions.y));
+		flowRegion->add(sys->getOutput().get(), bounds.position + pixel2(0.75f*bounds.dimensions.x,0.3f*bounds.dimensions.y));
 		
 	});
 	initialize();
@@ -383,13 +385,13 @@ bool TigerApp::onEventHandler(AlloyContext* context, const aly::InputEvent& e) {
 	return false;
 }
 bool TigerApp::initializeXOR() {
-	FullyConnectedFilterPtr firstFilter(new FullyConnectedFilter("First Layer",2,2, 2, 2));
+	FullyConnectedFilterPtr firstFilter(new FullyConnectedFilter("First Layer",2,2, 2, 2,true));
 	sys->add(firstFilter);
 
-	FullyConnectedFilterPtr secondFilter(new FullyConnectedFilter("Second Layer",firstFilter->getOutputLayer(0), 2, 2));
+	FullyConnectedFilterPtr secondFilter(new FullyConnectedFilter("Second Layer",firstFilter->getOutputLayer(0), 2, 2, true));
 	sys->add(secondFilter);
 
-	FullyConnectedFilterPtr thirdFilter(new FullyConnectedFilter("Output Layer", secondFilter->getOutputLayer(0), 1, 1));
+	FullyConnectedFilterPtr thirdFilter(new FullyConnectedFilter("Output Layer", secondFilter->getOutputLayer(0), 1, 1, true));
 	sys->add(thirdFilter);
 	thirdFilter->getOutputLayer(0)->setFunction(tgr::Linear());
 	sys->setInput(firstFilter->getInputLayer(0));
@@ -429,17 +431,17 @@ bool TigerApp::initializeLeNet5() {
 	parse_mnist_labels(trainLabelFile, trainOutputData);
 	if (trainInputData.size() > 0) {
 		const Image1f& ref = trainInputData[0];
-		ConvolutionFilterPtr conv1(new ConvolutionFilter(ref.width, ref.height, 5, 6));
-		sys->add(conv1);
+		ConvolutionFilterPtr conv1(new ConvolutionFilter(ref.width, ref.height, 5, 6, true));
+		sys->add(conv1,Tanh());
 		std::vector<NeuralLayerPtr> all;
 		for (int i = 0; i < conv1->getOutputSize(); i++) {
-			AveragePoolFilterPtr avg1(new AveragePoolFilter(conv1->getOutputLayer(i), 2));
+			AveragePoolFilterPtr avg1(new AveragePoolFilter(conv1->getOutputLayer(i), 2, true));
 			avg1->setName(MakeString() << "Sub-Sample [" << i << "]");
-			sys->add(avg1);
+			sys->add(avg1, Tanh());
 			all.push_back(avg1->getOutputLayer(0));
 		}
 
-		ConvolutionFilterPtr conv2(new ConvolutionFilter(all, 5, 16));
+		ConvolutionFilterPtr conv2(new ConvolutionFilter(all, 5, 16, true));
 		std::vector<std::pair<int, int>> connectionTable;
 		for (int ii = 0; ii < 6; ii++) {
 			for (int jj = 0; jj < 16; jj++) {
@@ -449,17 +451,17 @@ bool TigerApp::initializeLeNet5() {
 			}
 		}
 		conv2->setConnectionMap(connectionTable);
-		sys->add(conv2);
+		sys->add(conv2, Tanh());
 		all.clear();
 		for (int i = 0; i < conv2->getOutputSize(); i++) {
-			AveragePoolFilterPtr avg2(new AveragePoolFilter(conv2->getOutputLayer(i), 2));
+			AveragePoolFilterPtr avg2(new AveragePoolFilter(conv2->getOutputLayer(i), 2, true));
 			avg2->setName(MakeString() << "Sub-Sample [" << i << "]");
 			sys->add(avg2);
-			ConvolutionFilterPtr conv3(new ConvolutionFilter(avg2->getOutputLayer(0), 5, 1));
+			ConvolutionFilterPtr conv3(new ConvolutionFilter(avg2->getOutputLayer(0), 5, 1, true));
 			sys->add(conv3);
 			all.push_back(conv3->getOutputLayer(0));
 		}
-		FullyConnectedFilterPtr decisionFilter(new FullyConnectedFilter("Decision Layer", all, 10, 1));
+		FullyConnectedFilterPtr decisionFilter(new FullyConnectedFilter("Decision Layer", all, 10, 1, true));
 		sys->add(decisionFilter);
 		sys->setInput(conv1->getInputLayer(0));
 		sys->setOutput(decisionFilter->getOutputLayer(0));
