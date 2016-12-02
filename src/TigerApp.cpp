@@ -173,9 +173,11 @@ bool TigerApp::init(Composite& rootNode) {
 	controlLayout->setCenter(controls);
 	
 
-	graphRegion = GraphPanePtr(new GraphPane("Residual Error", CoordPX(0.0f,0.0f), CoordPercent(1.0f,1.0f)));
+	graphRegion = GraphPanePtr(new GraphPane("Training Error", CoordPX(0.0f,0.0f), CoordPercent(1.0f,1.0f)));
 	graphRegion->setRoundCorners(false);
 	graphRegion->borderWidth = UnitPX(0.0f);
+	graphRegion->xAxisLabel = "Iteration";
+	graphRegion->yAxisLabel = "Residual";
 	graphRegion->backgroundColor = MakeColor(AlloyDefaultContext()->theme.DARKER);
 	controlLayout->setNorth(graphRegion,0.3333f);
 	

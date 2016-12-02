@@ -85,7 +85,7 @@ namespace tgr {
 		bool active;
 		friend class NeuralLayer;
 		float normalizedValue() const {
-			return aly::clamp((value - transform.min()) / (transform.max() - transform.min()),0.0f,1.0f);
+			return aly::clamp((value - transform.min()) / std::max(1E-10f,transform.max() - transform.min()),0.0f,1.0f);
 		}
 		size_t getInputWeightSize() const {
 			return input.size();

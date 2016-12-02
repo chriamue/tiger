@@ -210,7 +210,7 @@ namespace aly {
 				Neuron& n = (*layer)(i, j);
 				if (lineWidth > 0.1f&&selected.x != -1 && std::abs(i - selected.x) <= selectionRadius&&std::abs(j - selected.y) <= selectionRadius) {
 					int N = (int)n.getInputWeightSize();
-					nvgLineCap(nvg, NVG_ROUND);
+					nvgLineCap(nvg, NVG_SQUARE);
 					for (int i = 0; i < N; i++) {
 						SignalPtr& sig = n.getInput(i);
 						float a = 2.0f*i*NVG_PI / N - 0.5f*NVG_PI;
@@ -218,35 +218,31 @@ namespace aly {
 						float sina = std::sin(a);
 						float sx = center.x + rInner*cosa;
 						float sy = center.y + rInner*sina;
-						float tw =(rOuter-lineWidth) * clamp(0.5f+0.5f*sig->value,0.0f,1.0f);
+						float tw =mix(rInner,rOuter-lineWidth, clamp(0.5f+0.5f*sig->value,0.0f,1.0f));
 						float wx = center.x + tw*cosa;
 						float wy = center.y + tw*sina;
 						float ex; 
 						float ey;
-						if (sig->value >= 0) {
 							ex = center.x + (rOuter - lineWidth)*cosa;
 							ey = center.y + (rOuter - lineWidth)*sina;
-						}
-						else {
-							ex = center.x;
-							ey = center.y;
-						}
+						
 						nvgStrokeColor(nvg, Color(128, 128, 128));
 						nvgStrokeWidth(nvg, lineWidth);
 						nvgBeginPath(nvg);
-						nvgMoveTo(nvg, sx, sy);
+						nvgMoveTo(nvg, sx,sy);
 						nvgLineTo(nvg, ex, ey);
 						nvgStroke(nvg);
 
 						float valSum = 0.0f;
 						int sz=(int)sig->mapping.size();
+						
 						if (sz > 0) {
 							for (Neuron* ne : sig->get(&n)) {
 								valSum += ne->normalizedValue();
 							}
 							nvgStrokeColor(nvg, Color(ColorMapToRGB(clamp(valSum/sz,0.0f,1.0f), ColorMap::RedToBlue)));
 						} else {
-							nvgStrokeColor(nvg, Color(220, 220, 220));
+							nvgStrokeColor(nvg, Color(200,200,200));
 						}
 						nvgBeginPath(nvg);
 						if (sig->value >= 0) {
