@@ -28,8 +28,11 @@ namespace tgr {
 
 	}
 	bool NeuralRuntime::init() {
-		std::cout << "Intialize " << std::endl;
-		sys->setOptimizer(std::shared_ptr<NeuralOptimization>(new GradientDescentOptimizer(0.8f)));
+		lastResidual = 1E30f;
+		for (NeuralLayerPtr layer : sys->getLayers()) {
+			layer->getGraph()->points.clear();
+		}
+		sys->setOptimizer(opt=std::shared_ptr<NeuralOptimization>(new GradientDescentOptimizer(learningRateInitial.toFloat())));
 		iteration = 0;
 		return true;
 	}
@@ -38,8 +41,7 @@ namespace tgr {
 	void NeuralRuntime::setup(const aly::ParameterPanePtr& controls) {
 		controls->addGroup("Training", true);
 		controls->addSelectionField("Optimizer", optimizationMethod, std::vector<std::string>{"Gradient Descent", "Momentum"},6.0f);
-		controls->addNumberField("Epochs", epochs);
-		controls->addNumberField("Outer Iterations", iterationsPerEpoch);
+		controls->addNumberField("Epochs", iterationsPerEpoch);
 		controls->addNumberField("Inner Iterations", iterationsPerStep);
 		controls->addNumberField("Learning Rate", learningRateInitial, Float(0.0f), Float(1.0f));
 		controls->addNumberField("Learning Delta", learningRateDelta, Float(0.0f), Float(1.0f));
@@ -57,30 +59,39 @@ namespace tgr {
 				outputSampler(outputData, idx);
 				double err= sys->accumulate(outputData);
 				res += err;
-				//std::cout << "Index " << idx << ": " << err << std::endl;
 			}
 			sys->backpropagate();
 		}
-		
 		res /= (sampleIndexes.size());
-		std::cout << "Residual " <<res << std::endl;
+		double delta = std::abs(lastResidual - res);
+		if (delta < 1E-3f) {
+			opt->setLearningRate(opt->getLearningRate()*learningRateDelta.toFloat());
+			
+		}
+		if (iter%iterationsPerStep.toInteger() == 0) {
+			std::cout << "Error=" << res << " Learning Rate=" << opt->getLearningRate() << std::endl;
+		}
+		lastResidual = res;
 		sys->optimize();
-		if (iter%uint64_t(iterationsPerStep.toInteger())==0&&onUpdate) {
+		for (NeuralLayerPtr layer : sys->getLayers()) {
+			layer->getGraph()->points.push_back(float2(float(iter),float(layer->getResidual())));
+		}
+		if (delta<1E-7f) {
+			ret = false;
+		}
+		if (onUpdate) {
 			onUpdate(iter, !ret);
 		}
 		iteration++;
-		if (iteration >= getMaxIteration()) {
-			ret = false;
-		}
+
 		return ret;
 	}
 	NeuralRuntime::NeuralRuntime(const std::shared_ptr<tgr::NeuralSystem>& system) :
 		RecurrentTask([this](uint64_t iteration) {return step();}, 5),sys(system),paused(false) {
 		optimizationMethod = 0;
-		epochs = Integer(12);
-		iterationsPerEpoch = Integer(100);
+		iterationsPerEpoch = Integer(20);
 		iterationsPerStep = Integer(10);
-		learningRateInitial = Float(0.8f);
-		learningRateDelta = Float(0.5);
+		learningRateInitial = Float(0.999f);
+		learningRateDelta = Float(0.9f);
 	}
 }

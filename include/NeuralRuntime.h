@@ -37,11 +37,12 @@ namespace tgr {
 	protected:
 		bool paused;
 		bool isInitialized;
-		aly::Number epochs;
+		double lastResidual;
 		aly::Number iterationsPerEpoch;
 		aly::Number iterationsPerStep;
 		aly::Number learningRateInitial;
 		aly::Number learningRateDelta;
+		std::shared_ptr<NeuralOptimization> opt;
 		int optimizationMethod;
 		std::vector<float> outputData;
 		uint64_t iteration;
@@ -62,7 +63,7 @@ namespace tgr {
 		void setup(const aly::ParameterPanePtr& pane);
 		NeuralRuntime(const std::shared_ptr<tgr::NeuralSystem>& system);
 		uint64_t getMaxIteration() const {
-			return uint64_t(iterationsPerEpoch.toInteger())*epochs.toInteger();
+			return uint64_t(iterationsPerEpoch.toInteger())*iterationsPerStep.toInteger();
 		}
 		int getIterationsPerEpoch() const {
 			return iterationsPerEpoch.toInteger();

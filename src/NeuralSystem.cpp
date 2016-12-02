@@ -54,7 +54,7 @@ namespace tgr {
 			}
 		}
 		residual /= double(output.size());
-		layer->accumulateResidual(residual);
+		layer->accumulate(residual);
 		return layer->getResidual();
 	}
 	double NeuralSystem::accumulate(const NeuralLayerPtr& layer, const std::vector<float>& output) {
@@ -66,7 +66,7 @@ namespace tgr {
 			residual += err*err;
 		}
 		residual /= double(output.size());
-		layer->accumulateResidual(residual);
+		layer->accumulate(residual);
 		return layer->getResidual();
 	}
 	void NeuralSystem::reset() {

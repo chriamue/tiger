@@ -41,6 +41,7 @@ namespace tgr {
 				MakeConnection(&biasNeurons[idx], SignalPtr(new Signal(RandomUniform(0.0f,0.1f))), &neurons[idx]);
 			}
 		}
+		graph.reset(new GraphData(getName()));
 	}
 	std::shared_ptr<aly::NeuralFlowPane> NeuralLayer::getFlow() const {
 		return sys->getFlow();
@@ -65,6 +66,12 @@ namespace tgr {
 				MakeConnection(&biasNeurons[idx], SignalPtr(new Signal(RandomUniform(0.0f, 1.0f))), &neurons[idx]);
 			}
 		}
+		graph.reset(new GraphData(getName()));
+	}
+	double NeuralLayer::accumulate(double r) {
+		residualError += r;
+		
+		return residualError;
 	}
 	void NeuralLayer::resize(int w, int h, int b) {
 		neurons.resize(w * h * b);

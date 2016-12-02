@@ -24,6 +24,7 @@
 #include <AlloyContext.h>
 #include <AlloyExpandTree.h>
 #include <AlloyWidget.h>
+#include <AlloyGraphPane.h>
 #include "Neuron.h"
 #include "NeuralLayerRegion.h"
 #include "NeuralOptimization.h"
@@ -52,6 +53,7 @@ namespace tgr {
 			bool trainable;
 			double residualError;
 			aly::NeuralLayerRegionPtr layerRegion;
+			aly::GraphDataPtr graph;
 			NeuralSystem* sys;
 		public:
 			int width;
@@ -70,6 +72,9 @@ namespace tgr {
 			iterator end() {
 				return neurons.end();
 			}
+			aly::GraphDataPtr getGraph() const {
+				return graph;
+			}
 			void expand();
 			void setResidual(float r) {
 				residualError = r;
@@ -77,10 +82,7 @@ namespace tgr {
 			double getResidual() const {
 				return residualError;
 			}
-			double accumulateResidual(double r) {
-				residualError += r;
-				return residualError;
-			}
+			double accumulate(double r);
 			bool hasChildren() const {
 				return (children.size() != 0);
 			}

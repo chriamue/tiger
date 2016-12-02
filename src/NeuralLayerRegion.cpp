@@ -211,7 +211,6 @@ namespace aly {
 				if (lineWidth > 0.1f&&selected.x != -1 && std::abs(i - selected.x) <= selectionRadius&&std::abs(j - selected.y) <= selectionRadius) {
 					int N = (int)n.getInputWeightSize();
 					nvgLineCap(nvg, NVG_ROUND);
-
 					for (int i = 0; i < N; i++) {
 						SignalPtr& sig = n.getInput(i);
 						float a = 2.0f*i*NVG_PI / N - 0.5f*NVG_PI;
@@ -272,14 +271,13 @@ namespace aly {
 					nvgCircle(nvg, center.x, center.y, rInner);
 					nvgStroke(nvg);
 				}
-				else if (n.active) {
-					nvgStrokeWidth(nvg, 2.0f* lineWidth);
+				if (n.active) {
+					nvgStrokeWidth(nvg, 2.0f);
 					nvgStrokeColor(nvg, Color(200, 200, 200));
 					nvgBeginPath(nvg);
-					nvgCircle(nvg, center.x, center.y, rInner);
+					nvgCircle(nvg, center.x, center.y, rOuter);
 					nvgStroke(nvg);
 				}
-
 			}
 		}
 

@@ -127,18 +127,18 @@ bool TigerApp::init(Composite& rootNode) {
 		valueRegion->setNumberValue(value);
 		setSampleIndex(value.toInteger());
 	});
-	TextLinkPtr evaluateButton = TextLinkPtr(new TextLink("Evaluate Network", CoordPX(0.0f, 0.0f), CoordPX(205.0f, entryHeight)));
-	evaluateButton->fontSize = UnitPX(30.0f);
-	evaluateButton->setAlignment(HorizontalAlignment::Center, VerticalAlignment::Middle);
-	evaluateButton->textColor = MakeColor(HSVtoColor(HSV(0.2f,0.4f,1.0f)));
-	evaluateButton->onMouseDown = [this](AlloyContext* context, const InputEvent& e) {
+	TextLinkPtr initWeightsButton = TextLinkPtr(new TextLink("Initialize Weights", CoordPX(0.0f, 0.0f), CoordPX(205.0f, entryHeight)));
+	initWeightsButton->fontSize = UnitPX(30.0f);
+	initWeightsButton->setAlignment(HorizontalAlignment::Center, VerticalAlignment::Middle);
+	initWeightsButton->textColor = MakeColor(HSVtoColor(HSV(0.2f,0.4f,1.0f)));
+	initWeightsButton->onMouseDown = [this](AlloyContext* context, const InputEvent& e) {
 		if (e.button == GLFW_MOUSE_BUTTON_LEFT) {
 			sys->evaluate();
 			return true;
 		}
 		return false;
 	};
-
+	/*
 	TextLinkPtr learnButton = TextLinkPtr(new TextLink("Learning Step", CoordPX(0.0f, 0.0f), CoordPX(170.0f, entryHeight)));
 	learnButton->fontSize = UnitPX(30.0f);
 	learnButton->setAlignment(HorizontalAlignment::Center, VerticalAlignment::Middle);
@@ -150,7 +150,7 @@ bool TigerApp::init(Composite& rootNode) {
 		}
 		return false;
 	};
-	
+	*/
 	valueRegion->textColor = MakeColor(AlloyDefaultContext()->theme.LIGHTER);
 	valueRegion->backgroundColor = MakeColor(0, 0, 0, 0);
 	valueRegion->borderWidth = UnitPX(0.0f);
@@ -160,8 +160,8 @@ bool TigerApp::init(Composite& rootNode) {
 	toolbar->add(labelRegion);
 	toolbar->add(tweenRegion);
 	toolbar->add(valueRegion);
-	toolbar->add(evaluateButton);
-	toolbar->add(learnButton);
+	toolbar->add(initWeightsButton);
+	//toolbar->add(learnButton);
 	controlLayout->backgroundColor = MakeColor(getContext()->theme.DARKER);
 	controlLayout->borderWidth = UnitPX(0.0f);
 	flowRegion->onSelect=[this](NeuralLayer* layer,const InputEvent& e) {
@@ -171,6 +171,13 @@ bool TigerApp::init(Composite& rootNode) {
 	layout->setWest(controlLayout, UnitPX(400.0f));
 	layout->setEast(expandTree, UnitPX(400.0f));
 	controlLayout->setCenter(controls);
+	
+
+	graphRegion = GraphPanePtr(new GraphPane("Residual Error", CoordPX(0.0f,0.0f), CoordPercent(1.0f,1.0f)));
+	graphRegion->setRoundCorners(false);
+	graphRegion->borderWidth = UnitPX(0.0f);
+	graphRegion->backgroundColor = MakeColor(AlloyDefaultContext()->theme.DARKER);
+	controlLayout->setNorth(graphRegion,0.3333f);
 	
 	timelineSlider = TimelineSliderPtr(
 		new TimelineSlider("Timeline", CoordPerPX(0.0f, 1.0f, 0.0f, -80.0f), CoordPerPX(1.0f, 0.0f, 0.0f, 80.0f), Integer(0), Integer(0), Integer(0)));
@@ -315,11 +322,11 @@ bool TigerApp::init(Composite& rootNode) {
 	});
 	initialize();
 	worker->onUpdate = [this](uint64_t iteration, bool lastIteration) {
-		std::cout << "Iterate " << iteration << std::endl;
+		graphRegion->updateGraphBounds();
 		if (lastIteration || (int)iteration == timelineSlider->getMaxValue().toInteger()) {
+			running = false;
 			stopButton->setVisible(false);
 			playButton->setVisible(true);
-			running = false;
 		}
 		AlloyApplicationContext()->addDeferredTask([this]() {
 			timelineSlider->setUpperValue((int)worker->getIteration());
@@ -331,6 +338,8 @@ bool TigerApp::init(Composite& rootNode) {
 	timelineSlider->setMinorTick(worker->getIterationsPerStep());
 	timelineSlider->setMajorTick(worker->getIterationsPerEpoch());
 	timelineSlider->setMaxValue((int)worker->getMaxIteration());
+
+	graphRegion->add(sys->getOutput()->getGraph());
 	return true;
 }
 void TigerApp::setSelectedLayer(tgr::NeuralLayer* layer) {
@@ -466,7 +475,11 @@ bool TigerApp::initializeLeNet5() {
 		};
 		setSampleRange(0, (int)trainInputData.size() - 1);
 		setSampleIndex(sampleIndex.toInteger());
-
+		std::vector<int> samples;
+		for (int i = 0; i < trainInputData.size(); i += 100) {
+			samples.push_back(i);
+		}
+		worker->setSamples(samples);
 		return true;
 	}
 	return false;

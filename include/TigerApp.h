@@ -29,6 +29,7 @@
 #include "AlloyExpandTree.h"
 #include "NeuralFlowPane.h"
 #include "AlloyTimeline.h"
+#include "AlloyGraphPane.h"
 #include "NeuralRuntime.h"
 class TigerApp : public aly::Application {
 protected:
@@ -53,6 +54,7 @@ protected:
 	std::vector<aly::Image1f> trainInputData;
 	std::vector<uint8_t> trainOutputData;
 	tgr::NeuralRuntimePtr worker;
+	aly::GraphPanePtr graphRegion;
 	int exampleIndex;
 	bool initializeXOR();
 	bool initializeLeNet5();
