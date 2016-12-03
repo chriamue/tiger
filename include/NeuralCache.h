@@ -11,7 +11,7 @@ namespace tgr {
 		bool loaded;
 		bool writeOnce;
 		std::string knowledgeFile;
-		std::shared_ptr<NeuralKnowledge> knowledge;
+		std::shared_ptr<NeuralKnowledge> WeightVec;
 		std::mutex accessLock;
 	public:
 		bool isLoaded() {
@@ -26,7 +26,7 @@ namespace tgr {
 		}
 		void load();
 		void unload();
-		void set(const NeuralKnowledge& knowledge);
+		void set(const NeuralKnowledge& WeightVec);
 		std::shared_ptr<NeuralKnowledge> getKnowledge();
 	};
 	struct CacheCompare {

@@ -63,7 +63,7 @@ namespace tgr {
 		for (size_t i = 0; i < output.size(); i++) {
 			Neuron* neuron = layer->get(i);
 			float err = neuron->value - output[i];
-			neuron->change += err;
+			neuron->change = err*neuron->forwardChange(neuron->value);
 			residual += err*err;
 		}
 		residual /= double(output.size());
@@ -87,11 +87,11 @@ namespace tgr {
 	void NeuralSystem::getLayer(const NeuralLayerPtr& layer, std::vector<float>& input) {
 		layer->get(input);
 	}
-	NeuralSystem::NeuralSystem(const std::shared_ptr<aly::NeuralFlowPane>& pane) :flowPane(pane) {
+	NeuralSystem::NeuralSystem(const std::shared_ptr<aly::NeuralFlowPane>& pane) :flowPane(pane),initialized(false) {
 
 	}
-
 	void NeuralSystem::evaluate() {
+		if (!initialized)initialize();
 		for (NeuralLayerPtr layer : layers) {
 			layer->evaluate();
 			Vector1f data = layer->toVector();
@@ -149,6 +149,7 @@ namespace tgr {
 				}
 			}
 		}
+		initialized = true;
 	}
 	void NeuralSystem::initializeWeights(float minW, float maxW) {
 		for (NeuralLayerPtr layer : layers) {
@@ -167,9 +168,11 @@ namespace tgr {
 		}
 		layers.insert(layers.end(), inputs.begin(), inputs.end());
 		layers.insert(layers.end(), output.begin(), output.end());
+		initialized = false;
+
 	}
 	void NeuralSystem::initialize(const aly::ExpandTreePtr& tree) {
-		initialize();
+		
 		TreeItemPtr root = TreeItemPtr(new TreeItem("Neural Layers"));
 		tree->addItem(root);
 		root->setExpanded(true);

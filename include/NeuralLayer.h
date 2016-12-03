@@ -28,7 +28,7 @@
 #include "Neuron.h"
 #include "NeuralLayerRegion.h"
 #include "NeuralOptimization.h"
-
+#include "NeuralKnowledge.h"
 #include <vector>
 #include <set>
 
@@ -44,6 +44,10 @@ namespace tgr {
 			std::vector<Neuron> neurons;
 			std::vector<Neuron> biasNeurons;
 			std::vector<std::shared_ptr<Signal>> signals;
+			Knowledge weights;
+			Knowledge weightChanges;
+			Knowledge responses;
+			Knowledge responseChanges;
 			std::vector<std::shared_ptr<NeuralLayer>> children;
 			std::vector<NeuralLayer*> dependencies;
 			std::shared_ptr<NeuralOptimization> optimizer;
@@ -55,6 +59,7 @@ namespace tgr {
 			double residualError;
 			aly::NeuralLayerRegionPtr layerRegion;
 			aly::GraphDataPtr graph;
+			
 			NeuralSystem* sys;
 			int id;
 		public:
@@ -73,7 +78,12 @@ namespace tgr {
 				id = i;
 			}
 
-
+			Knowledge& getWeights() {
+				return weights;
+			}
+			const Knowledge& getWeights() const {
+				return weights;
+			}
 			std::shared_ptr<aly::NeuralFlowPane> getFlow() const;
 			iterator begin() {
 				return neurons.begin();

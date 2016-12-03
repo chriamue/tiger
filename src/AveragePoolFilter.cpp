@@ -48,7 +48,7 @@ namespace tgr {
 			inputLayer->addChild(outputLayer);
 			for (int j = 0; j < outputLayer->height; j++) {
 				for (int i = 0; i < outputLayer->width; i++) {
-					SignalPtr sig = SignalPtr(new Signal(RandomUniform(0.0f, 1.0f)));
+					SignalPtr sig = SignalPtr(new Signal());
 					Neuron* dest = outputLayer->get(i, j);
 					dest->addInput(sig);
 					for (int jj = 0; jj < kernelSize; jj++) {

@@ -218,7 +218,7 @@ namespace aly {
 						float sina = std::sin(a);
 						float sx = center.x + rInner*cosa;
 						float sy = center.y + rInner*sina;
-						float tw =mix(rInner+lineWidth,rOuter-2*lineWidth, clamp(0.5f+0.5f*sig->value,0.0f,1.0f));
+						float tw =mix(rInner+lineWidth,rOuter-2*lineWidth, clamp(0.5f+0.5f*sig->getWeightValue(),0.0f,1.0f));
 						float wx = center.x + tw*cosa;
 						float wy = center.y + tw*sina;
 						float ex = center.x + (rOuter - 2 * lineWidth)*cosa;

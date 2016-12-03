@@ -8,10 +8,10 @@
 
 namespace tgr {
 	class NeuralLayer;
-	typedef std::vector<float> knowledge;
+	typedef aly::Vec<float> Knowledge;
 	class NeuralKnowledge {
 	protected:
-		std::map<int, knowledge> weights;
+		std::map<int, Knowledge> weights;
 		std::string name;
 		std::string file;
 	public:

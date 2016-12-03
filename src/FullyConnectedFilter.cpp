@@ -43,7 +43,7 @@ namespace tgr {
 					Neuron* src = inputLayer->get(i, j);
 					for (int jj = 0; jj < outputLayer->height; jj++) {
 						for (int ii = 0; ii < outputLayer->width; ii++) {
-							SignalPtr sig = SignalPtr(new Signal(RandomUniform(0.0f, 1.0f)));
+							SignalPtr sig = SignalPtr(new Signal());
 							Neuron* dest = outputLayer->get(ii, jj);
 							MakeConnection(src, sig, dest);
 						}

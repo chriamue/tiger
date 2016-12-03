@@ -43,14 +43,40 @@ namespace tgr {
 		bool operator >(const Terminal & r) const;
 	};
 	class Neuron;
-	struct Signal {
-		float value;
-		float change;
+	class Signal {
+	protected:
+		float* weight;
+		float* change;
+	public:
 		std::map<const Neuron*,std::vector<Neuron*>> mapping;
-		Signal() :value(0.0f),change(0.0f) {
+		Signal() :weight(nullptr),change(nullptr) {
 
 		}
-		Signal(float value) : value(value) {
+		void setWeightPointer(float* ptr) {
+			weight = ptr;
+		}
+		void setChangePointer(float* ptr) {
+			change = ptr;
+		}
+		float* getWeight() {
+			return weight;
+		}
+		float getWeightValue() {
+			return *weight;
+		}
+		float getChangeValue() {
+			return *change;
+		}
+		void setWeight(float w) {
+			if (!weight)throw std::runtime_error("weight pointer missing.");
+			*weight=w;
+		}
+		float* getChange() {
+			return change;
+		}
+		void setChange(float w) {
+			if (!change)throw std::runtime_error("change pointer missing.");
+			*change = w;
 		}
 		std::vector<Neuron*>& operator[](const Neuron* n) {
 			return mapping.at(n);
@@ -86,6 +112,12 @@ namespace tgr {
 		friend class NeuralLayer;
 		float normalizedValue() const {
 			return aly::clamp((value - transform.min()) / std::max(1E-10f,transform.max() - transform.min()),0.0f,1.0f);
+		}
+		float forward(float val) const {
+			return transform.forward(val);
+		}
+		float forwardChange(float val) const {
+			return transform.change(val);
 		}
 		size_t getInputWeightSize() const {
 			return input.size();
@@ -141,18 +173,14 @@ namespace tgr {
 		void addOutput(const SignalPtr& s) {
 			output.push_back(s);
 		}
-		float& getInputWeight(size_t idx) {
-			return input[idx]->value;
+		float getInputWeight(size_t idx) {
+			return *input[idx]->getWeight();
 		}
-		const float& getInputWeight(size_t idx) const {
-			return input[idx]->value;
+
+		float getOutputWeight(size_t idx) {
+			return *output[idx]->getWeight();
 		}
-		float& getOutputWeight(size_t idx) {
-			return output[idx]->value;
-		}
-		const float& getOutputWeight(size_t idx) const {
-			return output[idx]->value;
-		}
+
 		Neuron(const NeuronFunction& func = ReLU(),float val=0.0f);
 		void setFunction(const NeuronFunction& func) {
 			transform = func;
@@ -165,6 +193,6 @@ namespace tgr {
 			}
 	};
 	void MakeConnection(Neuron* src, const std::shared_ptr<Signal>& signal,Neuron* dest);
-
+	std::shared_ptr<Signal> MakeConnection(Neuron* src, Neuron* dest);
 }
 #endif

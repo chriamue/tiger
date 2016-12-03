@@ -38,7 +38,7 @@ namespace tgr {
 		if (bias) {
 			biasNeurons.resize(width*height*bins, Bias());
 			for (size_t idx = 0; idx < neurons.size(); idx++) {
-				MakeConnection(&biasNeurons[idx], SignalPtr(new Signal(RandomUniform(0.0f,0.1f))), &neurons[idx]);
+				MakeConnection(&biasNeurons[idx], &neurons[idx]);
 			}
 		}
 		graph.reset(new GraphData(getName()));
@@ -48,7 +48,7 @@ namespace tgr {
 	}
 	void NeuralLayer::initializeWeights(float minW, float maxW) {
 		for (SignalPtr sig : signals) {
-			sig->value = RandomUniform(minW, maxW);
+			sig->setWeight(RandomUniform(minW, maxW));
 		}
 	}
 	void NeuralLayer::reset() {
@@ -60,7 +60,7 @@ namespace tgr {
 			neuron.change = 0.0f;
 		}
 		for (SignalPtr sig : signals) {
-			sig->change = 0.0f;
+			sig->setChange(0.0f);
 		}
 	}
 	NeuralLayer::NeuralLayer(const std::string& name,int width, int height, int bins,bool bias, const NeuronFunction& func) :name(name), width(width), height(height), bins(bins),bias(bias), id(-1), visited(false), trainable(true), residualError(0.0) {
@@ -68,7 +68,7 @@ namespace tgr {
 		if (bias) {
 			biasNeurons.resize(width*height*bins, Bias());
 			for (size_t idx = 0; idx < neurons.size(); idx++) {
-				MakeConnection(&biasNeurons[idx], SignalPtr(new Signal(RandomUniform(0.0f, 1.0f))), &neurons[idx]);
+				MakeConnection(&biasNeurons[idx], &neurons[idx]);
 			}
 		}
 		graph.reset(new GraphData(getName()));
@@ -83,7 +83,7 @@ namespace tgr {
 		if (bias) {
 			biasNeurons.resize(width*height*bins, Bias());
 			for (size_t idx = 0; idx < neurons.size(); idx++) {
-				MakeConnection(&biasNeurons[idx], SignalPtr(new Signal(RandomUniform(0.0f, 1.0f))), &neurons[idx]);
+				MakeConnection(&biasNeurons[idx], &neurons[idx]);
 			}
 		}
 		neurons.shrink_to_fit();
@@ -130,6 +130,14 @@ namespace tgr {
 		signals.clear();
 		for (Neuron& n : neurons) {
 			signals.insert(signals.end(), n.getInput().begin(), n.getInput().end());
+		}
+		size_t N = signals.size();
+		weights.resize(N);
+		weightChanges.resize(N);
+		for (size_t n = 0; n < N; n++) {
+			SignalPtr sig = signals[n];
+			sig->setWeightPointer(&weights[n]);
+			sig->setChangePointer(&weightChanges[n]);
 		}
 	}
 	bool NeuralLayer::optimize() {

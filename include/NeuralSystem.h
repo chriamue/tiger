@@ -36,9 +36,10 @@ namespace tgr {
 		std::vector<NeuralLayer*> backpropLayers;
 		std::vector<NeuralLayerPtr> roots;
 		std::vector<NeuralLayerPtr> leafs;
+		bool initialized;
 		std::shared_ptr<aly::NeuralFlowPane> flowPane;
 		NeuralLayerPtr inputLayer, outputLayer;
-		NeuralKnowledge knowledge;
+		NeuralKnowledge WeightVec;
 	public:
 
 		void evaluate();

@@ -7,16 +7,7 @@
 using namespace aly;
 namespace tgr {
 	void NeuralKnowledge::add(const NeuralLayer& layer) {
-		const std::vector<std::shared_ptr<Signal>>& signals= layer.getSignals();
-		int N = (int)signals.size();
-		if (weights.find(layer.getId()) == weights.end()) {
-			weights[layer.getId()] = knowledge();
-		}
-		knowledge& W = weights[layer.getId()];
-		W.resize(N);
-		for (int n = 0; n < N; n++) {
-			W[n] = signals[n]->value;
-		}
+		weights[layer.getId()] = layer.getWeights();
 	}
 	void WriteNeuralKnowledgeToFile(const std::string& file, const NeuralKnowledge& params) {
 		std::string ext = GetFileExtension(file);

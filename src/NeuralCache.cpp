@@ -5,9 +5,9 @@ namespace tgr {
 	void CacheElement::load() {
 		std::lock_guard<std::mutex> lockMe(accessLock);
 		if (!loaded) {
-			knowledge.reset(new NeuralKnowledge());
-			ReadNeuralKnowledgeFromFile(knowledgeFile, *knowledge);
-			//std::cout << "Load: " << knowledge->getFile() << std::endl;
+			WeightVec.reset(new NeuralKnowledge());
+			ReadNeuralKnowledgeFromFile(knowledgeFile, *WeightVec);
+			//std::cout << "Load: " << WeightVec->getFile() << std::endl;
 			loaded = true;
 		}
 	}
@@ -15,23 +15,23 @@ namespace tgr {
 		std::lock_guard<std::mutex> lockMe(accessLock);
 		if (loaded) {
 			if (writeOnce) {
-				WriteNeuralKnowledgeToFile(knowledge->getFile(), *knowledge);
-				//std::cout<<"Unload: "<<knowledge->getFile()<<std::endl;
+				WriteNeuralKnowledgeToFile(WeightVec->getFile(), *WeightVec);
+				//std::cout<<"Unload: "<<WeightVec->getFile()<<std::endl;
 				writeOnce = false;
 			}
-			knowledge.reset();
+			WeightVec.reset();
 			loaded = false;
 		}
 	}
 	void CacheElement::set(const NeuralKnowledge& springl) {
-		knowledge.reset(new NeuralKnowledge());
-		*knowledge = springl;
+		WeightVec.reset(new NeuralKnowledge());
+		*WeightVec = springl;
 		knowledgeFile = springl.getFile();
 		loaded = true;
 	}
 	std::shared_ptr<NeuralKnowledge> CacheElement::getKnowledge() {
 		load();
-		return knowledge;
+		return WeightVec;
 	}
 	std::shared_ptr<CacheElement> SpringlCache2D::set(int frame, const NeuralKnowledge& springl) {
 		std::lock_guard<std::mutex> lockMe(accessLock);
