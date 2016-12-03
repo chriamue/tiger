@@ -48,8 +48,8 @@ namespace tgr {
 		for (int j = 0; j < output.height; j++) {
 			for (int i = 0; i < output.width; i++) {
 				Neuron* neuron = layer->get(i, j);
-				float err = neuron->value - output(i, j).x;
-				neuron->change += err;
+				float err = *neuron->value - output(i, j).x;
+				*neuron->change += err;
 
 				residual += std::abs(err);
 			}
@@ -62,8 +62,8 @@ namespace tgr {
 		double residual = 0;
 		for (size_t i = 0; i < output.size(); i++) {
 			Neuron* neuron = layer->get(i);
-			float err = neuron->value - output[i];
-			neuron->change = err*neuron->forwardChange(neuron->value);
+			float err = *neuron->value - output[i];
+			*neuron->change = err*neuron->forwardChange(*neuron->value);
 			residual += err*err;
 		}
 		residual /= double(output.size());
@@ -99,6 +99,7 @@ namespace tgr {
 		}
 	}
 	void NeuralSystem::initialize() {
+		std::cout << "Initialize" << std::endl;
 		roots.clear();
 		leafs.clear();
 		std::list<NeuralLayerPtr> q;

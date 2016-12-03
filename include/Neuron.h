@@ -44,40 +44,14 @@ namespace tgr {
 	};
 	class Neuron;
 	class Signal {
-	protected:
+	public:
 		float* weight;
 		float* change;
-	public:
 		std::map<const Neuron*,std::vector<Neuron*>> mapping;
 		Signal() :weight(nullptr),change(nullptr) {
 
 		}
-		void setWeightPointer(float* ptr) {
-			weight = ptr;
-		}
-		void setChangePointer(float* ptr) {
-			change = ptr;
-		}
-		float* getWeight() {
-			return weight;
-		}
-		float getWeightValue() {
-			return *weight;
-		}
-		float getChangeValue() {
-			return *change;
-		}
-		void setWeight(float w) {
-			if (!weight)throw std::runtime_error("weight pointer missing.");
-			*weight=w;
-		}
-		float* getChange() {
-			return change;
-		}
-		void setChange(float w) {
-			if (!change)throw std::runtime_error("change pointer missing.");
-			*change = w;
-		}
+		
 		std::vector<Neuron*>& operator[](const Neuron* n) {
 			return mapping.at(n);
 		}
@@ -106,12 +80,12 @@ namespace tgr {
 		std::vector<SignalPtr> input;
 		std::vector<SignalPtr> output;
 	public:
-		float value;
-		float change;
+		float* value;
+		float* change;
 		bool active;
 		friend class NeuralLayer;
 		float normalizedValue() const {
-			return aly::clamp((value - transform.min()) / std::max(1E-10f,transform.max() - transform.min()),0.0f,1.0f);
+			return aly::clamp((*value - transform.min()) / std::max(1E-10f,transform.max() - transform.min()),0.0f,1.0f);
 		}
 		float forward(float val) const {
 			return transform.forward(val);
@@ -174,21 +148,21 @@ namespace tgr {
 			output.push_back(s);
 		}
 		float getInputWeight(size_t idx) {
-			return *input[idx]->getWeight();
+			return *input[idx]->weight;
 		}
 
 		float getOutputWeight(size_t idx) {
-			return *output[idx]->getWeight();
+			return *output[idx]->weight;
 		}
 
-		Neuron(const NeuronFunction& func = ReLU(),float val=0.0f);
+		Neuron(const NeuronFunction& func = ReLU());
 		void setFunction(const NeuronFunction& func) {
 			transform = func;
 		}
 	};
 	class Bias : public Neuron {
 		public:		
-			Bias(float val=1.0f) :Neuron(Constant(&value), val) {
+			Bias() :Neuron(Constant(value)) {
 
 			}
 	};

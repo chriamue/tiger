@@ -81,8 +81,26 @@ namespace tgr {
 			Knowledge& getWeights() {
 				return weights;
 			}
+			Knowledge& getResponses() {
+				return responses;
+			}
+			Knowledge& getWeightChanges() {
+				return weightChanges;
+			}
+			Knowledge& getResponseChanges() {
+				return responseChanges;
+			}
 			const Knowledge& getWeights() const {
 				return weights;
+			}
+			const Knowledge& getResponses() const {
+				return responses;
+			}
+			const Knowledge& getWeightChanges() const {
+				return weightChanges;
+			}
+			const Knowledge& getResponseChanges() const {
+				return responseChanges;
 			}
 			std::shared_ptr<aly::NeuralFlowPane> getFlow() const;
 			iterator begin() {

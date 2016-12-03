@@ -48,19 +48,19 @@ namespace tgr {
 	}
 	void NeuralLayer::initializeWeights(float minW, float maxW) {
 		for (SignalPtr sig : signals) {
-			sig->setWeight(RandomUniform(minW, maxW));
+			*sig->weight=RandomUniform(minW, maxW);
 		}
 	}
 	void NeuralLayer::reset() {
 		residualError = 0.0;
 		for (Neuron& neuron : neurons) {
-			neuron.change = 0.0f;
+			*neuron.change = 0.0f;
 		}
 		for (Neuron& neuron : biasNeurons) {
-			neuron.change = 0.0f;
+			*neuron.change = 0.0f;
 		}
 		for (SignalPtr sig : signals) {
-			sig->setChange(0.0f);
+			*sig->change=0.0f;
 		}
 	}
 	NeuralLayer::NeuralLayer(const std::string& name,int width, int height, int bins,bool bias, const NeuronFunction& func) :name(name), width(width), height(height), bins(bins),bias(bias), id(-1), visited(false), trainable(true), residualError(0.0) {
@@ -136,8 +136,24 @@ namespace tgr {
 		weightChanges.resize(N);
 		for (size_t n = 0; n < N; n++) {
 			SignalPtr sig = signals[n];
-			sig->setWeightPointer(&weights[n]);
-			sig->setChangePointer(&weightChanges[n]);
+			sig->weight=&weights[n];
+			sig->change=&weightChanges[n];
+		}
+		N = neurons.size();
+		size_t M = biasNeurons.size();
+		responses.resize(N+M);
+		responseChanges.resize(N+M);
+		for (size_t n = 0; n < N; n++) {
+			Neuron& neuron = neurons[n];
+			neuron.value = &responses[n];
+			neuron.change = &responseChanges[n];
+			*neuron.value = 0.0f;
+		}
+		for (size_t n = 0; n < M; n++) {
+			Neuron& neuron = biasNeurons[n];
+			neuron.value = &responses[n+N];
+			neuron.change = &responseChanges[n + N];
+			*neuron.value = 1.0f;
 		}
 	}
 	bool NeuralLayer::optimize() {
@@ -159,10 +175,10 @@ namespace tgr {
 		}
 	}
 	int NeuralLayer::getBin(size_t index) const {
-		return clamp((int)std::floor(neurons[index].value*bins), 0, bins-1);
+		return clamp((int)std::floor(*neurons[index].value*bins), 0, bins-1);
 	}
 	int NeuralLayer::getBin(const Neuron& n) const {
-		return clamp((int)std::floor(n.value*bins), 0, bins-1);
+		return clamp((int)std::floor(*n.value*bins), 0, bins-1);
 	}
 	
 	const Neuron& NeuralLayer::operator[](const size_t i) const {
@@ -270,7 +286,7 @@ namespace tgr {
 	void NeuralLayer::set(const Image1f& input) {
 		for (int j = 0; j < input.height; j++) {
 			for (int i = 0; i < input.width; i++) {
-				get(i, j)->value = input(i, j).x;
+				*get(i, j)->value = input(i, j).x;
 			}
 		}
 		if (layerRegion.get() != nullptr) {
@@ -279,7 +295,7 @@ namespace tgr {
 	}
 	void NeuralLayer::set(const std::vector<float>& input) {
 		for (size_t i = 0; i < input.size(); i++) {
-			get(i)->value = input[i];
+			*get(i)->value = input[i];
 		}
 		if (layerRegion.get() != nullptr) {
 			layerRegion->setDirty(true);
@@ -289,14 +305,14 @@ namespace tgr {
 		input.resize(width, height);
 		for (int j = 0; j < input.height; j++) {
 			for (int i = 0; i < input.width; i++) {
-				input(i, j).x = get(i, j)->value;
+				input(i, j).x = *get(i, j)->value;
 			}
 		}
 	}
 	void NeuralLayer::get(std::vector<float>& input) {
 		input.resize(size());
 		for (size_t i = 0; i < input.size(); i++) {
-			input[i] = get(i)->value;
+			input[i] = *get(i)->value;
 		}
 	}
 

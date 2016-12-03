@@ -5,8 +5,8 @@ namespace tgr {
 #pragma omp parallel for
 		for (int n = 0; n < N;n++) {
 			SignalPtr sig = signals[n];
-			float* w=sig->getWeight();
-			*w -= learningRate*(sig->getChangeValue() +weightDecay*(*w));
+			float* w=sig->weight;
+			*w -= learningRate*(*sig->change +weightDecay*(*w));
 		}
 		//std::cout << "Weight change="<<delta<< std::endl;
 		return true;
@@ -22,8 +22,8 @@ namespace tgr {
 		for (int n = 0; n < N; n++) {
 			SignalPtr sig = signals[n];
 			float prev = velocityBuffer[n];
-			float* w=sig->getWeight();
-			float vel = momentum * prev - learningRate* (sig->getChangeValue() + (*w) * weightDecay);
+			float* w=sig->weight;
+			float vel = momentum * prev - learningRate* (*sig->change + (*w) * weightDecay);
 			*w += vel;
 			velocityBuffer[n] = vel;
 		}

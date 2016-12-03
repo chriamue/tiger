@@ -33,7 +33,7 @@ namespace tgr {
 	bool Terminal::operator >(const Terminal & r) const {
 		return (std::make_tuple(x, y, (layer) ? layer->getId() : -1) < std::make_tuple(r.x, r.y, (layer) ? layer->getId() : -1));
 	}
-	Neuron::Neuron(const NeuronFunction& func,float val) :transform(func),value(val),change(0.0f),active(false) {
+	Neuron::Neuron(const NeuronFunction& func) :transform(func),value(nullptr),change(nullptr),active(false) {
 	}
 	std::vector<Neuron*> Neuron::getInputNeurons()  const {
 		std::vector<Neuron*> out;
@@ -78,25 +78,24 @@ namespace tgr {
 			for (SignalPtr sig : output) {
 				sum2 = 0.0f;
 				for (auto pr : sig->mapping) {
-					sum2 += pr.first->change;
+					sum2 += *pr.first->change;
 					count++;
 				}
-				sum1 += sig->getWeightValue()*sum2;
+				sum1 += *sig->weight*sum2;
 				//std::cout << std::setfill(' ') << std::setw(5) << aly::round(sig->value, 3) << " * [" << aly::round(sum2, 3) << "] ";
 			}
-			change=sum1*transform.change(value) / count;
+			*change=sum1*transform.change(*value) / count;
 			//std::cout << "] " << change << std::endl;
 		}
 		for (SignalPtr sig : input) {
 			sum2 = 0.0f;
 			std::vector<Neuron*>& input2 = sig->get(this);
 			for (Neuron* inner : input2) {
-				sum2 += inner->value;
+				sum2 += *inner->value;
 			}
-			float* ch = sig->getChange();
-			*ch += change*sum2 / (input2.size());
+			*sig->change += *change*sum2 / (input2.size());
 		}
-		return change;
+		return *change;
 	}
 
 	float Neuron::evaluate() {
@@ -109,19 +108,19 @@ namespace tgr {
 				sum2 = 0.0f;
 				std::vector<Neuron*>& input2 = sig->get(this);
 				for (Neuron* inner : input2) {
-					sum2 += inner->value;
+					sum2 += *inner->value;
 					count++;
 				}
-				sum1 += sig->getWeightValue()*sum2;
+				sum1 += (*sig->weight)*sum2;
 				//std::cout <<std::setfill(' ')<< std::setw(5) << aly::round(sig->value,3) << " * [" << aly::round(sum2, 3) << "] ";
 			}
-			change = 0.0f;
+			*change = 0.0f;
 			sum1 /= count;
-			value = transform.forward(sum1);
+			*value = transform.forward(sum1);
 			//std::cout << "] T(" <<sum1<<") = "<< value << std::endl;
 		}
 		
-		return value;
+		return *value;
 	}
 	void MakeConnection(Neuron* src,const std::shared_ptr<Signal>& signal, Neuron* dest) {
 		src->addOutput(signal);

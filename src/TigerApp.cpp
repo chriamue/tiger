@@ -121,6 +121,7 @@ bool TigerApp::init(Composite& rootNode) {
 			field->setNumberValue(Integer(val));
 		}
 		tweenRegion->setValue(val);
+		
 		setSampleIndex(val);
 	};
 	tweenRegion->setOnChangeEvent([this](const aly::Number& value) {
@@ -421,6 +422,7 @@ bool TigerApp::initializeXOR() {
 			trainOutputData.push_back(b);
 		}
 	}
+	sys->initialize();
 	setSampleRange(0, (int)trainInputData.size() - 1);
 	setSampleIndex(0);
 	worker->setSamples(samples);
@@ -452,6 +454,7 @@ bool TigerApp::initializeLeNet5() {
 		}
 		conv2->setConnectionMap(connectionTable);
 		sys->add(conv2, Tanh());
+
 		all.clear();
 		for (int i = 0; i < conv2->getOutputSize(); i++) {
 			AveragePoolFilterPtr avg2(new AveragePoolFilter(conv2->getOutputLayer(i), 2, true));
@@ -477,6 +480,7 @@ bool TigerApp::initializeLeNet5() {
 				outputData[i] = (out == i) ? 1.0f : 0.0f;
 			}
 		};
+		sys->initialize();
 		setSampleRange(0, (int)trainInputData.size() - 1);
 		setSampleIndex(sampleIndex.toInteger());
 		std::vector<int> samples;
