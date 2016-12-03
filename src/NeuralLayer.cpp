@@ -33,6 +33,9 @@ namespace tgr {
 		}
 		return ss.str();
 	}
+	void NeuralLayer::set(const Knowledge& k) {
+		weights = k;
+	}
 	NeuralLayer::NeuralLayer(int width, int height, int bins, bool bias, const NeuronFunction& func) :width(width), height(height), bins(bins),bias(bias),id(-1),visited(false),trainable(true),residualError(0.0) {
 		neurons.resize(width*height*bins, Neuron(func));
 		if (bias) {

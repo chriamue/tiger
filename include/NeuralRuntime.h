@@ -26,6 +26,7 @@
 #include <AlloyParameterPane.h>
 #include <AlloyWorker.h>
 #include "NeuralSystem.h"
+#include "NeuralCache.h"
 namespace tgr {
 	class NeuralRuntime;
 	class NeuralListener {
@@ -48,18 +49,22 @@ namespace tgr {
 		std::shared_ptr<NeuralOptimization> opt;
 		int optimizationMethod;
 		std::vector<float> outputData;
-		uint64_t iteration;
+		int iteration;
 		std::thread simulationThread;
 		std::shared_ptr<tgr::NeuralSystem> sys;
 		std::vector<int> sampleIndexes;
+		std::shared_ptr<tgr::NeuralCache> cache;
 	public:
-		std::function<void(uint64_t iteration, bool lastIteration)> onUpdate;
+		std::function<void(int iteration, bool lastIteration)> onUpdate;
 		std::function<void(const NeuralLayerPtr& input,int idx)> inputSampler;
 		std::function<void(std::vector<float>& outputData, int idx)> outputSampler;
 		typedef std::chrono::high_resolution_clock Clock;
 		bool step();
 		bool init();
 		void cleanup();
+		std::shared_ptr<tgr::NeuralCache> getCache() const {
+			return cache;
+		}
 		void setSamples(const std::vector<int>& idx) {
 			sampleIndexes = idx;
 		}

@@ -77,7 +77,7 @@ namespace tgr {
 			void setId(int i) {
 				id = i;
 			}
-
+			void set(const Knowledge& k);
 			Knowledge& getWeights() {
 				return weights;
 			}

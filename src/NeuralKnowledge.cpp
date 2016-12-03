@@ -1,13 +1,26 @@
 #include "NeuralLayer.h"
 #include "NeuralKnowledge.h"
 #include "AlloyFileUtil.h"
+#include "NeuralSystem.h"
 #include <cereal/archives/xml.hpp>
 #include <cereal/archives/json.hpp>
 #include <cereal/archives/portable_binary.hpp>
 using namespace aly;
 namespace tgr {
+	Knowledge& NeuralKnowledge::get(const NeuralLayer& layer) {
+		return weights.at(layer.getId());
+	}
+	const Knowledge& NeuralKnowledge::get(const NeuralLayer& layer) const {
+		return weights.at(layer.getId());
+	}
 	void NeuralKnowledge::add(const NeuralLayer& layer) {
 		weights[layer.getId()] = layer.getWeights();
+	}
+	void NeuralKnowledge::set(const NeuralSystem& sys) {
+		weights.clear();
+		for (NeuralLayerPtr layer : sys.getLayers()) {
+			add(*layer);
+		}
 	}
 	void WriteNeuralKnowledgeToFile(const std::string& file, const NeuralKnowledge& params) {
 		std::string ext = GetFileExtension(file);

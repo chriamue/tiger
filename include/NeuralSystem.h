@@ -39,13 +39,13 @@ namespace tgr {
 		bool initialized;
 		std::shared_ptr<aly::NeuralFlowPane> flowPane;
 		NeuralLayerPtr inputLayer, outputLayer;
-		NeuralKnowledge WeightVec;
+		NeuralKnowledge knowledge;
 	public:
 
 		void evaluate();
 		void backpropagate();
 		bool optimize();
-
+		void setKnowledge(const NeuralKnowledge& k);
 		void setInput(const NeuralLayerPtr& layer) {
 			inputLayer = layer;
 		}
@@ -69,7 +69,13 @@ namespace tgr {
 		inline double accumulate(const std::vector<float>& output) {
 			return accumulate(outputLayer, output);
 		}
-
+		NeuralKnowledge& getKnowledge() {
+			return knowledge;
+		}
+		NeuralKnowledge& updateKnowledge();
+		const NeuralKnowledge& getKnowledge() const {
+			return knowledge;
+		}
 		void initialize();
 		std::shared_ptr<aly::NeuralFlowPane> getFlow() const {
 			return flowPane;

@@ -8,6 +8,7 @@
 
 namespace tgr {
 	class NeuralLayer;
+	class NeuralSystem;
 	typedef aly::Vec<float> Knowledge;
 	class NeuralKnowledge {
 	protected:
@@ -28,7 +29,13 @@ namespace tgr {
 		void setFile(const std::string& f) {
 			file = f;
 		}
+		Knowledge& get(const NeuralLayer& layer);
+		const Knowledge& get(const NeuralLayer& layer) const;
+		void clear() {
+			weights.clear();
+		}
 		void add(const NeuralLayer& layer);
+		void set(const NeuralSystem& sys);
 		template<class Archive> void save(Archive & ar) const
 		{
 			ar(CEREAL_NVP(name), CEREAL_NVP(file), CEREAL_NVP(weights));

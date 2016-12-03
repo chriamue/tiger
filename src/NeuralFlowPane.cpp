@@ -274,9 +274,7 @@ namespace aly{
 				float yoffset = 10.0f;
 				drawText(nvg, cursorPosition + pixel2(0.0f, yoffset), MakeString() << neuron->getType() << " " << selected, FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
 				yoffset += 20.0f;
-				drawText(nvg, cursorPosition + pixel2(0.0f, yoffset), MakeString() << "value: " <<std::setw(4)<<std::setprecision(3)<<neuron->value, FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
-				yoffset += 20.0f;
-				drawText(nvg, cursorPosition + pixel2(0.0f, yoffset), MakeString() << "change: " << std::setprecision(4) << neuron->change, FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
+				drawText(nvg, cursorPosition + pixel2(0.0f, yoffset), MakeString() << "value: " <<std::setw(4)<<std::setprecision(3)<<*neuron->value, FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
 				yoffset += 20.0f;
 				if (neuron->getInputNeuronSize() > 0) {
 					drawText(nvg, cursorPosition + pixel2(0.0f, yoffset), MakeString() << "in neurons: " << neuron->getInputNeuronSize(), FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);

@@ -29,6 +29,12 @@ namespace tgr {
 			layer->backpropagate();
 		}
 	}
+	void NeuralSystem::setKnowledge(const NeuralKnowledge& k) {
+		knowledge = k;
+		for (NeuralLayerPtr layer : layers) {
+			layer->set(k.get(*layer));
+		}
+	}
 	bool NeuralSystem::optimize() {
 		bool ret = false;
 		for (NeuralLayer* layer : backpropLayers) {
@@ -98,8 +104,11 @@ namespace tgr {
 			//std::cout << layer->getName() << ":: Sum: " << data.sum() << " Std. Dev: " << data.stdDev() << std::endl;
 		}
 	}
+	NeuralKnowledge& NeuralSystem::updateKnowledge() {
+		knowledge.set(*this);
+		return knowledge;
+	}
 	void NeuralSystem::initialize() {
-		std::cout << "Initialize" << std::endl;
 		roots.clear();
 		leafs.clear();
 		std::list<NeuralLayerPtr> q;
@@ -150,6 +159,7 @@ namespace tgr {
 				}
 			}
 		}
+		knowledge.set(*this);
 		initialized = true;
 	}
 	void NeuralSystem::initializeWeights(float minW, float maxW) {

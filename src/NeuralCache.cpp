@@ -5,9 +5,8 @@ namespace tgr {
 	void CacheElement::load() {
 		std::lock_guard<std::mutex> lockMe(accessLock);
 		if (!loaded) {
-			WeightVec.reset(new NeuralKnowledge());
-			ReadNeuralKnowledgeFromFile(knowledgeFile, *WeightVec);
-			//std::cout << "Load: " << WeightVec->getFile() << std::endl;
+			neuralKnowledge.reset(new NeuralKnowledge());
+			ReadNeuralKnowledgeFromFile(knowledgeFile, *neuralKnowledge);
 			loaded = true;
 		}
 	}
@@ -15,25 +14,24 @@ namespace tgr {
 		std::lock_guard<std::mutex> lockMe(accessLock);
 		if (loaded) {
 			if (writeOnce) {
-				WriteNeuralKnowledgeToFile(WeightVec->getFile(), *WeightVec);
-				//std::cout<<"Unload: "<<WeightVec->getFile()<<std::endl;
+				WriteNeuralKnowledgeToFile(neuralKnowledge->getFile(), *neuralKnowledge);
 				writeOnce = false;
 			}
-			WeightVec.reset();
+			neuralKnowledge.reset();
 			loaded = false;
 		}
 	}
-	void CacheElement::set(const NeuralKnowledge& springl) {
-		WeightVec.reset(new NeuralKnowledge());
-		*WeightVec = springl;
-		knowledgeFile = springl.getFile();
+	void CacheElement::set(const NeuralKnowledge& nknow) {
+		neuralKnowledge.reset(new NeuralKnowledge());
+		*neuralKnowledge = nknow;
+		knowledgeFile = nknow.getFile();
 		loaded = true;
 	}
 	std::shared_ptr<NeuralKnowledge> CacheElement::getKnowledge() {
 		load();
-		return WeightVec;
+		return neuralKnowledge;
 	}
-	std::shared_ptr<CacheElement> SpringlCache2D::set(int frame, const NeuralKnowledge& springl) {
+	std::shared_ptr<CacheElement> NeuralCache::set(int frame, const NeuralKnowledge& nknow) {
 		std::lock_guard<std::mutex> lockMe(accessLock);
 		auto iter = cache.find(frame);
 		std::shared_ptr<CacheElement> elem;
@@ -44,7 +42,7 @@ namespace tgr {
 			elem = std::shared_ptr<CacheElement>(new CacheElement());
 			cache[frame] = elem;
 		}
-		elem->set(springl);
+		elem->set(nknow);
 		if (elem->isLoaded()) {
 			while (loadedList.size() >= maxElements) {
 				cache[loadedList.begin()->second]->unload();
@@ -54,7 +52,7 @@ namespace tgr {
 		}
 		return elem;
 	}
-	std::shared_ptr<CacheElement> SpringlCache2D::get(int frame) {
+	std::shared_ptr<CacheElement> NeuralCache::get(int frame) {
 		std::lock_guard<std::mutex> lockMe(accessLock);
 		auto iter = cache.find(frame);
 		if (iter != cache.end()) {
@@ -80,7 +78,7 @@ namespace tgr {
 			if (FileExists(imageFile))RemoveFile(imageFile);
 		}
 	}
-	void SpringlCache2D::clear() {
+	void NeuralCache::clear() {
 		std::lock_guard<std::mutex> lockMe(accessLock);
 		counter = 0;
 		loadedList.clear();

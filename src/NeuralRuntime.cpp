@@ -44,7 +44,14 @@ namespace tgr {
 		}
 		
 		sys->initializeWeights(0.0f,1.0f);
+		sys->updateKnowledge();
+		cache->clear();
 		iteration = 0;
+		NeuralKnowledge& k = sys->getKnowledge();
+		k.setFile(MakeString() << GetDesktopDirectory() << ALY_PATH_SEPARATOR << "tiger" <<std::setw(5)<<std::setfill('0')<< iteration << ".bin");
+		k.setName("tiger");
+		cache->set(iteration, k);
+
 		return true;
 	}
 	void NeuralRuntime::cleanup(){
@@ -62,7 +69,7 @@ namespace tgr {
 	}
 	bool NeuralRuntime::step() {
 		static std::random_device rd;
-		uint64_t iter =iteration;
+		int iter =iteration;
 		bool ret = true;
 		double res = 0;
 		int B = std::min(batchSize.toInteger(),(int)sampleIndexes.size());
@@ -104,7 +111,11 @@ namespace tgr {
 			onUpdate(iter, !ret);
 		}
 		iteration++;
-
+		sys->updateKnowledge();
+		NeuralKnowledge& k = sys->getKnowledge();
+		k.setFile(MakeString() << GetDesktopDirectory() << ALY_PATH_SEPARATOR << "tiger" << std::setw(5) << std::setfill('0') << iteration << ".bin");
+		k.setName("tiger");
+		cache->set(iteration, k);
 		return ret;
 	}
 	NeuralRuntime::NeuralRuntime(const std::shared_ptr<tgr::NeuralSystem>& system) :
@@ -117,5 +128,6 @@ namespace tgr {
 		weightDecay = Float(0.0f);
 		momentum = Float(0.9f);
 		learningRateDelta = Float(0.9f);
+		cache.reset(new NeuralCache());
 	}
 }

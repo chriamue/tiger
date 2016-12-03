@@ -51,6 +51,10 @@ void TigerApp::setSampleIndex(int idx){
 	sys->getInput()->set(trainInputData[idx]);
 	sys->evaluate();
 }
+void TigerApp::setNeuralTime(int idx) {
+	sys->setKnowledge(*worker->getCache()->get(idx)->getKnowledge());
+	sys->evaluate();
+}
 void TigerApp::setSampleRange(int mn, int mx){
 	minIndex = mn;
 	maxIndex = mx;
@@ -190,7 +194,8 @@ bool TigerApp::init(Composite& rootNode) {
 	timelineSlider->borderColor = MakeColor(AlloyApplicationContext()->theme.DARK);
 	timelineSlider->borderWidth = UnitPX(0.0f);
 	timelineSlider->onChangeEvent = [this](const Number& timeValue, const Number& lowerValue, const Number& upperValue) {
-
+		int t = timeValue.toInteger();
+		setNeuralTime(t);
 	};
 	timelineSlider->setMajorTick(100);
 	timelineSlider->setMinorTick(10);
@@ -326,7 +331,7 @@ bool TigerApp::init(Composite& rootNode) {
 		
 	});
 	initialize();
-	worker->onUpdate = [this](uint64_t iteration, bool lastIteration) {
+	worker->onUpdate = [this](int iteration, bool lastIteration) {
 		graphRegion->updateGraphBounds();
 		if (lastIteration || (int)iteration == timelineSlider->getMaxValue().toInteger()) {
 			running = false;
@@ -345,6 +350,7 @@ bool TigerApp::init(Composite& rootNode) {
 	timelineSlider->setMaxValue((int)worker->getMaxIteration());
 
 	graphRegion->add(sys->getOutput()->getGraph());
+	
 	return true;
 }
 void TigerApp::setSelectedLayer(tgr::NeuralLayer* layer) {

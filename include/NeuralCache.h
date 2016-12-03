@@ -11,7 +11,7 @@ namespace tgr {
 		bool loaded;
 		bool writeOnce;
 		std::string knowledgeFile;
-		std::shared_ptr<NeuralKnowledge> WeightVec;
+		std::shared_ptr<NeuralKnowledge> neuralKnowledge;
 		std::mutex accessLock;
 	public:
 		bool isLoaded() {
@@ -26,7 +26,7 @@ namespace tgr {
 		}
 		void load();
 		void unload();
-		void set(const NeuralKnowledge& WeightVec);
+		void set(const NeuralKnowledge& neuralKnowledge);
 		std::shared_ptr<NeuralKnowledge> getKnowledge();
 	};
 	struct CacheCompare {
@@ -34,7 +34,7 @@ namespace tgr {
 			return lhs.first < rhs.first;
 		}
 	};
-	class SpringlCache2D {
+	class NeuralCache {
 	protected:
 		std::map<int, std::shared_ptr<CacheElement>> cache;
 		std::set<std::pair<uint64_t, int>, CacheCompare> loadedList;

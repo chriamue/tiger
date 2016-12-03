@@ -31,6 +31,7 @@
 #include "AlloyTimeline.h"
 #include "AlloyGraphPane.h"
 #include "NeuralRuntime.h"
+#include "NeuralCache.h"
 class TigerApp : public aly::Application {
 protected:
 	tgr::NeuralLayer* selectedLayer;
@@ -55,6 +56,7 @@ protected:
 	std::vector<uint8_t> trainOutputData;
 	tgr::NeuralRuntimePtr worker;
 	aly::GraphPanePtr graphRegion;
+	std::shared_ptr<tgr::NeuralCache> cache;
 	int exampleIndex;
 	bool initializeXOR();
 	bool initializeLeNet5();
@@ -62,6 +64,7 @@ protected:
 	void setSelectedLayer(tgr::NeuralLayer* layer);
 public:
 	void setSampleIndex(int idx);
+	void setNeuralTime(int idx);
 	void setSampleRange(int mn, int mx);
 	bool overTarget = false;
 	TigerApp(int example);
