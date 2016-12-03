@@ -31,9 +31,7 @@
 
 #include <vector>
 #include <set>
-#include <cereal/cereal.hpp>
-#include <cereal/types/vector.hpp>
-#include <cereal/types/string.hpp>
+
 class TigerApp;
 namespace aly {
 	class NeuralFlowPane;
@@ -58,32 +56,23 @@ namespace tgr {
 			aly::NeuralLayerRegionPtr layerRegion;
 			aly::GraphDataPtr graph;
 			NeuralSystem* sys;
+			int id;
 		public:
 			int width;
 			int height;
 			int bins;
-			int id;
+
 			typedef Neuron ValueType;
 			typedef typename std::vector<ValueType>::iterator iterator;
 			typedef typename std::vector<ValueType>::const_iterator const_iterator;
 			typedef typename std::vector<ValueType>::reverse_iterator reverse_iterator;
-			template<class Archive> void save(Archive & ar) const
-			{
-				std::vector<float> weights(signals.size());
-				for (int i = 0; i <(int)weights.size(); i++) {
-					weights[i] = signals[i]->value;
-				}
-				ar(CEREAL_NVP(name),CEREAL_NVP(weights));
+			int getId() const {
+				return id;
 			}
-			template<class Archive> void load(Archive & ar)
-			{
-				std::vector<float> weights;
-				ar(CEREAL_NVP(name), CEREAL_NVP(weights));
-				int N =(int)std::min(weights.size(), signals.size());
-				for (int i = 0; i < N; i++) {
-					signals[i]->value= weights[i];
-				}
+			void setId(int i) {
+				id = i;
 			}
+
 
 			std::shared_ptr<aly::NeuralFlowPane> getFlow() const;
 			iterator begin() {

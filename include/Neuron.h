@@ -21,7 +21,7 @@
 #ifndef NEURON_H_
 #define NEURON_H_
 #include <AlloyMath.h>
-#include <AlloySparseMatrix.h>
+#include <AlloyOptimizationMath.h>
 #include "NeuronFunction.h"
 #include <memory>
 #include <map>
@@ -165,5 +165,6 @@ namespace tgr {
 			}
 	};
 	void MakeConnection(Neuron* src, const std::shared_ptr<Signal>& signal,Neuron* dest);
+
 }
 #endif

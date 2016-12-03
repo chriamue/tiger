@@ -28,10 +28,10 @@ namespace tgr {
 		return (x != r.x || y != r.y || layer != r.layer);
 	}
 	bool Terminal::operator <(const Terminal & r) const {
-		return (std::make_tuple(x, y, (layer) ? layer->id : -1) < std::make_tuple(r.x, r.y, (layer) ? layer->id : -1));
+		return (std::make_tuple(x, y, (layer) ? layer->getId() : -1) < std::make_tuple(r.x, r.y, (layer) ? layer->getId() : -1));
 	}
 	bool Terminal::operator >(const Terminal & r) const {
-		return (std::make_tuple(x, y, (layer) ? layer->id : -1) < std::make_tuple(r.x, r.y, (layer) ? layer->id : -1));
+		return (std::make_tuple(x, y, (layer) ? layer->getId() : -1) < std::make_tuple(r.x, r.y, (layer) ? layer->getId() : -1));
 	}
 	Neuron::Neuron(const NeuronFunction& func,float val) :transform(func),value(val),change(0.0f),active(false) {
 	}

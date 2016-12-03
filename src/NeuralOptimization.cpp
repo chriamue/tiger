@@ -1,5 +1,3 @@
-
-
 #include "NeuralOptimization.h"
 namespace tgr {
 	bool GradientDescentOptimizer::optimize(int id, const std::vector<std::shared_ptr<Signal>>& signals) {

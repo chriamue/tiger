@@ -21,9 +21,7 @@
 #include "NeuralSystem.h"
 #include "NeuralFilter.h"
 #include "NeuralFlowPane.h"
-#include <cereal/archives/xml.hpp>
-#include <cereal/archives/json.hpp>
-#include <cereal/archives/portable_binary.hpp>
+
 using namespace aly;
 namespace tgr {
 	void NeuralSystem::backpropagate() {
@@ -120,7 +118,7 @@ namespace tgr {
 		while (!q.empty()) {
 			NeuralLayerPtr layer = q.front();
 			q.pop_front();
-			layer->id = index++;
+			layer->setId(index++);
 			layer->setVisited(true);
 			order.push_back(layer);
 			for (NeuralLayerPtr child : layer->getChildren()) {
@@ -184,41 +182,6 @@ namespace tgr {
 	Neuron* NeuralSystem::getNeuron(const Terminal& t) const {
 		return t.layer->get(t.x, t.y);
 	}
-	void WriteNeuralSystemToFile(const std::string& file, const NeuralSystem& params) {
-		std::string ext = GetFileExtension(file);
-		if (ext == "json") {
-			std::ofstream os(file);
-			cereal::JSONOutputArchive archive(os);
-			archive(cereal::make_nvp("tigernet", params));
-		}
-		else if (ext == "xml") {
-			std::ofstream os(file);
-			cereal::XMLOutputArchive archive(os);
-			archive(cereal::make_nvp("tigernet", params));
-		}
-		else {
-			std::ofstream os(file, std::ios::binary);
-			cereal::PortableBinaryOutputArchive archive(os);
-			archive(cereal::make_nvp("tigernet", params));
-		}
-	}
-	void ReadNeuralSystemFromFile(const std::string& file, NeuralSystem& params) {
-		std::string ext = GetFileExtension(file);
-		if (ext == "json") {
-			std::ifstream os(file);
-			cereal::JSONInputArchive archive(os);
-			archive(cereal::make_nvp("tigernet", params));
-		}
-		else if (ext == "xml") {
-			std::ifstream os(file);
-			cereal::XMLInputArchive archive(os);
-			archive(cereal::make_nvp("tigernet", params));
-		}
-		else {
-			std::ifstream os(file, std::ios::binary);
-			cereal::PortableBinaryInputArchive archive(os);
-			archive(cereal::make_nvp("tigernet", params));
-		}
-	}
+
 
 }

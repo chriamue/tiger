@@ -22,10 +22,9 @@
 #define _NEURAL_SYSTEM_H_
 #include "NeuralLayer.h"
 #include "AlloyExpandTree.h"
+#include "NeuralKnowledge.h"
 #include <map>
-#include <cereal/cereal.hpp>
-#include <cereal/types/string.hpp>
-#include <cereal/types/memory.hpp>
+
 namespace aly {
 	class NeuralFlowPane;
 }
@@ -39,16 +38,9 @@ namespace tgr {
 		std::vector<NeuralLayerPtr> leafs;
 		std::shared_ptr<aly::NeuralFlowPane> flowPane;
 		NeuralLayerPtr inputLayer, outputLayer;
+		NeuralKnowledge knowledge;
 	public:
 
-		template<class Archive> void save(Archive & ar) const
-		{
-			ar(CEREAL_NVP(layers));
-		}
-		template<class Archive> void load(Archive & ar)
-		{
-			ar(CEREAL_NVP(layers));
-		}
 		void evaluate();
 		void backpropagate();
 		bool optimize();
@@ -117,8 +109,6 @@ namespace tgr {
 		void add(const std::shared_ptr<NeuralFilter>& filter, const NeuronFunction& func = Tanh());
 	};
 	typedef std::shared_ptr<NeuralSystem> NeuralSystemPtr;
-	void WriteNeuralSystemToFile(const std::string& file, const NeuralSystem& params);
-	void ReadNeuralSystemFromFile(const std::string& file, NeuralSystem& params);
 
 }
 #endif
