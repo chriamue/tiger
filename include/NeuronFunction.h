@@ -143,7 +143,7 @@ namespace tgr {
 			return NeuronFunctionType::Sigmoid;
 		}
 		float forward(float t) const {
-			return 1.0f / (1 + std::exp(-t));
+			return 1.0f / (1 + std::exp(-aly::clamp(t,-6.0f,6.0f)));
 		}
 		float change(float f_t) const {
 			return f_t*(1 - f_t);
@@ -166,8 +166,8 @@ namespace tgr {
 			return NeuronFunctionType::Tanh;
 		}
 		float forward(float t) const {
-			float e = std::exp(2 * t);
-			return (e - 1) / std::max(1E-6f,e + 1);
+			float e = std::exp(2 * aly::clamp(t,-6.0f,6.0f));
+			return (e - 1.0f) / (e + 1.0f);
 		}
 		float change(float f_t) const {
 			return 1.0f - f_t*f_t;

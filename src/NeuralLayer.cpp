@@ -39,7 +39,7 @@ namespace tgr {
 	NeuralLayer::NeuralLayer(int width, int height, int bins, bool bias, const NeuronFunction& func) :width(width), height(height), bins(bins),bias(bias),id(-1),visited(false),trainable(true),residualError(0.0) {
 		neurons.resize(width*height*bins, Neuron(func));
 		if (bias) {
-			biasNeurons.resize(width*height*bins, Bias());
+			biasNeurons.resize(width*height, Bias());
 			for (size_t idx = 0; idx < neurons.size(); idx++) {
 				MakeConnection(&biasNeurons[idx], &neurons[idx]);
 			}
@@ -70,7 +70,7 @@ namespace tgr {
 	NeuralLayer::NeuralLayer(const std::string& name,int width, int height, int bins,bool bias, const NeuronFunction& func) :name(name), width(width), height(height), bins(bins),bias(bias), id(-1), visited(false), trainable(true), residualError(0.0) {
 		neurons.resize(width*height*bins,Neuron(func));
 		if (bias) {
-			biasNeurons.resize(width*height*bins, Bias());
+			biasNeurons.resize(width*height, Bias());
 			for (size_t idx = 0; idx < neurons.size(); idx++) {
 				MakeConnection(&biasNeurons[idx], &neurons[idx]);
 			}
@@ -85,7 +85,7 @@ namespace tgr {
 	void NeuralLayer::resize(int w, int h, int b) {
 		neurons.resize(w * h * b);
 		if (bias) {
-			biasNeurons.resize(width*height*bins, Bias());
+			biasNeurons.resize(width*height, Bias());
 			for (size_t idx = 0; idx < neurons.size(); idx++) {
 				MakeConnection(&biasNeurons[idx], &neurons[idx]);
 			}
@@ -137,6 +137,9 @@ namespace tgr {
 	void NeuralLayer::update() {
 		signals.clear();
 		for (Neuron& n : neurons) {
+			signals.insert(signals.end(), n.getInput().begin(), n.getInput().end());
+		}
+		for (Neuron& n : biasNeurons) {
 			signals.insert(signals.end(), n.getInput().begin(), n.getInput().end());
 		}
 		size_t N = signals.size();

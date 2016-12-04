@@ -342,6 +342,7 @@ bool TigerApp::init(Composite& rootNode) {
 			running = false;
 			stopButton->setVisible(false);
 			playButton->setVisible(true);
+			setSampleIndex(sampleIndex.toInteger());
 		}
 		AlloyApplicationContext()->addDeferredTask([this]() {
 			timelineSlider->setUpperValue((int)worker->getIteration());

@@ -90,13 +90,13 @@ namespace tgr {
 		for (SignalPtr sig : input) {
 			sum2 = 0.0f;
 			std::vector<Neuron*>& input2 = sig->get(this);
-			count = (int)input2.size();
-			if (count > 0) {
+			//count = (int)input2.size();
+			//if (count > 0) {
 				for (Neuron* inner : input2) {
 					sum2 += *inner->value;
 				}
-				*sig->change += *change * sum2 / count;
-			}
+				*sig->change += *change * sum2;
+			//}
 		}
 		return *change;
 	}
@@ -104,23 +104,21 @@ namespace tgr {
 	float Neuron::evaluate() {
 		float sum1 = 0.0f, sum2;
 		int count = 0;
-		
 		if (input.size() > 0) {
-			//std::cout << "w= [";
+			//if (debug)std::cout << "w= [";
 			for (SignalPtr sig : input) {
 				sum2 = 0.0f;
-				std::vector<Neuron*>& input2 = sig->get(this);
-				for (Neuron* inner : input2) {
+				for (Neuron* inner : sig->get(this)) {
 					sum2 += *inner->value;
 					count++;
 				}
 				sum1 += (*sig->weight)*sum2;
-				//std::cout <<std::setfill(' ')<< std::setw(5) << aly::round(sig->value,3) << " * [" << aly::round(sum2, 3) << "] ";
+				//if(debug)std::cout <<std::setfill(' ')<< std::setw(5) << aly::round(*sig->weight,3) << " * [" << aly::round(sum2, 3) << "] ";
 			}
 			*change = 0.0f;
 			sum1 /= count;
 			*value = transform.forward(sum1);
-			//std::cout << "] T(" <<sum1<<") = "<< value << std::endl;
+			//if (debug)std::cout << "] T(" <<sum1<<") = "<< *value <<" "<< std::exp(2 * sum1)<< std::endl;
 		}
 		
 		return *value;

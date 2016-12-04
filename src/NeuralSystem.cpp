@@ -70,7 +70,7 @@ namespace tgr {
 			Neuron* neuron = layer->get(i);
 			float err = *neuron->value - output[i];
 			*neuron->change = err*neuron->forwardChange(*neuron->value);
-			//std::cout << i << ": " << *neuron->change << " " << *neuron->value <<" "<<err<< std::endl;
+			//std::cout << i << ": " << *neuron->change << " " << *neuron->value <<" "<<err<<" "<< output[i]<< std::endl;
 			residual += err*err;
 		}
 		residual /= double(output.size());

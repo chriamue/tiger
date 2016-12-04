@@ -9,7 +9,6 @@ namespace tgr {
 			float* w=sig->weight;
 			delta += std::abs(*sig->change);
 			*w = *w - learningRate*(*sig->change + weightDecay*(*w));
-			//			*w = aly::clamp(*w - learningRate*(*sig->change + weightDecay*(*w)),-1.0f,1.0f);
 		}
 		//if (N>0)std::cout <<"["<<id<<"] Weight Change="<<delta<< std::endl;
 		return true;
@@ -29,7 +28,6 @@ namespace tgr {
 			float* w=sig->weight;
 			float vel = momentum * prev - learningRate* (*sig->change + (*w) * weightDecay);
 			*w = *w + vel;
-			//*w = aly::clamp(*w+vel,-1.0f,1.0f);
 			delta += std::abs(*sig->change);
 			velocityBuffer[n] = vel;
 		}
