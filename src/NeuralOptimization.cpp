@@ -3,7 +3,7 @@ namespace tgr {
 	bool GradientDescentOptimizer::optimize(int id, const std::vector<std::shared_ptr<Signal>>& signals) {
 		int N = (int)signals.size();
 		double delta = 0.0;
-#pragma omp parallel for reduction(+:residual)
+#pragma omp parallel for reduction(+:delta)
 		for (int n = 0; n < N;n++) {
 			SignalPtr sig = signals[n];
 			float* w=sig->weight;
@@ -21,7 +21,7 @@ namespace tgr {
 		}
 		double delta = 0.0;
 		std::vector<float>& velocityBuffer = velocityBufferMap.at(id);
-#pragma omp parallel for reduction(+:residual)
+#pragma omp parallel for reduction(+:delta)
 		for (int n = 0; n < N; n++) {
 			SignalPtr sig = signals[n];
 			float prev = velocityBuffer[n];
