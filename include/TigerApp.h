@@ -73,8 +73,6 @@ public:
 	}
 	virtual void draw(aly::AlloyContext* context) override;
 	bool init(aly::Composite& rootNode);
-
-	void train(const std::vector<int>& sampleIndexes);
 	bool onEventHandler(aly::AlloyContext* context, const aly::InputEvent& e);
 
 };

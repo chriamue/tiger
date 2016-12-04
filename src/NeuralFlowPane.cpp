@@ -265,7 +265,7 @@ namespace aly{
 			int2 selected = selectedLayer->getRegion()->getSelected();
 			NeuralLayer* layer = selectedLayer;
 			pixel2 cursorPosition = selectedLayer->getRegion()->cursorPosition;
-			if (selected.x != -1 && selected.y != -1) {
+			if (selected.x != -1 && selected.y != -1 && glfwGetKey(context->window,GLFW_KEY_LEFT)==GLFW_RELEASE&&glfwGetKey(context->window, GLFW_KEY_RIGHT) == GLFW_RELEASE) {
 				Neuron* neuron = layer->get(selected.x, selected.y);
 				context->setCursor(&Cursor::CrossHairs);
 				nvgFontFaceId(nvg, context->getFontHandle(FontType::Bold));

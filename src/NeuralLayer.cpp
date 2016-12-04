@@ -58,10 +58,9 @@ namespace tgr {
 		residualError = 0.0;
 		for (Neuron& neuron : neurons) {
 			*neuron.change = 0.0f;
+			*neuron.value = 0.0f;
 		}
-		for (Neuron& neuron : biasNeurons) {
-			*neuron.change = 0.0f;
-		}
+
 		for (SignalPtr sig : signals) {
 			*sig->change=0.0f;
 		}

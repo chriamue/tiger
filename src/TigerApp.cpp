@@ -52,8 +52,11 @@ void TigerApp::setSampleIndex(int idx){
 	sys->evaluate();
 }
 void TigerApp::setNeuralTime(int idx) {
-	sys->setKnowledge(*worker->getCache()->get(idx)->getKnowledge());
-	sys->evaluate();
+	auto elem = worker->getCache()->get(idx);
+	if (elem.get() != nullptr) {
+		sys->setKnowledge(*elem->getKnowledge());
+		sys->evaluate();
+	}
 }
 void TigerApp::setSampleRange(int mn, int mx){
 	minIndex = mn;
@@ -62,6 +65,7 @@ void TigerApp::setSampleRange(int mn, int mx){
 	tweenRegion->setMaxValue(Integer(mx));
 	sampleIndex.setValue(aly::clamp(sampleIndex.toInteger(), mn, mx));
 	tweenRegion->setValue(sampleIndex.toDouble());
+	worker->setSamples(minIndex,maxIndex);
 }
 bool TigerApp::init(Composite& rootNode) {
 
@@ -184,6 +188,7 @@ bool TigerApp::init(Composite& rootNode) {
 	graphRegion->borderWidth = UnitPX(0.0f);
 	graphRegion->xAxisLabel = "Iteration";
 	graphRegion->yAxisLabel = "Residual";
+	graphRegion->xAxisInteger = true;
 	graphRegion->backgroundColor = MakeColor(AlloyDefaultContext()->theme.DARKER);
 	controlLayout->setNorth(graphRegion,0.3333f);
 	
@@ -356,12 +361,20 @@ bool TigerApp::init(Composite& rootNode) {
 void TigerApp::setSelectedLayer(tgr::NeuralLayer* layer) {
 	selectedLayer = layer;
 }
-void TigerApp::train(const std::vector<int>& sampleIndexes) {
-	worker->init();
-	worker->setSamples(sampleIndexes);
-	worker->step();
-}
+
 bool TigerApp::onEventHandler(AlloyContext* context, const aly::InputEvent& e) {
+	if (e.type == InputType::Key&&e.isDown()) {
+		if (e.key == GLFW_KEY_LEFT) {
+			int t = std::max(timelineSlider->getTimeValue().toInteger() - 1, timelineSlider->getLowerValue().toInteger());		
+			timelineSlider->setTimeValue(t);
+			setNeuralTime(t);
+		}
+		else if (e.key == GLFW_KEY_RIGHT) {
+			int t = std::min(timelineSlider->getTimeValue().toInteger() + 1, timelineSlider->getUpperValue().toInteger());
+			timelineSlider->setTimeValue(t);
+			setNeuralTime(t);
+		}
+	}
 	if (selectedLayer != nullptr) {
 		dragIconPane->setDragOffset(e.cursor, pixel2(20.0f, 20.0f));
 		AlloyApplicationContext()->getGlassPane()->setVisible(true);
@@ -431,7 +444,6 @@ bool TigerApp::initializeXOR() {
 	sys->initialize();
 	setSampleRange(0, (int)trainInputData.size() - 1);
 	setSampleIndex(0);
-	worker->setSamples(samples);
 	return true;
 }
 bool TigerApp::initializeLeNet5() {
@@ -493,7 +505,7 @@ bool TigerApp::initializeLeNet5() {
 		for (int i = 0; i < trainInputData.size(); i += 100) {
 			samples.push_back(i);
 		}
-		worker->setSamples(samples);
+		
 		return true;
 	}
 	return false;

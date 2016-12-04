@@ -233,27 +233,26 @@ namespace tgr {
 	};
 	struct Constant {
 	protected:
-		float* value;
+		float value;
 	public:
-		Constant() {
-			value = nullptr;
+		Constant():value(1.0f) {
 		}
 		NeuronFunctionType virtual type() const {
 			return NeuronFunctionType::Constant;
 		}
 		float forward(float t) const {
-			return *value;
+			return value;
 		}
 		float change(float f_t) const {
 			return 0.0f;
 		}
 		float min() const {
-			return *value;
+			return value;
 		}
 		float max() const {
-			return *value;
+			return value;
 		}
-		Constant(float* val):value(val) {
+		Constant(float val):value(val) {
 		}
 		Constant(const NeuronFunction& func):value(static_cast<Constant>(func).value){
 		}

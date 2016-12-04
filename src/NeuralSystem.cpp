@@ -183,7 +183,6 @@ namespace tgr {
 
 	}
 	void NeuralSystem::initialize(const aly::ExpandTreePtr& tree) {
-		
 		TreeItemPtr root = TreeItemPtr(new TreeItem("Neural Layers"));
 		tree->addItem(root);
 		root->setExpanded(true);
@@ -191,8 +190,6 @@ namespace tgr {
 			n->initialize(tree, root);
 		}
 	}
-
-
 	Neuron* NeuralSystem::getNeuron(const Terminal& t) const {
 		return t.layer->get(t.x, t.y);
 	}

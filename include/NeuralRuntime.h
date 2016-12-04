@@ -46,13 +46,19 @@ namespace tgr {
 		aly::Number momentum;
 		aly::Number learningRateDelta;
 		aly::Number batchSize;
+		aly::Number minSample;
+		aly::Number maxSample;
+		aly::Number lowerSample;
+		aly::Number upperSample;
 		std::shared_ptr<NeuralOptimization> opt;
 		int optimizationMethod;
+
+		std::vector<int> sampleIndexes;
 		std::vector<float> outputData;
 		int iteration;
 		std::thread simulationThread;
 		std::shared_ptr<tgr::NeuralSystem> sys;
-		std::vector<int> sampleIndexes;
+
 		std::shared_ptr<tgr::NeuralCache> cache;
 	public:
 		std::function<void(int iteration, bool lastIteration)> onUpdate;
@@ -65,9 +71,7 @@ namespace tgr {
 		std::shared_ptr<tgr::NeuralCache> getCache() const {
 			return cache;
 		}
-		void setSamples(const std::vector<int>& idx) {
-			sampleIndexes = idx;
-		}
+		void setSamples(int mn, int mx);
 		void setup(const aly::ParameterPanePtr& pane);
 		NeuralRuntime(const std::shared_ptr<tgr::NeuralSystem>& system);
 		uint64_t getMaxIteration() const {

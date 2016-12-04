@@ -42,7 +42,10 @@ namespace tgr {
 				sys->setOptimizer(opt = std::shared_ptr<NeuralOptimization>(new MomentumOptimizer(learningRateInitial.toFloat(),weightDecay.toFloat(),momentum.toFloat())));
 				break;
 		}
-		
+		sampleIndexes.clear();
+		for (int n = lowerSample.toInteger(); n <= upperSample.toInteger(); n++) {
+			sampleIndexes.push_back(n);
+		}
 		sys->initializeWeights(0.0f,1.0f);
 		sys->updateKnowledge();
 		cache->clear();
@@ -56,12 +59,19 @@ namespace tgr {
 	}
 	void NeuralRuntime::cleanup(){
 	}
+	void NeuralRuntime::setSamples(int mn, int mx) {
+		minSample.setValue(mn);
+		maxSample.setValue(mx);
+		lowerSample.setValue(mn);
+		upperSample.setValue(mx);
+		batchSize.setValue(std::min(mx-mn+1, batchSize.toInteger()));
+	}
 	void NeuralRuntime::setup(const aly::ParameterPanePtr& controls) {
 		controls->addGroup("Training", true);
 		controls->addSelectionField("Optimizer", optimizationMethod, std::vector<std::string>{"Gradient Descent", "Momentum"},6.0f);
 		controls->addNumberField("Epochs", iterationsPerEpoch);
-		controls->addNumberField("Inner Iterations", iterationsPerStep);
-		controls->addNumberField("Batch Size", batchSize);
+		controls->addRangeField("Samples", lowerSample, upperSample, minSample, maxSample);
+		controls->addNumberField("Batch Size", batchSize, Integer(0), Integer((maxSample.toInteger()- minSample.toInteger())+1));
 		controls->addNumberField("Learning Rate", learningRateInitial, Float(0.0f), Float(1.0f));
 		controls->addNumberField("Attenuation", learningRateDelta, Float(0.0f), Float(1.0f));
 		controls->addNumberField("Weight Decay", weightDecay, Float(0.0f), Float(1.0f));
@@ -72,21 +82,19 @@ namespace tgr {
 		int iter =iteration;
 		bool ret = true;
 		double res = 0;
-		int B = std::min(batchSize.toInteger(),(int)sampleIndexes.size());
 		sys->reset();
+		int B = std::min(batchSize.toInteger(),(int)sampleIndexes.size());
 		if (iter%iterationsPerStep.toInteger() == 0) {
 			std::shuffle(sampleIndexes.begin(), sampleIndexes.end(), rd);
 		}
 		for(int b=0;b<B;b++){
 			int idx = sampleIndexes[(b+iter*B)%sampleIndexes.size()];
 			if (inputSampler)inputSampler(sys->getInput(), idx);
-			//std::cout <<iter<< ") Evaluating Sample " << idx << std::endl;
 			sys->evaluate();
 			if (outputSampler) {
 				outputSampler(outputData, idx);
 				double err= sys->accumulate(outputData);
 				res += err;
-				//std::cout << "Residual=" << err << std::endl;
 			}
 			sys->backpropagate();
 		}
@@ -96,9 +104,9 @@ namespace tgr {
 			opt->setLearningRate(opt->getLearningRate()*learningRateDelta.toFloat());
 			
 		}
-		if (iter%iterationsPerStep.toInteger() == 0) {
+		//if (iter%iterationsPerStep.toInteger() == 0) {
 			std::cout << "Error=" << res << " Learning Rate=" << opt->getLearningRate() << std::endl;
-		}
+		//}
 		lastResidual = res;
 		sys->optimize();
 		for (NeuralLayerPtr layer : sys->getLayers()) {
@@ -124,6 +132,10 @@ namespace tgr {
 		iterationsPerEpoch = Integer(20);
 		iterationsPerStep = Integer(10);
 		batchSize = Integer(30);
+		lowerSample = Integer(0);
+		upperSample = Integer(0);
+		minSample = Integer(0);
+		maxSample = Integer(0);
 		learningRateInitial = Float(0.999f);
 		weightDecay = Float(0.0f);
 		momentum = Float(0.9f);
