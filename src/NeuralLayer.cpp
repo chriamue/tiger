@@ -60,7 +60,9 @@ namespace tgr {
 			*neuron.change = 0.0f;
 			*neuron.value = 0.0f;
 		}
-
+		for (Neuron& neuron : biasNeurons) {
+			*neuron.change = 0.0f;
+		}
 		for (SignalPtr sig : signals) {
 			*sig->change=0.0f;
 		}
@@ -104,18 +106,22 @@ namespace tgr {
 	void NeuralLayer::backpropagate() {
 		int N = (int)neurons.size();
 		double residual = 0.0;
-		//std::cout << "Back-propagate [" << getName() << "|" << N << "]" << std::endl;
-#pragma omp parallel for
+#pragma omp parallel for reduction(+:residual)
 		for (int n = 0; n < N; n++) {
-			neurons[n].backpropagate();
+			residual+=std::abs(neurons[n].backpropagate());
 		}
+		residual /= N;
+		//std::cout << "Backprop [" << getName() << "|" << N << "] Residual="<<residual << std::endl;
 	}
 	void NeuralLayer::evaluate() {
 		int N = (int)neurons.size();
-#pragma omp parallel for
+		double mag = 0.0;
+#pragma omp parallel for reduction(+:mag)
 		for (int n = 0; n < N; n++) {
-			neurons[n].evaluate();
+			mag+=std::abs(neurons[n].evaluate());
 		}
+		mag /= N;
+		//std::cout << "Evaluate [" << getName() << "|" << N << "] Magnitude=" << mag << std::endl;
 		if (layerRegion.get() != nullptr) {
 			layerRegion->setDirty(true);
 		}

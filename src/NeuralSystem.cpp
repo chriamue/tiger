@@ -70,6 +70,7 @@ namespace tgr {
 			Neuron* neuron = layer->get(i);
 			float err = *neuron->value - output[i];
 			*neuron->change = err*neuron->forwardChange(*neuron->value);
+			//std::cout << i << ": " << *neuron->change << " " << *neuron->value <<" "<<err<< std::endl;
 			residual += err*err;
 		}
 		residual /= double(output.size());
@@ -159,6 +160,7 @@ namespace tgr {
 				}
 			}
 		}
+		initializeWeights(0.0f, 1.0f);
 		knowledge.set(*this);
 		initialized = true;
 	}

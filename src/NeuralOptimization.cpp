@@ -2,13 +2,16 @@
 namespace tgr {
 	bool GradientDescentOptimizer::optimize(int id, const std::vector<std::shared_ptr<Signal>>& signals) {
 		int N = (int)signals.size();
-#pragma omp parallel for
+		double delta = 0.0;
+#pragma omp parallel for reduction(+:residual)
 		for (int n = 0; n < N;n++) {
 			SignalPtr sig = signals[n];
 			float* w=sig->weight;
-			*w -= learningRate*(*sig->change +weightDecay*(*w));
+			delta += std::abs(*sig->change);
+			*w = *w - learningRate*(*sig->change + weightDecay*(*w));
+			//			*w = aly::clamp(*w - learningRate*(*sig->change + weightDecay*(*w)),-1.0f,1.0f);
 		}
-		//std::cout << "Weight change="<<delta<< std::endl;
+		//if (N>0)std::cout <<"["<<id<<"] Weight Change="<<delta<< std::endl;
 		return true;
 	}	
 	bool MomentumOptimizer::optimize(int id, const std::vector<std::shared_ptr<Signal>>& signals) {
@@ -17,16 +20,21 @@ namespace tgr {
 		if (pos == velocityBufferMap.end()) {
 			velocityBufferMap[id]=std::vector<float>(signals.size(), 0.0f);
 		}
+		double delta = 0.0;
 		std::vector<float>& velocityBuffer = velocityBufferMap.at(id);
-#pragma omp parallel for
+#pragma omp parallel for reduction(+:residual)
 		for (int n = 0; n < N; n++) {
 			SignalPtr sig = signals[n];
 			float prev = velocityBuffer[n];
 			float* w=sig->weight;
 			float vel = momentum * prev - learningRate* (*sig->change + (*w) * weightDecay);
-			*w += vel;
+			*w = *w + vel;
+			//*w = aly::clamp(*w+vel,-1.0f,1.0f);
+			delta += std::abs(*sig->change);
 			velocityBuffer[n] = vel;
 		}
+		delta /= N;
+		//if(N>0)std::cout << "[" << id << "] Weight Change=" << delta <<" signals "<<signals.size()<< std::endl;
 		return true;
 	}
 }

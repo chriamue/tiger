@@ -167,7 +167,7 @@ namespace tgr {
 		}
 		float forward(float t) const {
 			float e = std::exp(2 * t);
-			return (e - 1) / (e + 1);
+			return (e - 1) / std::max(1E-6f,e + 1);
 		}
 		float change(float f_t) const {
 			return 1.0f - f_t*f_t;

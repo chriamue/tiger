@@ -95,6 +95,7 @@ namespace tgr {
 				outputSampler(outputData, idx);
 				double err= sys->accumulate(outputData);
 				res += err;
+				std::cout << "Evaluate ["<<idx<<"] Error=" << err <<" "<< std::endl;
 			}
 			sys->backpropagate();
 		}
@@ -102,11 +103,9 @@ namespace tgr {
 		double delta = std::abs(lastResidual - res);
 		if (delta < 1E-3f) {
 			opt->setLearningRate(opt->getLearningRate()*learningRateDelta.toFloat());
+			std::cout << "Learning Rate=" << opt->getLearningRate() << std::endl;
 			
 		}
-		//if (iter%iterationsPerStep.toInteger() == 0) {
-			std::cout << "Error=" << res << " Learning Rate=" << opt->getLearningRate() << std::endl;
-		//}
 		lastResidual = res;
 		sys->optimize();
 		for (NeuralLayerPtr layer : sys->getLayers()) {
@@ -124,12 +123,12 @@ namespace tgr {
 		k.setFile(MakeString() << GetDesktopDirectory() << ALY_PATH_SEPARATOR << "tiger" << std::setw(5) << std::setfill('0') << iteration << ".bin");
 		k.setName("tiger");
 		cache->set(iteration, k);
-		return ret;
+		return true;
 	}
 	NeuralRuntime::NeuralRuntime(const std::shared_ptr<tgr::NeuralSystem>& system) :
 		RecurrentTask([this](uint64_t iteration) {return step();}, 5),sys(system),paused(false) {
 		optimizationMethod = 1;
-		iterationsPerEpoch = Integer(20);
+		iterationsPerEpoch = Integer(200);
 		iterationsPerStep = Integer(10);
 		batchSize = Integer(30);
 		lowerSample = Integer(0);

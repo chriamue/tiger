@@ -75,7 +75,7 @@ namespace tgr {
 		void setup(const aly::ParameterPanePtr& pane);
 		NeuralRuntime(const std::shared_ptr<tgr::NeuralSystem>& system);
 		uint64_t getMaxIteration() const {
-			return uint64_t(iterationsPerEpoch.toInteger())*iterationsPerStep.toInteger();
+			return uint64_t(iterationsPerEpoch.toInteger());
 		}
 		int getIterationsPerEpoch() const {
 			return iterationsPerEpoch.toInteger();

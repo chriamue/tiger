@@ -84,16 +84,19 @@ namespace tgr {
 				sum1 += *sig->weight*sum2;
 				//std::cout << std::setfill(' ') << std::setw(5) << aly::round(sig->value, 3) << " * [" << aly::round(sum2, 3) << "] ";
 			}
-			*change=sum1*transform.change(*value) / count;
+			*change = sum1*transform.change(*value) / count;
 			//std::cout << "] " << change << std::endl;
 		}
 		for (SignalPtr sig : input) {
 			sum2 = 0.0f;
 			std::vector<Neuron*>& input2 = sig->get(this);
-			for (Neuron* inner : input2) {
-				sum2 += *inner->value;
+			count = (int)input2.size();
+			if (count > 0) {
+				for (Neuron* inner : input2) {
+					sum2 += *inner->value;
+				}
+				*sig->change += *change * sum2 / count;
 			}
-			*sig->change += *change*sum2 / (input2.size());
 		}
 		return *change;
 	}
