@@ -75,7 +75,7 @@ namespace tgr {
 		}
 		residual /= double(output.size());
 		layer->accumulate(residual);
-		return layer->getResidual();
+		return residual;
 	}
 	void NeuralSystem::reset() {
 		for (NeuralLayerPtr layer : layers) {

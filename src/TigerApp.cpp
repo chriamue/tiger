@@ -236,6 +236,7 @@ bool TigerApp::init(Composite& rootNode) {
 	stopButton->borderColor = MakeColor(getContext()->theme.LIGHTEST);
 	playButton->onMouseDown = [this](AlloyContext* context, const InputEvent& e) {
 		if (e.button == GLFW_MOUSE_BUTTON_LEFT) {
+			worker->cancel();
 			stopButton->setVisible(true);
 			playButton->setVisible(false);
 			timelineSlider->setTimeValue(0);
@@ -243,10 +244,8 @@ bool TigerApp::init(Composite& rootNode) {
 			timelineSlider->setMajorTick(worker->getIterationsPerEpoch());
 			timelineSlider->setMaxValue((int)worker->getMaxIteration());
 			timelineSlider->setVisible(true);
-			context->addDeferredTask([this]() {
-				worker->init();
-				running = true;
-			});
+			worker->init();
+			worker->execute();
 			return true;
 		}
 		return false;
@@ -255,7 +254,8 @@ bool TigerApp::init(Composite& rootNode) {
 		if (e.button == GLFW_MOUSE_BUTTON_LEFT) {
 			stopButton->setVisible(false);
 			playButton->setVisible(true);
-			running = false;
+			worker->cancel();
+			//running = false;
 			return true;
 		}
 		return false;
@@ -520,9 +520,11 @@ void TigerApp::initialize() {
 	sys->initialize(expandTree);
 }
 void TigerApp::draw(AlloyContext* context) {
+	/*
 	if (running) {
 		if (!worker->step()) {
 			running = false;
 		}
 	}
+	*/
 }

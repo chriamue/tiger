@@ -95,23 +95,23 @@ namespace tgr {
 				outputSampler(outputData, idx);
 				double err= sys->accumulate(outputData);
 				res += err;
-				std::cout << "Evaluate ["<<idx<<"] Error=" << err <<" "<< std::endl;
+				//std::cout << "Evaluate ["<<idx<<"] Error=" << err <<" "<< std::endl;
 			}
 			sys->backpropagate();
 		}
 		res /= (sampleIndexes.size());
+		std::cout << iter<<") Residual Error=" << res << " " << std::endl;
 		double delta = std::abs(lastResidual - res);
 		if (delta < 1E-3f) {
 			opt->setLearningRate(opt->getLearningRate()*learningRateDelta.toFloat());
 			std::cout << "Learning Rate=" << opt->getLearningRate() << std::endl;
-			
 		}
 		lastResidual = res;
 		sys->optimize();
 		for (NeuralLayerPtr layer : sys->getLayers()) {
 			layer->getGraph()->points.push_back(float2(float(iter),float(layer->getResidual())));
 		}
-		if (delta<1E-7f) {
+		if (delta<1E-7f||iteration>=getMaxIteration()) {
 			ret = false;
 		}
 		if (onUpdate) {
@@ -123,7 +123,7 @@ namespace tgr {
 		k.setFile(MakeString() << GetDesktopDirectory() << ALY_PATH_SEPARATOR << "tiger" << std::setw(5) << std::setfill('0') << iteration << ".bin");
 		k.setName("tiger");
 		cache->set(iteration, k);
-		return true;
+		return ret;
 	}
 	NeuralRuntime::NeuralRuntime(const std::shared_ptr<tgr::NeuralSystem>& system) :
 		RecurrentTask([this](uint64_t iteration) {return step();}, 5),sys(system),paused(false) {
