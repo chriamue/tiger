@@ -24,16 +24,16 @@
 #include "AlloyExpandTree.h"
 #include "NeuralKnowledge.h"
 #include <map>
-
 namespace aly {
 	class NeuralFlowPane;
 }
 namespace tgr {
+	class NeuralLayer;
 	class NeuralFilter;
 	class NeuralSystem {
 	protected:
 		std::vector<NeuralLayerPtr> layers;
-		std::vector<NeuralLayer*> backpropLayers;
+		std::vector<std::shared_ptr<NeuralFilter>> filters;
 		std::vector<NeuralLayerPtr> roots;
 		std::vector<NeuralLayerPtr> leafs;
 		bool initialized;

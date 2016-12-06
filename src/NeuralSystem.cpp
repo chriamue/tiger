@@ -25,8 +25,8 @@
 using namespace aly;
 namespace tgr {
 	void NeuralSystem::backpropagate() {
-		for (NeuralLayer* layer : backpropLayers) {
-			layer->backpropagate();
+		for (int n = (int)filters.size() - 1; n >= 0; n--) {
+			filters[n]->backpropagate();
 		}
 	}
 	void NeuralSystem::setKnowledge(const NeuralKnowledge& k) {
@@ -37,7 +37,7 @@ namespace tgr {
 	}
 	bool NeuralSystem::optimize() {
 		bool ret = false;
-		for (NeuralLayer* layer : backpropLayers) {
+		for (NeuralLayerPtr layer : layers) {
 			ret |= layer->optimize();
 		}
 		return ret;
@@ -99,10 +99,8 @@ namespace tgr {
 	}
 	void NeuralSystem::evaluate() {
 		if (!initialized)initialize();
-		for (NeuralLayerPtr layer : layers) {
-			layer->evaluate();
-			Vector1f data = layer->toVector();
-			//std::cout << layer->getName() << ":: Sum: " << data.sum() << " Std. Dev: " << data.stdDev() << std::endl;
+		for (NeuralFilterPtr filter:filters) {
+			filter->evaluate();
 		}
 	}
 	NeuralKnowledge& NeuralSystem::updateKnowledge() {
@@ -113,7 +111,6 @@ namespace tgr {
 		roots.clear();
 		leafs.clear();
 		std::list<NeuralLayerPtr> q;
-		std::list<NeuralLayer*> q2;
 		for (NeuralLayerPtr layer : layers) {
 			layer->update();
 			layer->setVisited(false);
@@ -122,8 +119,6 @@ namespace tgr {
 				q.push_back(layer);
 			}
 		}
-
-		backpropLayers.clear();
 		std::vector<NeuralLayerPtr> order;
 		int index = 0;
 		while (!q.empty()) {
@@ -140,24 +135,10 @@ namespace tgr {
 		}
 		layers = order;
 		order.clear();
-
-		q2.clear();
 		for (NeuralLayerPtr layer : layers) {
 			layer->setVisited(false);
 			if (layer->isLeaf()) {
 				leafs.push_back(layer);
-				q2.push_back(layer.get());
-			}
-		}
-		while (!q2.empty()) {
-			NeuralLayer* layer = q2.front();
-			q2.pop_front();
-			layer->setVisited(true);
-			backpropLayers.push_back(layer);
-			for (NeuralLayer* dep : layer->getDependencies()) {
-				if (dep->visitedChildren()) {
-					q2.push_back(dep);
-				}
 			}
 		}
 		initializeWeights(0.0f, 1.0f);
@@ -181,6 +162,7 @@ namespace tgr {
 		}
 		layers.insert(layers.end(), inputs.begin(), inputs.end());
 		layers.insert(layers.end(), output.begin(), output.end());
+		filters.push_back(filter);
 		initialized = false;
 
 	}

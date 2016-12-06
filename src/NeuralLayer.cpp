@@ -134,8 +134,10 @@ namespace tgr {
 		}
 		return data;
 	}
+
 	void NeuralLayer::update() {
 		signals.clear();
+		int idx = 0;
 		for (Neuron& n : neurons) {
 			signals.insert(signals.end(), n.getInput().begin(), n.getInput().end());
 		}
@@ -166,6 +168,58 @@ namespace tgr {
 			neuron.change = &responseChanges[n + N];
 			*neuron.value = 1.0f;
 		}
+		/*
+#pragma omp parallel for
+		for (int i = 0; i < (int)neurons.size();i++) {
+			Neuron& n = neurons[i];
+			{
+				std::list<float*>& changes = inWeightMapChange[idx];
+				std::list<float*>& values = inWeightMapValue[idx];
+				for (SignalPtr sig : n.getInput()) {
+					for (Neuron* inner : sig->get(&n)) {
+						changes.push_back(inner->change);
+						values.push_back(inner->value);
+					}
+				}
+			}
+			{
+				std::list<float*>& changes = outWeightMapChange[idx];
+				std::list<float*>& values = outWeightMapValue[idx];
+				for (SignalPtr sig : n.getOutput()) {
+					for (auto pr : sig->mapping) {
+						changes.push_back(pr.first->change);
+						values.push_back(pr.first->value);
+					}
+				}
+			}
+			idx++;
+		}
+#pragma omp parallel for
+		for (int i = 0; i < (int)biasNeurons.size(); i++) {
+			Neuron& n = biasNeurons[i];
+			{
+				std::list<float*>& changes = inWeightMapChange[idx];
+				std::list<float*>& values = inWeightMapValue[idx];
+				for (SignalPtr sig : n.getInput()) {
+					for (Neuron* inner : sig->get(&n)) {
+						changes.push_back(inner->change);
+						values.push_back(inner->value);
+					}
+				}
+			}
+			{
+				std::list<float*>& changes = outWeightMapChange[idx];
+				std::list<float*>& values = outWeightMapValue[idx];
+				for (SignalPtr sig : n.getOutput()) {
+					for (auto pr : sig->mapping) {
+						changes.push_back(pr.first->change);
+						values.push_back(pr.first->value);
+					}
+				}
+			}
+			idx++;
+		}
+		*/
 	}
 	bool NeuralLayer::optimize() {
 		if (optimizer.get() != nullptr) {

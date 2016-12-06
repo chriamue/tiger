@@ -48,6 +48,7 @@ namespace tgr {
 			Knowledge weightChanges;
 			Knowledge responses;
 			Knowledge responseChanges;
+
 			std::vector<std::shared_ptr<NeuralLayer>> children;
 			std::vector<NeuralLayer*> dependencies;
 			std::shared_ptr<NeuralOptimization> optimizer;
@@ -143,6 +144,7 @@ namespace tgr {
 			}
 			bool optimize();
 			void update();
+			void compile();
 			void evaluate();
 			void reset();
 			void initializeWeights(float minW=0.0f, float maxW=1.0f);
