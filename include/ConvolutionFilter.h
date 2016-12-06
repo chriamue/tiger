@@ -19,11 +19,13 @@
 * THE SOFTWARE.
 */
 #include "NeuralFilter.h"
+#include "NeuronFunction.h"
 namespace tgr {
 	class ConvolutionFilter :public NeuralFilter {
 	protected:
 		int kernelSize;
 		bool bias;
+		NeuronFunction transform;
 		std::vector<std::pair<int,int>> connectionMap;
 	public:
 		ConvolutionFilter( int width, int height, int kernelSize,int features, bool bias);
@@ -32,6 +34,8 @@ namespace tgr {
 		void setConnectionMap(const std::vector<std::pair<int, int>>& mapping) {
 			connectionMap = mapping;
 		}
+		virtual void evaluate() override;
+		virtual void backpropagate() override;
 		virtual void initialize(NeuralSystem& sys, const NeuronFunction& func) override;
 	};
 	typedef std::shared_ptr<ConvolutionFilter> ConvolutionFilterPtr;

@@ -452,7 +452,7 @@ bool TigerApp::initializeLeNet5() {
 	parse_mnist_labels(trainLabelFile, trainOutputData);
 	if (trainInputData.size() > 0) {
 		const Image1f& ref = trainInputData[0];
-		ConvolutionFilterPtr conv1(new ConvolutionFilter(ref.width, ref.height, 5, 6, true));
+		ConvolutionFilterPtr conv1(new ConvolutionFilter(ref.width, ref.height, 5, 6, false));
 		sys->add(conv1,Tanh());
 		std::vector<NeuralLayerPtr> all;
 		for (int i = 0; i < conv1->getOutputSize(); i++) {

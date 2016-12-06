@@ -44,10 +44,6 @@ namespace tgr {
 			std::vector<Neuron> neurons;
 			std::vector<Neuron> biasNeurons;
 			std::vector<std::shared_ptr<Signal>> signals;
-			Knowledge weights;
-			Knowledge weightChanges;
-			Knowledge responses;
-			Knowledge responseChanges;
 
 			std::vector<std::shared_ptr<NeuralLayer>> children;
 			std::vector<NeuralLayer*> dependencies;
@@ -67,6 +63,12 @@ namespace tgr {
 			int width;
 			int height;
 			int bins;
+			Knowledge weights;
+			Knowledge weightChanges;
+			Knowledge biasWeights;
+			Knowledge biasWeightChanges;
+			Knowledge responses;
+			Knowledge responseChanges;
 
 			typedef Neuron ValueType;
 			typedef typename std::vector<ValueType>::iterator iterator;
