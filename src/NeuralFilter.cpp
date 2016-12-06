@@ -9,5 +9,8 @@ namespace tgr {
 		for (NeuralLayerPtr layer : inputLayers) {
 			layer->backpropagate();
 		}
+		for (NeuralLayerPtr layer : outputLayers) {
+			if(layer->isLeaf())layer->backpropagate();
+		}
 	}
 }
