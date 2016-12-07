@@ -38,12 +38,6 @@ namespace tgr {
 	}
 	NeuralLayer::NeuralLayer(int width, int height, int bins, bool bias, const NeuronFunction& func) :width(width), height(height), bins(bins),bias(bias),id(-1),visited(false),trainable(true),residualError(0.0) {
 		neurons.resize(width*height*bins, Neuron(func));
-		if (bias) {
-			biasNeurons.resize(width*height, Bias());
-			for (size_t idx = 0; idx < neurons.size(); idx++) {
-				MakeConnection(&biasNeurons[idx], &neurons[idx]);
-			}
-		}
 		graph.reset(new GraphData(getName()));
 	}
 	std::shared_ptr<aly::NeuralFlowPane> NeuralLayer::getFlow() const {
@@ -69,12 +63,6 @@ namespace tgr {
 	}
 	NeuralLayer::NeuralLayer(const std::string& name,int width, int height, int bins,bool bias, const NeuronFunction& func) :name(name), width(width), height(height), bins(bins),bias(bias), id(-1), visited(false), trainable(true), residualError(0.0) {
 		neurons.resize(width*height*bins,Neuron(func));
-		if (bias) {
-			biasNeurons.resize(width*height, Bias());
-			for (size_t idx = 0; idx < neurons.size(); idx++) {
-				MakeConnection(&biasNeurons[idx], &neurons[idx]);
-			}
-		}
 		graph.reset(new GraphData(getName()));
 	}
 	double NeuralLayer::accumulate(double r) {
@@ -84,12 +72,6 @@ namespace tgr {
 	}
 	void NeuralLayer::resize(int w, int h, int b) {
 		neurons.resize(w * h * b);
-		if (bias) {
-			biasNeurons.resize(width*height, Bias());
-			for (size_t idx = 0; idx < neurons.size(); idx++) {
-				MakeConnection(&biasNeurons[idx], &neurons[idx]);
-			}
-		}
 		neurons.shrink_to_fit();
 		width = w;
 		height = h;
@@ -137,12 +119,12 @@ namespace tgr {
 	struct SignalCompare {
 		bool operator()(const SignalPtr& lhs, const SignalPtr& rhs) const
 		{
-			return lhs.get()< rhs.get();
+			return lhs->id< rhs->id;
 		}
 	};
 	void NeuralLayer::update() {
-		signals.clear();
 		int idx = 0;
+		signals.clear();
 		std::set<SignalPtr, SignalCompare> tmp;
 		for (Neuron& n : neurons) {
 			for (SignalPtr sig : n.getInput()) {
@@ -159,39 +141,36 @@ namespace tgr {
 			sig->change = &weightChanges[n];
 			n++;
 		}
-
 		tmp.clear();
-		for (Neuron& n : biasNeurons) {
-			for (SignalPtr sig : n.getInput()) {
-				tmp.insert(sig);
-			}
-		}
-		N = tmp.size();
-		biasWeights.resize(N);
-		biasWeightChanges.resize(N);
-		n = 0;
-		for (SignalPtr sig : tmp) {
-			sig->weight = &biasWeights[n];
-			sig->change = &biasWeightChanges[n];
-			n++;
-		}
-
 		N = neurons.size();
-		size_t M = biasNeurons.size();
-		responses.resize(N+M);
-		responseChanges.resize(N+M);
+		responses.resize(N);
+		responseChanges.resize(N);
 		for (size_t n = 0; n < N; n++) {
 			Neuron& neuron = neurons[n];
 			neuron.value = &responses[n];
 			neuron.change = &responseChanges[n];
 			*neuron.value = 0.0f;
 		}
-		for (size_t n = 0; n < M; n++) {
-			Neuron& neuron = biasNeurons[n];
-			neuron.value = &responses[n+N];
-			neuron.change = &responseChanges[n + N];
-			*neuron.value = 1.0f;
+		
+		if (bias) {
+			int N = width*height;
+			biasNeurons.resize(N, Bias());
+			biasWeights.resize(N);
+			biasWeightChanges.resize(N);
+			biasResponses.resize(N);
+			biasResponseChanges.resize(N);
+			for (size_t n = 0; n < N; n++) {
+				Neuron& neuron = biasNeurons[n];
+				SignalPtr sig = MakeConnection(&neuron, &neurons[n]);
+				sig->weight = &biasWeights[n];
+				sig->change = &biasWeightChanges[n];
+				neuron.value = &biasResponses[n];
+				neuron.change = &biasResponseChanges[n];
+				*neuron.value = 1.0f;
+				signals.push_back(sig);
+			}
 		}
+		
 	}
 	bool NeuralLayer::optimize() {
 		if (optimizer.get() != nullptr) {

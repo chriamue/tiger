@@ -44,14 +44,26 @@ namespace tgr {
 	};
 	class Neuron;
 	class Signal {
+	protected:
+		static int64_t ID_COUNT;
 	public:
 		float* weight;
 		float* change;
+		int64_t id;
 		std::map<const Neuron*,std::vector<Neuron*>> mapping;
-		Signal() :weight(nullptr),change(nullptr) {
+		Signal() :weight(nullptr),change(nullptr),id(ID_COUNT++) {
 
 		}
-		
+		Signal(const Signal& sig) :weight(sig.weight), change(sig.change), id(sig.id) {
+
+		}
+		Signal& operator=(const Signal& other)
+		{
+			weight = other.weight;
+			change = other.change;
+			id = other.id;
+			return *this;
+		}
 		std::vector<Neuron*>& operator[](const Neuron* n) {
 			return mapping.at(n);
 		}

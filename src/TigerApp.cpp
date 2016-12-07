@@ -452,7 +452,8 @@ bool TigerApp::initializeLeNet5() {
 	parse_mnist_labels(trainLabelFile, trainOutputData);
 	if (trainInputData.size() > 0) {
 		const Image1f& ref = trainInputData[0];
-		ConvolutionFilterPtr conv1(new ConvolutionFilter(ref.width, ref.height, 5, 6, false));
+		ConvolutionFilterPtr conv1(new ConvolutionFilter(ref.width, ref.height, 5, 6,true));
+		conv1->setName("conv1");
 		sys->add(conv1,Tanh());
 		std::vector<NeuralLayerPtr> all;
 		for (int i = 0; i < conv1->getOutputSize(); i++) {
@@ -463,6 +464,7 @@ bool TigerApp::initializeLeNet5() {
 		}
 
 		ConvolutionFilterPtr conv2(new ConvolutionFilter(all, 5, 16, true));
+		conv1->setName("conv2");
 		std::vector<std::pair<int, int>> connectionTable;
 		for (int ii = 0; ii < 6; ii++) {
 			for (int jj = 0; jj < 16; jj++) {
@@ -480,6 +482,7 @@ bool TigerApp::initializeLeNet5() {
 			avg2->setName(MakeString() << "Sub-Sample [" << i << "]");
 			sys->add(avg2);
 			ConvolutionFilterPtr conv3(new ConvolutionFilter(avg2->getOutputLayer(0), 5, 1, true));
+			conv1->setName("conv3");
 			sys->add(conv3);
 			all.push_back(conv3->getOutputLayer(0));
 		}

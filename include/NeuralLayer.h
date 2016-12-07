@@ -69,7 +69,8 @@ namespace tgr {
 			Knowledge biasWeightChanges;
 			Knowledge responses;
 			Knowledge responseChanges;
-
+			Knowledge biasResponses;
+			Knowledge biasResponseChanges;
 			typedef Neuron ValueType;
 			typedef typename std::vector<ValueType>::iterator iterator;
 			typedef typename std::vector<ValueType>::const_iterator const_iterator;

@@ -35,6 +35,7 @@ namespace tgr {
 	}
 	Neuron::Neuron(const NeuronFunction& func) :transform(func),value(nullptr),change(nullptr),active(false) {
 	}
+	int64_t Signal::ID_COUNT = 0;
 	std::vector<Neuron*> Neuron::getInputNeurons()  const {
 		std::vector<Neuron*> out;
 		for (SignalPtr sig : input) {

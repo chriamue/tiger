@@ -112,7 +112,6 @@ namespace tgr {
 		leafs.clear();
 		std::list<NeuralLayerPtr> q;
 		for (NeuralLayerPtr layer : layers) {
-			layer->update();
 			layer->setVisited(false);
 			if (layer->isRoot()) {
 				roots.push_back(layer);
@@ -123,6 +122,7 @@ namespace tgr {
 		int index = 0;
 		while (!q.empty()) {
 			NeuralLayerPtr layer = q.front();
+			if (!layer->isVisited())layer->update();
 			q.pop_front();
 			layer->setId(index++);
 			layer->setVisited(true);

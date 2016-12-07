@@ -45,45 +45,36 @@ namespace tgr {
 		outputLayers.resize(features);
 	}
 	void ConvolutionFilter::evaluate() {
-		/*
+		
+	
 		int pad = kernelSize / 2;
 		int width = inputLayers[0]->width;
 		int height = inputLayers[0]->height;
 		int ow = width - 2 * pad;
 		int oh = height - 2 * pad;
 		int K = kernelSize*kernelSize;
+		bool hasBias;
 		const Knowledge& inResponses = inputLayers.front()->responses;
 		for (NeuralLayerPtr layer : outputLayers) {
 			const Knowledge& weights = layer->weights;
+			const Knowledge& biasWeights = layer->biasWeights;
 			Knowledge& outResponses = layer->responses;
-			std::cout << "Layer: " << layer->getName() << std::endl;
-			std::cout << "Input Weights " << weights.size() << std::endl;
-			std::cout << "Input Responses " << inResponses.size() << std::endl;
-			std::cout << "Output Responses " << outResponses.size() << std::endl;
-//#pragma omp parallel for
-
+			hasBias = (biasWeights.size() > 0);
+#pragma omp parallel for
 			for (int j = 0; j < oh; j++) {
 				for (int i = 0; i < ow; i++) {
-					float sum = 0;
-					float wsum = 0;
-					float rsum = 0;
-					int idx = (i + j*ow);
+					int idx = i + j*ow;
+					float sum=(hasBias)?biasWeights[idx]:0.0f;
 					for (int jj = 0; jj < kernelSize; jj++) {
 						for (int ii = 0; ii < kernelSize; ii++) {
-							float w = weights[idx + ii + kernelSize*jj];
-							float r = inResponses[(i + ii) + width*(j + jj)];
-							sum += r*w;
-							wsum += w;
+							sum += weights[ii + kernelSize*jj] * inResponses[(i + ii) + width*(j + jj)];
 						}
 					}
-					//std::cout << "OUT " << sum << " " << wsum <<" "<<rsum<< std::endl;
-					outResponses[i + j*ow] = transform.forward(sum);
+					outResponses[idx] = transform.forward(sum/(weights.size()+biasWeights.size()));
 				}
-			}
-			
+			}	
 		}
-		*/
-		NeuralFilter::evaluate();
+		//NeuralFilter::evaluate();
 	}
 	void ConvolutionFilter::backpropagate() {
 		NeuralFilter::backpropagate();
