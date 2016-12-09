@@ -23,6 +23,9 @@
 #include "AlloyDrawUtil.h"
 #include "TigerApp.h"
 #include "NeuralFlowPane.h"
+#include <cereal/archives/xml.hpp>
+#include <cereal/archives/json.hpp>
+#include <cereal/archives/portable_binary.hpp>
 using namespace aly;
 namespace tgr {
 	std::string MakeID(int len) {
@@ -33,9 +36,69 @@ namespace tgr {
 		}
 		return ss.str();
 	}
+	void WriteNeuralStateToFile(const std::string& file, const NeuralKnowledge& params) {
+		std::string ext = GetFileExtension(file);
+		if (ext == "json") {
+			std::ofstream os(file);
+			cereal::JSONOutputArchive archive(os);
+			archive(cereal::make_nvp("neuralstate", params));
+		}
+		else if (ext == "xml") {
+			std::ofstream os(file);
+			cereal::XMLOutputArchive archive(os);
+			archive(cereal::make_nvp("neuralstate", params));
+		}
+		else {
+			std::ofstream os(file, std::ios::binary);
+			cereal::PortableBinaryOutputArchive archive(os);
+			archive(cereal::make_nvp("neuralstate", params));
+		}
+	}
+	void ReadNeuralStateFromFile(const std::string& file, NeuralKnowledge& params) {
+		std::string ext = GetFileExtension(file);
+		if (ext == "json") {
+			std::ifstream os(file);
+			cereal::JSONInputArchive archive(os);
+			archive(cereal::make_nvp("neuralstate", params));
+		}
+		else if (ext == "xml") {
+			std::ifstream os(file);
+			cereal::XMLInputArchive archive(os);
+			archive(cereal::make_nvp("neuralstate", params));
+		}
+		else {
+			std::ifstream os(file, std::ios::binary);
+			cereal::PortableBinaryInputArchive archive(os);
+			archive(cereal::make_nvp("neuralstate", params));
+		}
+	}
 	void NeuralLayer::set(const Knowledge& k, const Knowledge& bk) {
 		weights = k;
 		biasWeights = bk;
+	}
+	void NeuralLayer::set(const NeuralState& state) {
+		name = state.name;
+		weights = state.weights;
+		weightChanges = state.weightChanges;
+		biasWeights = state.biasWeights;
+		biasWeightChanges = state.biasWeightChanges;
+		responses = state.responses;
+		responseChanges = state.responseChanges;
+		biasResponses = state.biasResponses;
+		biasResponseChanges = state.biasResponseChanges;
+	}
+	NeuralState NeuralLayer::get() const {
+		NeuralState state;
+		state.name = name;
+		state.weights = weights;
+		state.weightChanges = weightChanges;
+		state.biasWeights = biasWeights;
+		state.biasWeightChanges = biasWeightChanges;
+		state.responses = responses;
+		state.responseChanges = responseChanges;
+		state.biasResponses = biasResponses;
+		state.biasResponseChanges = biasResponseChanges;
+		return state;
 	}
 	NeuralLayer::NeuralLayer(int width, int height, int bins, bool bias, const NeuronFunction& func) :width(width), height(height), bins(bins),bias(bias),compiled(false),id(-1),visited(false),trainable(true),residualError(0.0) {
 		neurons.resize(width*height*bins, Neuron(func));
@@ -77,14 +140,6 @@ namespace tgr {
 		width = w;
 		height = h;
 		bins = b;
-	}
-	std::vector<SignalPtr> NeuralLayer::getBiasSignals() const {
-		std::vector<SignalPtr> signals;
-		for (const Neuron& n : biasNeurons) {
-			SignalPtr sig = n.output.front();
-			signals.push_back(sig);
-		}
-		return signals;
 	}
 	void NeuralLayer::backpropagate() {
 		int N = (int)neurons.size();

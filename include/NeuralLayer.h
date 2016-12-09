@@ -39,6 +39,46 @@ namespace aly {
 namespace tgr {
 	std::string MakeID(int len=8);
 	class NeuralSystem;
+	struct NeuralState {
+		std::string name;
+		Knowledge weights;
+		Knowledge weightChanges;
+		Knowledge biasWeights;
+		Knowledge biasWeightChanges;
+		Knowledge responses;
+		Knowledge responseChanges;
+		Knowledge biasResponses;
+		Knowledge biasResponseChanges;
+		template<class Archive> void save(Archive & ar) const
+		{
+			ar(
+				CEREAL_NVP(name),
+				CEREAL_NVP(weights), 
+				CEREAL_NVP(weightChanges), 
+				CEREAL_NVP(biasWeights), 
+				CEREAL_NVP(biasWeightChanges), 
+				CEREAL_NVP(responses),
+				CEREAL_NVP(responseChanges), 
+				CEREAL_NVP(biasResponses), 
+				CEREAL_NVP(biasResponseChanges));
+		}
+		template<class Archive> void load(Archive & ar)
+		{
+			ar(
+				CEREAL_NVP(name),
+				CEREAL_NVP(weights),
+				CEREAL_NVP(weightChanges),
+				CEREAL_NVP(biasWeights),
+				CEREAL_NVP(biasWeightChanges),
+				CEREAL_NVP(responses),
+				CEREAL_NVP(responseChanges),
+				CEREAL_NVP(biasResponses),
+				CEREAL_NVP(biasResponseChanges));
+		}
+	};
+	void WriteNeuralStateToFile(const std::string& file, const NeuralKnowledge& params);
+	void ReadNeuralStateFromFile(const std::string& file, NeuralKnowledge& params);
+
 	class NeuralLayer {
 		protected:
 			std::vector<Neuron> neurons;
@@ -120,6 +160,8 @@ namespace tgr {
 			aly::GraphDataPtr getGraph() const {
 				return graph;
 			}
+			void set(const NeuralState& state);
+			NeuralState get() const;
 			void expand();
 			void setResidual(float r) {
 				residualError = r;
@@ -167,7 +209,6 @@ namespace tgr {
 			const std::vector<std::shared_ptr<Signal>>& getSignals() const {
 				return signals;
 			}
-			std::vector<SignalPtr> getBiasSignals() const;
 			std::vector<std::shared_ptr<NeuralLayer>>& getChildren() {
 				return children;
 			}
