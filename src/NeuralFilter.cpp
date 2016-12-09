@@ -6,11 +6,11 @@ namespace tgr {
 		}
 	}
 	void NeuralFilter::backpropagate() {
+		for (NeuralLayerPtr layer : outputLayers) {
+			if (layer->isLeaf())layer->backpropagate();
+		}
 		for (NeuralLayerPtr layer : inputLayers) {
 			layer->backpropagate();
-		}
-		for (NeuralLayerPtr layer : outputLayers) {
-			if(layer->isLeaf())layer->backpropagate();
 		}
 	}
 }

@@ -7,14 +7,21 @@
 #include <cereal/archives/portable_binary.hpp>
 using namespace aly;
 namespace tgr {
-	Knowledge& NeuralKnowledge::get(const NeuralLayer& layer) {
+	Knowledge& NeuralKnowledge::getWeights(const NeuralLayer& layer) {
 		return weights.at(layer.getId());
 	}
-	const Knowledge& NeuralKnowledge::get(const NeuralLayer& layer) const {
+	const Knowledge& NeuralKnowledge::getWeights(const NeuralLayer& layer) const {
 		return weights.at(layer.getId());
+	}
+	Knowledge& NeuralKnowledge::getBiasWeights(const NeuralLayer& layer) {
+		return biasWeights.at(layer.getId());
+	}
+	const Knowledge& NeuralKnowledge::getBiasWeights(const NeuralLayer& layer) const {
+		return biasWeights.at(layer.getId());
 	}
 	void NeuralKnowledge::add(const NeuralLayer& layer) {
 		weights[layer.getId()] = layer.getWeights();
+		biasWeights[layer.getId()] = layer.getBiasWeights();
 	}
 	void NeuralKnowledge::set(const NeuralSystem& sys) {
 		weights.clear();

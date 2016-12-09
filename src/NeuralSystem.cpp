@@ -32,7 +32,7 @@ namespace tgr {
 	void NeuralSystem::setKnowledge(const NeuralKnowledge& k) {
 		knowledge = k;
 		for (NeuralLayerPtr layer : layers) {
-			layer->set(k.get(*layer));
+			layer->set(k.getWeights(*layer), k.getBiasWeights(*layer));
 		}
 	}
 	bool NeuralSystem::optimize() {
@@ -122,7 +122,7 @@ namespace tgr {
 		int index = 0;
 		while (!q.empty()) {
 			NeuralLayerPtr layer = q.front();
-			if (!layer->isVisited())layer->update();
+			if (!layer->isVisited())layer->compile();
 			q.pop_front();
 			layer->setId(index++);
 			layer->setVisited(true);

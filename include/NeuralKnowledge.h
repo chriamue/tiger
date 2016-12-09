@@ -13,6 +13,7 @@ namespace tgr {
 	class NeuralKnowledge {
 	protected:
 		std::map<int, Knowledge> weights;
+		std::map<int, Knowledge> biasWeights;
 		std::string name;
 		std::string file;
 	public:
@@ -29,8 +30,11 @@ namespace tgr {
 		void setFile(const std::string& f) {
 			file = f;
 		}
-		Knowledge& get(const NeuralLayer& layer);
-		const Knowledge& get(const NeuralLayer& layer) const;
+		Knowledge& getWeights(const NeuralLayer& layer);
+		const Knowledge& getWeights(const NeuralLayer& layer) const;
+
+		Knowledge& getBiasWeights(const NeuralLayer& layer);
+		const Knowledge& getBiasWeights(const NeuralLayer& layer) const;
 		void clear() {
 			weights.clear();
 		}
@@ -38,11 +42,11 @@ namespace tgr {
 		void set(const NeuralSystem& sys);
 		template<class Archive> void save(Archive & ar) const
 		{
-			ar(CEREAL_NVP(name), CEREAL_NVP(file), CEREAL_NVP(weights));
+			ar(CEREAL_NVP(name), CEREAL_NVP(file), CEREAL_NVP(weights), CEREAL_NVP(biasWeights));
 		}
 		template<class Archive> void load(Archive & ar)
 		{
-			ar(CEREAL_NVP(name), CEREAL_NVP(file), CEREAL_NVP(weights));
+			ar(CEREAL_NVP(name), CEREAL_NVP(file), CEREAL_NVP(weights), CEREAL_NVP(biasWeights));
 		}
 	};
 	void WriteNeuralKnowledgeToFile(const std::string& file, const NeuralKnowledge& params);

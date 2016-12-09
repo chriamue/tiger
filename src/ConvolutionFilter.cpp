@@ -45,8 +45,6 @@ namespace tgr {
 		outputLayers.resize(features);
 	}
 	void ConvolutionFilter::evaluate() {
-		
-	
 		int pad = kernelSize / 2;
 		int width = inputLayers[0]->width;
 		int height = inputLayers[0]->height;
@@ -77,7 +75,73 @@ namespace tgr {
 		//NeuralFilter::evaluate();
 	}
 	void ConvolutionFilter::backpropagate() {
-		NeuralFilter::backpropagate();
+		for (NeuralLayerPtr layer : outputLayers) {
+			if (layer->isLeaf())layer->backpropagate();
+		}
+		int pad = kernelSize / 2;
+		int width = inputLayers[0]->width;
+		int height = inputLayers[0]->height;
+		int ow = width - 2 * pad;
+		int oh = height - 2 * pad;
+		int K = kernelSize*kernelSize;
+		int M = (int)outputLayers.size();
+		bool hasBias;
+		const Knowledge& inResponses = inputLayers.front()->responses;
+		Knowledge& inResponseChanges = inputLayers.front()->responseChanges;
+		inResponseChanges.setZero();
+		for (NeuralLayerPtr layer : outputLayers) {
+			const Knowledge& weights = layer->weights;
+			const Knowledge& biasWeights = layer->biasWeights;
+			Knowledge& outResponses = layer->responses;
+			Knowledge& outBiasResponseChanges = layer->biasResponseChanges;
+			const Knowledge& outResponseChanges = layer->responseChanges;
+			outBiasResponseChanges.setZero();
+			Knowledge& biasResponses = layer->biasResponses;
+			hasBias = (biasWeights.size() > 0);
+#pragma omp parallel for
+			for (int j = 0; j < oh; j++) {
+				for (int i = 0; i < ow; i++) {
+					int idx = i + j*ow;
+					float change = outResponseChanges[idx];
+					if(hasBias)outBiasResponseChanges[idx] = biasWeights[0] * change*transform.change(biasResponses[idx]);
+					for (int jj = 0; jj < kernelSize; jj++) {
+						for (int ii = 0; ii < kernelSize; ii++) {
+							int shifted=(i + ii) + width*(j + jj);
+							inResponseChanges[shifted] += weights[ii + kernelSize*jj] * change;
+							
+						}
+					}
+				}
+			}
+		}
+#pragma omp parallel for
+		for (int j = 0; j < height; j++) {
+			for (int i = 0; i < width; i++) {
+				int idx = i + j*width;
+				inResponseChanges[idx] *= transform.change(inResponses[idx]) / M;
+			}
+		}
+		for (NeuralLayerPtr layer : outputLayers) {
+			Knowledge& weightChanges = layer->weightChanges;
+			Knowledge& biasWeightChanges = layer->biasWeightChanges;
+			Knowledge& outBiasResponseChanges = layer->biasResponseChanges;
+			Knowledge& biasResponses = layer->biasResponses;
+#pragma omp parallel for
+			for (int j = 0; j < oh; j++) {
+				for (int i = 0; i < ow; i++) {
+					int idx = i + ow*j;
+					float inResponse = inResponses[idx];
+					if(hasBias)biasWeightChanges[idx] += biasResponses[idx] *outBiasResponseChanges[idx];
+					for (int jj = 0; jj < kernelSize; jj++) {
+						for (int ii = 0; ii < kernelSize; ii++) {
+							weightChanges[ii + kernelSize*jj] += inResponse*inResponseChanges[(i + ii) + width*(j + jj)];
+						}
+					}
+				}
+			}
+		}
+
+		//NeuralFilter::backpropagate();
 		/*
 		for (NeuralLayerPtr layer : inputLayers) {
 			layer->backpropagate();

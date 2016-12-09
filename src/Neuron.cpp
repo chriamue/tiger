@@ -91,13 +91,10 @@ namespace tgr {
 		for (SignalPtr sig : input) {
 			sum2 = 0.0f;
 			std::vector<Neuron*>& input2 = sig->get(this);
-			//count = (int)input2.size();
-			//if (count > 0) {
-				for (Neuron* inner : input2) {
-					sum2 += *inner->value;
-				}
-				*sig->change += *change * sum2;
-			//}
+			for (Neuron* inner : input2) {
+				sum2 += *inner->value;
+			}
+			*sig->change += *change * sum2;
 		}
 		return *change;
 	}

@@ -33,10 +33,11 @@ namespace tgr {
 		}
 		return ss.str();
 	}
-	void NeuralLayer::set(const Knowledge& k) {
+	void NeuralLayer::set(const Knowledge& k, const Knowledge& bk) {
 		weights = k;
+		biasWeights = bk;
 	}
-	NeuralLayer::NeuralLayer(int width, int height, int bins, bool bias, const NeuronFunction& func) :width(width), height(height), bins(bins),bias(bias),id(-1),visited(false),trainable(true),residualError(0.0) {
+	NeuralLayer::NeuralLayer(int width, int height, int bins, bool bias, const NeuronFunction& func) :width(width), height(height), bins(bins),bias(bias),compiled(false),id(-1),visited(false),trainable(true),residualError(0.0) {
 		neurons.resize(width*height*bins, Neuron(func));
 		graph.reset(new GraphData(getName()));
 	}
@@ -122,7 +123,8 @@ namespace tgr {
 			return lhs->id< rhs->id;
 		}
 	};
-	void NeuralLayer::update() {
+	void NeuralLayer::compile() {
+		if (compiled)return;
 		int idx = 0;
 		signals.clear();
 		std::set<SignalPtr, SignalCompare> tmp;
@@ -170,7 +172,7 @@ namespace tgr {
 				signals.push_back(sig);
 			}
 		}
-		
+		compiled = true;
 	}
 	bool NeuralLayer::optimize() {
 		if (optimizer.get() != nullptr) {

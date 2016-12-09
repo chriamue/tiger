@@ -51,6 +51,7 @@ namespace tgr {
 			std::string name;
 			
 			bool bias;
+			bool compiled;
 			bool visited;
 			bool trainable;
 			double residualError;
@@ -81,7 +82,7 @@ namespace tgr {
 			void setId(int i) {
 				id = i;
 			}
-			void set(const Knowledge& k);
+			void set(const Knowledge& k,const Knowledge& bk);
 			Knowledge& getWeights() {
 				return weights;
 			}
@@ -96,6 +97,9 @@ namespace tgr {
 			}
 			const Knowledge& getWeights() const {
 				return weights;
+			}
+			const Knowledge& getBiasWeights() const {
+				return biasWeights;
 			}
 			const Knowledge& getResponses() const {
 				return responses;
@@ -146,7 +150,6 @@ namespace tgr {
 				sys = s;
 			}
 			bool optimize();
-			void update();
 			void compile();
 			void evaluate();
 			void reset();
