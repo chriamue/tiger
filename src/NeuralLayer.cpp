@@ -36,7 +36,7 @@ namespace tgr {
 		}
 		return ss.str();
 	}
-	void WriteNeuralStateToFile(const std::string& file, const NeuralKnowledge& params) {
+	void WriteNeuralStateToFile(const std::string& file, const NeuralState& params) {
 		std::string ext = GetFileExtension(file);
 		if (ext == "json") {
 			std::ofstream os(file);
@@ -54,7 +54,7 @@ namespace tgr {
 			archive(cereal::make_nvp("neuralstate", params));
 		}
 	}
-	void ReadNeuralStateFromFile(const std::string& file, NeuralKnowledge& params) {
+	void ReadNeuralStateFromFile(const std::string& file, NeuralState& params) {
 		std::string ext = GetFileExtension(file);
 		if (ext == "json") {
 			std::ifstream os(file);
@@ -76,18 +76,18 @@ namespace tgr {
 		weights = k;
 		biasWeights = bk;
 	}
-	void NeuralLayer::set(const NeuralState& state) {
+	void NeuralLayer::setState(const NeuralState& state) {
 		name = state.name;
-		weights = state.weights;
-		weightChanges = state.weightChanges;
-		biasWeights = state.biasWeights;
-		biasWeightChanges = state.biasWeightChanges;
-		responses = state.responses;
-		responseChanges = state.responseChanges;
-		biasResponses = state.biasResponses;
-		biasResponseChanges = state.biasResponseChanges;
+		weights.set(state.weights);
+		weightChanges.set(state.weightChanges);
+		biasWeights.set(state.biasWeights);
+		biasWeightChanges.set(state.biasWeightChanges);
+		responses.set(state.responses);
+		responseChanges.set(state.responseChanges);
+		biasResponses.set(state.biasResponses);
+		biasResponseChanges.set(state.biasResponseChanges);
 	}
-	NeuralState NeuralLayer::get() const {
+	NeuralState NeuralLayer::getState() const {
 		NeuralState state;
 		state.name = name;
 		state.weights = weights;
@@ -150,6 +150,11 @@ namespace tgr {
 		}
 		residual /= N;
 		//std::cout << "Backprop [" << getName() << "|" << N << "] Residual="<<residual << std::endl;
+	}
+	void NeuralLayer::setRegionDirty(bool b) {
+		if (layerRegion.get() != nullptr) {
+			layerRegion->setDirty(b);
+		}
 	}
 	void NeuralLayer::evaluate() {
 		int N = (int)neurons.size();

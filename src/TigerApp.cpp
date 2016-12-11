@@ -47,6 +47,7 @@ TigerApp::TigerApp(int example) :
 void TigerApp::setSampleIndex(int idx){
 	bool dirty = (sampleIndex.toInteger() != idx);
 	sampleIndex.setValue(idx);
+	tweenRegion->setValue(idx);
 	valueRegion->setNumberValue(sampleIndex);
 	sys->getInput()->set(trainInputData[idx]);
 	sys->evaluate();
@@ -65,7 +66,8 @@ void TigerApp::setSampleRange(int mn, int mx){
 	tweenRegion->setMaxValue(Integer(mx));
 	sampleIndex.setValue(aly::clamp(sampleIndex.toInteger(), mn, mx));
 	tweenRegion->setValue(sampleIndex.toDouble());
-	worker->setSamples(minIndex,maxIndex);
+	worker->setSampleRange(minIndex,maxIndex);
+	worker->setSelectedSamples(minIndex, maxIndex);
 }
 bool TigerApp::init(Composite& rootNode) {
 
@@ -128,8 +130,6 @@ bool TigerApp::init(Composite& rootNode) {
 			val = maxIndex;
 			field->setNumberValue(Integer(val));
 		}
-		tweenRegion->setValue(val);
-		
 		setSampleIndex(val);
 	};
 	tweenRegion->setOnChangeEvent([this](const aly::Number& value) {
@@ -342,7 +342,9 @@ bool TigerApp::init(Composite& rootNode) {
 			running = false;
 			stopButton->setVisible(false);
 			playButton->setVisible(true);
-			setSampleIndex(sampleIndex.toInteger());
+			AlloyApplicationContext()->addDeferredTask([this]() {
+				setSampleIndex(sampleIndex.toInteger());
+			});
 		}
 		AlloyApplicationContext()->addDeferredTask([this]() {
 			timelineSlider->setUpperValue((int)worker->getIteration());
@@ -405,6 +407,58 @@ bool TigerApp::onEventHandler(AlloyContext* context, const aly::InputEvent& e) {
 	}
 	return false;
 }
+bool TigerApp::initializeWaves() {
+	int w = 16;
+	int h = 16;
+	int dir = 4;
+	float freq = 0.1f;
+	int shifts = 4;
+	ConvolutionFilterPtr firstFilter(new ConvolutionFilter(w, h, 5, 1, true));
+	sys->add(firstFilter);
+
+	FullyConnectedFilterPtr secondFilter(new FullyConnectedFilter("Output Layer", firstFilter->getOutputLayer(0), dir, 1, true));
+	sys->add(secondFilter);
+
+	secondFilter->getOutputLayer(0)->setFunction(tgr::Linear());
+	sys->setInput(firstFilter->getInputLayer(0));
+	sys->setOutput(secondFilter->getOutputLayer(0));
+	worker.reset(new NeuralRuntime(sys));
+
+	worker->inputSampler = [this](const NeuralLayerPtr& input, int idx) {
+		aly::Image1f& inputData = trainInputData[idx];
+		input->set(inputData);
+	};
+	worker->outputSampler = [this,dir](std::vector<float>& outputData, int idx) {
+		int out = trainOutputData[idx];
+		outputData.resize(dir);
+		for (int d = 0; d < dir; d++) {
+			outputData[d] = (out==d)?1.0f:0.0f;
+		}
+	};
+
+	Image1f img(w, h);
+	std::vector<int> samples;
+	for (int d = 0; d < dir; d++) {
+		for (int s = 0; s < shifts; s++) {
+			for (int i = 0; i < w; i++) {
+				for (int j = 0; j < h; j++) {
+					float x = std::cos(d*ALY_PI / dir)*(i - w*0.5f);
+					float y = std::sin(d*ALY_PI / dir)*(j - h*0.5f);
+					float t = x + y;
+					img(i, j).x = std::cos((2 * t*freq+(s+0.5f)/(float)shifts)*ALY_PI);
+				}
+			}
+			samples.push_back(int(samples.size()));
+			trainInputData.push_back(img);
+			trainOutputData.push_back(d);
+		}
+	}
+	sys->initialize();
+	setSampleRange(0, (int)trainInputData.size() - 1);
+	setSampleIndex(0);
+	return true;
+}
+
 bool TigerApp::initializeXOR() {
 	FullyConnectedFilterPtr firstFilter(new FullyConnectedFilter("First Layer",2,2, 2, 2,true));
 	sys->add(firstFilter);
@@ -452,7 +506,7 @@ bool TigerApp::initializeLeNet5() {
 	parse_mnist_labels(trainLabelFile, trainOutputData);
 	if (trainInputData.size() > 0) {
 		const Image1f& ref = trainInputData[0];
-		ConvolutionFilterPtr conv1(new ConvolutionFilter(ref.width, ref.height, 5, 6,true));
+		ConvolutionFilterPtr conv1(new ConvolutionFilter(ref.width, ref.height, 5, 6,false));
 		conv1->setName("conv1");
 		sys->add(conv1,Tanh());
 		std::vector<NeuralLayerPtr> all;
@@ -504,12 +558,8 @@ bool TigerApp::initializeLeNet5() {
 		};
 		sys->initialize();
 		setSampleRange(0, (int)trainInputData.size() - 1);
-		setSampleIndex(sampleIndex.toInteger());
-		std::vector<int> samples;
-		for (int i = 0; i < trainInputData.size(); i += 100) {
-			samples.push_back(i);
-		}
-		
+		setSampleIndex(2600);
+		worker->setSelectedSamples(0, (int)trainInputData.size() - 1);
 		return true;
 	}
 	return false;
@@ -518,7 +568,8 @@ void TigerApp::initialize() {
 	sys.reset(new NeuralSystem(flowRegion));
 	switch (exampleIndex) {
 		case 0: initializeXOR(); break;
-		case 1: initializeLeNet5(); break;
+		case 1: initializeWaves(); break;
+		case 2: initializeLeNet5(); break;
 	}
 	sys->initialize(expandTree);
 }

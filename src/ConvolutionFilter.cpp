@@ -62,92 +62,136 @@ namespace tgr {
 			for (int j = 0; j < oh; j++) {
 				for (int i = 0; i < ow; i++) {
 					int idx = i + j*ow;
-					float sum=(hasBias)?biasWeights[idx]:0.0f;
+					float sum = (hasBias) ? biasWeights[idx] : 0.0f;
 					for (int jj = 0; jj < kernelSize; jj++) {
 						for (int ii = 0; ii < kernelSize; ii++) {
 							sum += weights[ii + kernelSize*jj] * inResponses[(i + ii) + width*(j + jj)];
 						}
 					}
-					outResponses[idx] = transform.forward(sum/(weights.size()+biasWeights.size()));
-				}
-			}	
-		}
-		//NeuralFilter::evaluate();
-	}
-	void ConvolutionFilter::backpropagate() {
-		for (NeuralLayerPtr layer : outputLayers) {
-			if (layer->isLeaf())layer->backpropagate();
-		}
-		int pad = kernelSize / 2;
-		int width = inputLayers[0]->width;
-		int height = inputLayers[0]->height;
-		int ow = width - 2 * pad;
-		int oh = height - 2 * pad;
-		int K = kernelSize*kernelSize;
-		int M = (int)outputLayers.size();
-		bool hasBias;
-		const Knowledge& inResponses = inputLayers.front()->responses;
-		Knowledge& inResponseChanges = inputLayers.front()->responseChanges;
-		inResponseChanges.setZero();
-		for (NeuralLayerPtr layer : outputLayers) {
-			const Knowledge& weights = layer->weights;
-			const Knowledge& biasWeights = layer->biasWeights;
-			Knowledge& outResponses = layer->responses;
-			Knowledge& outBiasResponseChanges = layer->biasResponseChanges;
-			const Knowledge& outResponseChanges = layer->responseChanges;
-			outBiasResponseChanges.setZero();
-			Knowledge& biasResponses = layer->biasResponses;
-			hasBias = (biasWeights.size() > 0);
-#pragma omp parallel for
-			for (int j = 0; j < oh; j++) {
-				for (int i = 0; i < ow; i++) {
-					int idx = i + j*ow;
-					float change = outResponseChanges[idx];
-					if(hasBias)outBiasResponseChanges[idx] = biasWeights[0] * change*transform.change(biasResponses[idx]);
-					for (int jj = 0; jj < kernelSize; jj++) {
-						for (int ii = 0; ii < kernelSize; ii++) {
-							int shifted=(i + ii) + width*(j + jj);
-							inResponseChanges[shifted] += weights[ii + kernelSize*jj] * change;
-							
-						}
-					}
+					outResponses[idx] = transform.forward(sum / (weights.size() + biasWeights.size()));
 				}
 			}
-		}
-#pragma omp parallel for
-		for (int j = 0; j < height; j++) {
-			for (int i = 0; i < width; i++) {
-				int idx = i + j*width;
-				inResponseChanges[idx] *= transform.change(inResponses[idx]) / M;
-			}
-		}
-		for (NeuralLayerPtr layer : outputLayers) {
-			Knowledge& weightChanges = layer->weightChanges;
-			Knowledge& biasWeightChanges = layer->biasWeightChanges;
-			Knowledge& outBiasResponseChanges = layer->biasResponseChanges;
-			Knowledge& biasResponses = layer->biasResponses;
-#pragma omp parallel for
-			for (int j = 0; j < oh; j++) {
-				for (int i = 0; i < ow; i++) {
-					int idx = i + ow*j;
-					float inResponse = inResponses[idx];
-					if(hasBias)biasWeightChanges[idx] += biasResponses[idx] *outBiasResponseChanges[idx];
-					for (int jj = 0; jj < kernelSize; jj++) {
-						for (int ii = 0; ii < kernelSize; ii++) {
-							weightChanges[ii + kernelSize*jj] += inResponse*inResponseChanges[(i + ii) + width*(j + jj)];
-						}
-					}
-				}
-			}
+			layer->setRegionDirty(true);
 		}
 
-		//NeuralFilter::backpropagate();
+	}
+	void ConvolutionFilter::backpropagate() {
+		NeuralFilter::backpropagate();
 		/*
-		for (NeuralLayerPtr layer : inputLayers) {
-			layer->backpropagate();
-		}
-		for (NeuralLayerPtr layer : outputLayers) {
-			if (layer->isLeaf())layer->backpropagate();
+		std::vector<NeuralState> inStates(inputLayers.size());
+		std::vector<NeuralState> outStates(outputLayers.size());
+		NeuralLayerPtr inLayer = inputLayers.front();
+		bool record = (inLayer->getName()=="Input Layer");
+		if (record) {
+			for (int n = 0; n < (int)inputLayers.size(); n++) {
+				NeuralLayerPtr layer = inputLayers[n];
+				NeuralState state = layer->getState();
+				WriteNeuralStateToFile(MakeString() << GetDesktopDirectory() << ALY_PATH_SEPARATOR << "orig_" << state.name << ".json", state);
+				inStates[n] = state;
+			}
+			for (int n = 0; n < (int)outputLayers.size(); n++) {
+				NeuralLayerPtr layer = outputLayers[n];
+				NeuralState state = layer->getState();
+				outStates[n] = state;
+			}
+			NeuralFilter::backpropagate();
+			for (int n = 0; n < (int)inputLayers.size(); n++) {
+				NeuralLayerPtr layer = inputLayers[n];
+				NeuralState state = layer->getState();
+				WriteNeuralStateToFile(MakeString() << GetDesktopDirectory() << ALY_PATH_SEPARATOR << "after_" << state.name << ".json", state);
+				layer->setState(inStates[n]);
+			}
+			for (int n = 0; n < (int)outputLayers.size(); n++) {
+				NeuralLayerPtr layer = outputLayers[n];
+				NeuralState state = layer->getState();
+				layer->setState(outStates[n]);
+			}
+
+			NeuralState inState;
+			for (NeuralLayerPtr layer : outputLayers) {
+				if (layer->isLeaf())layer->backpropagate();
+			}
+			int pad = kernelSize / 2;
+			int width = inLayer->width;
+			int height = inLayer->height;
+			int ow = width - 2 * pad;
+			int oh = height - 2 * pad;
+			int K = kernelSize*kernelSize;
+			int M = (int)outputLayers.size();
+			bool hasBias;
+			const Knowledge& inResponses = inLayer->responses;
+			Knowledge& inResponseChanges = inLayer->responseChanges;
+			inResponseChanges.setZero();
+			for (NeuralLayerPtr layer : outputLayers) {
+				//if (record) {
+				//	NeuralState outState = layer->getState();
+				//	WriteNeuralStateToFile(MakeString() << GetDesktopDirectory() << ALY_PATH_SEPARATOR << outState.name << ".json", outState);
+				//}
+				const Knowledge& weights = layer->weights;
+				const Knowledge& biasWeights = layer->biasWeights;
+				Knowledge& outResponses = layer->responses;
+				Knowledge& outBiasResponseChanges = layer->biasResponseChanges;
+				const Knowledge& outResponseChanges = layer->responseChanges;
+				outBiasResponseChanges.setZero();
+				//if (record) {
+				//	std::cout << "Backprop " << inLayer->getName() << " <- " << layer->getName() << " " << weights.size() << " " << outResponses.size() << " " << biasWeights.size() << std::endl;
+				//}
+				Knowledge& biasResponses = layer->biasResponses;
+				hasBias = (biasWeights.size() > 0);
+				for (int j = 0; j < oh; j++) {
+					for (int i = 0; i < ow; i++) {
+						int idx = i + j*ow;
+						float change = outResponseChanges[idx];
+						if (hasBias)outBiasResponseChanges[idx] = biasWeights[0] * change*transform.change(biasResponses[idx]);
+						for (int jj = 0; jj < kernelSize; jj++) {
+							for (int ii = 0; ii < kernelSize; ii++) {
+								int shifted = (i + ii) + width*(j + jj);
+								inResponseChanges[shifted] += 1.0f;// weights[ii + kernelSize*jj] * change;
+							}
+						}
+					}
+				}
+			}
+			for (int k = 0; k < 20; k++) {
+				std::cout << "Out response " << inResponseChanges[500+k] <<" "<<kernelSize<<" "<<ow<<" "<<oh<< std::endl;
+			}
+			
+#pragma omp parallel for
+			for (int j = 0; j < height; j++) {
+				for (int i = 0; i < width; i++) {
+					int idx = i + j*width;
+					inResponseChanges[idx] *= transform.change(inResponses[idx]) / M;
+				}
+			}
+			
+			for (NeuralLayerPtr layer : outputLayers) {
+				Knowledge& weightChanges = layer->weightChanges;
+				Knowledge& biasWeightChanges = layer->biasWeightChanges;
+				Knowledge& outBiasResponseChanges = layer->biasResponseChanges;
+				Knowledge& biasResponses = layer->biasResponses;
+#pragma omp parallel for
+				for (int j = 0; j < oh; j++) {
+					for (int i = 0; i < ow; i++) {
+						int idx = i + ow*j;
+						float inResponse = inResponses[idx];
+						if (hasBias)biasWeightChanges[idx] += biasResponses[idx] * outBiasResponseChanges[idx];
+						for (int jj = 0; jj < kernelSize; jj++) {
+							for (int ii = 0; ii < kernelSize; ii++) {
+								weightChanges[ii + kernelSize*jj] += inResponse*inResponseChanges[(i + ii) + width*(j + jj)];
+							}
+						}
+					}
+				}
+			}
+			if (record) {
+				for (int n = 0; n < (int)inputLayers.size(); n++) {
+					NeuralLayerPtr layer = inputLayers[n];
+					NeuralState state = layer->getState();
+					WriteNeuralStateToFile(MakeString() << GetDesktopDirectory() << ALY_PATH_SEPARATOR << "opt_" << state.name << ".json", state);
+				}
+			}
+		} else {
+			NeuralFilter::backpropagate();
 		}
 		*/
 	}

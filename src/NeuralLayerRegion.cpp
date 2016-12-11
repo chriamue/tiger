@@ -231,10 +231,9 @@ namespace aly {
 						nvgStroke(nvg);
 
 						float valSum = 0.0f;
-						int sz=(int)sig->mapping.size();
-						
+						int sz=(int)sig->forwardMapping.size();	
 						if (sz > 0) {
-							for (Neuron* ne : sig->get(&n)) {
+							for (Neuron* ne : sig->getForward(&n)) {
 								valSum += ne->normalizedValue();
 							}
 							nvgStrokeColor(nvg, Color(ColorMapToRGB(clamp(valSum/sz,0.0f,1.0f), ColorMap::RedToBlue)));

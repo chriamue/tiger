@@ -60,6 +60,7 @@ protected:
 	int exampleIndex;
 	bool initializeXOR();
 	bool initializeLeNet5();
+	bool initializeWaves();
 	void initialize();
 	void setSelectedLayer(tgr::NeuralLayer* layer);
 public:

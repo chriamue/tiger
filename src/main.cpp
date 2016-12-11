@@ -26,7 +26,8 @@ int main(int argc, char *argv[]) {
 		if (argc == 1) {
 			std::cout << "Usage: " << argv[0] << " [example index]\nToy Examples:" << std::endl;
 			std::cout << "[0] XOR" << std::endl;
-			std::cout << "[1] LeNET5" << std::endl;
+			std::cout << "[1] Waves" << std::endl;
+			std::cout << "[2] LeNET5" << std::endl;
 			std::cout << ">> Enter Example Number: ";
 			std::cin >> index;
 		} else {

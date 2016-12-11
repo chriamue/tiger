@@ -59,12 +59,14 @@ namespace tgr {
 	}
 	void NeuralRuntime::cleanup(){
 	}
-	void NeuralRuntime::setSamples(int mn, int mx) {
+	void NeuralRuntime::setSampleRange(int mn, int mx) {
 		minSample.setValue(mn);
 		maxSample.setValue(mx);
+		batchSize.setValue(std::min(mx-mn+1, batchSize.toInteger()));
+	}
+	void NeuralRuntime::setSelectedSamples(int mn, int mx) {
 		lowerSample.setValue(mn);
 		upperSample.setValue(mx);
-		batchSize.setValue(std::min(mx-mn+1, batchSize.toInteger()));
 	}
 	void NeuralRuntime::setup(const aly::ParameterPanePtr& controls) {
 		controls->addGroup("Training", true);
@@ -130,7 +132,7 @@ namespace tgr {
 		optimizationMethod = 1;
 		iterationsPerEpoch = Integer(200);
 		iterationsPerStep = Integer(10);
-		batchSize = Integer(30);
+		batchSize = Integer(32);
 		lowerSample = Integer(0);
 		upperSample = Integer(0);
 		minSample = Integer(0);

@@ -50,7 +50,8 @@ namespace tgr {
 		float* weight;
 		float* change;
 		int64_t id;
-		std::map<const Neuron*,std::vector<Neuron*>> mapping;
+		std::map<const Neuron*,std::vector<Neuron*>> forwardMapping;
+		std::map<const Neuron*, std::vector<Neuron*>> backwardMapping;
 		Signal() :weight(nullptr),change(nullptr),id(ID_COUNT++) {
 
 		}
@@ -64,24 +65,24 @@ namespace tgr {
 			id = other.id;
 			return *this;
 		}
-		std::vector<Neuron*>& operator[](const Neuron* n) {
-			return mapping.at(n);
+		std::vector<Neuron*>& getForward(const Neuron* n) {
+			return forwardMapping.at(n);
 		}
-		std::vector<Neuron*>& get(const Neuron* n) {
-			return mapping.at(n);
+		const std::vector<Neuron*>& getForward(const Neuron* n) const {
+			return forwardMapping.at(n);
 		}
-		const std::vector<Neuron*>& operator[](const Neuron* n) const {
-			return mapping.at(n);
+		std::vector<Neuron*>& getBackward(const Neuron* n) {
+			return backwardMapping.at(n);
 		}
-		const std::vector<Neuron*>& get(const Neuron* n) const {
-			return mapping.at(n);
+		const std::vector<Neuron*>& getBackward(const Neuron* n) const {
+			return backwardMapping.at(n);
 		}
 		size_t size(const Neuron* n) const {
-			return mapping.at(n).size();
+			return forwardMapping.at(n).size();
 		}
-		
-		void add(Neuron* in,const Neuron* out) {
-			mapping[out].push_back(in);
+		void add(Neuron* in,Neuron* out) {
+			forwardMapping[out].push_back(in);
+			backwardMapping[in].push_back(out);
 		}
 	};
 

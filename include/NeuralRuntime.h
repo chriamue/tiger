@@ -71,7 +71,8 @@ namespace tgr {
 		std::shared_ptr<tgr::NeuralCache> getCache() const {
 			return cache;
 		}
-		void setSamples(int mn, int mx);
+		void setSampleRange(int mn, int mx);
+		void setSelectedSamples(int mn, int mx);
 		void setup(const aly::ParameterPanePtr& pane);
 		NeuralRuntime(const std::shared_ptr<tgr::NeuralSystem>& system);
 		uint64_t getMaxIteration() const {

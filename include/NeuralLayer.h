@@ -76,8 +76,8 @@ namespace tgr {
 				CEREAL_NVP(biasResponseChanges));
 		}
 	};
-	void WriteNeuralStateToFile(const std::string& file, const NeuralKnowledge& params);
-	void ReadNeuralStateFromFile(const std::string& file, NeuralKnowledge& params);
+	void WriteNeuralStateToFile(const std::string& file, const NeuralState& params);
+	void ReadNeuralStateFromFile(const std::string& file, NeuralState& params);
 
 	class NeuralLayer {
 		protected:
@@ -160,8 +160,8 @@ namespace tgr {
 			aly::GraphDataPtr getGraph() const {
 				return graph;
 			}
-			void set(const NeuralState& state);
-			NeuralState get() const;
+			void setState(const NeuralState& state);
+			NeuralState getState() const;
 			void expand();
 			void setResidual(float r) {
 				residualError = r;
@@ -196,7 +196,7 @@ namespace tgr {
 			void evaluate();
 			void reset();
 			void initializeWeights(float minW=0.0f, float maxW=1.0f);
-
+			void setRegionDirty(bool d);
 			void backpropagate();
 			aly::NeuralLayerRegionPtr getRegion();
 			bool hasRegion() const {

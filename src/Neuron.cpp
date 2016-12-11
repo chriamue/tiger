@@ -39,7 +39,7 @@ namespace tgr {
 	std::vector<Neuron*> Neuron::getInputNeurons()  const {
 		std::vector<Neuron*> out;
 		for (SignalPtr sig : input) {
-			auto in = sig->get(this);
+			auto in = sig->getForward(this);
 				out.insert(out.end(), in.begin(), in.end());
 		}
 		return out;
@@ -47,14 +47,14 @@ namespace tgr {
 	void Neuron::getInputNeurons(std::vector<Neuron*>& out) const {
 		out.clear();
 		for (SignalPtr sig : input) {
-			auto in = sig->get(this);
+			auto in = sig->getForward(this);
 			out.insert(out.end(), in.begin(), in.end());
 		}
 	}
 	std::vector<const Neuron*> Neuron::getOutputNeurons() const {
 		std::vector<const Neuron*> out;
 		for (SignalPtr sig : output) {
-			for (auto pr : sig->mapping) {
+			for (auto pr : sig->forwardMapping) {
 				out.push_back(pr.first);
 			}
 		}
@@ -63,7 +63,7 @@ namespace tgr {
 	void Neuron::getOutputNeurons(std::vector<const Neuron*>& out) const {
 		out.clear();
 		for (SignalPtr sig : output) {
-			for (auto pr : sig->mapping) {
+			for (auto pr : sig->forwardMapping) {
 				out.push_back(pr.first);
 			}
 		}
@@ -78,20 +78,18 @@ namespace tgr {
 			//std::cout << "dw= [";
 			for (SignalPtr sig : output) {
 				sum2 = 0.0f;
-				for (auto pr : sig->mapping) {
-					sum2 += *pr.first->change;
-					count++;
+				for (Neuron* inner : sig->getBackward(this)) {
+					sum2 += *inner->change;
 				}
 				sum1 += *sig->weight*sum2;
 				//std::cout << std::setfill(' ') << std::setw(5) << aly::round(sig->value, 3) << " * [" << aly::round(sum2, 3) << "] ";
 			}
-			*change = sum1*transform.change(*value) / count;
-			//std::cout << "] " << change << std::endl;
+			*change = sum1*transform.change(*value) / output.size();
 		}
+		//std::cout << "] " << change << std::endl;
 		for (SignalPtr sig : input) {
 			sum2 = 0.0f;
-			std::vector<Neuron*>& input2 = sig->get(this);
-			for (Neuron* inner : input2) {
+			for (Neuron* inner : sig->getForward(this)) {
 				sum2 += *inner->value;
 			}
 			*sig->change += *change * sum2;
@@ -106,7 +104,7 @@ namespace tgr {
 			//if (debug)std::cout << "w= [";
 			for (SignalPtr sig : input) {
 				sum2 = 0.0f;
-				for (Neuron* inner : sig->get(this)) {
+				for (Neuron* inner : sig->getForward(this)) {
 					sum2 += *inner->value;
 					count++;
 				}
