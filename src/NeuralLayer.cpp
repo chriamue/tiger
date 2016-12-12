@@ -188,19 +188,17 @@ namespace tgr {
 		}
 		return data;
 	}
-	/*
 	struct SignalCompare {
 		bool operator()(const SignalPtr& lhs, const SignalPtr& rhs) const
 		{
 			return lhs->id< rhs->id;
 		}
 	};
-	*/
 	void NeuralLayer::compile() {
 		if (compiled)return;
 		int idx = 0;
 		signals.clear();
-		std::set<SignalPtr> tmp;//, SignalCompare
+		std::set<SignalPtr, SignalCompare> tmp;
 		for (Neuron& n : neurons) {
 			for (SignalPtr sig : n.getInput()) {
 				tmp.insert(sig);
