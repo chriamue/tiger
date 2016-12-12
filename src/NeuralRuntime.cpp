@@ -105,12 +105,11 @@ namespace tgr {
 			}
 			sys->backpropagate();
 		}
-		res /= (sampleIndexes.size());
 		std::cout << iter<<") Residual Error=" << res << " " << std::endl;
 		double delta = std::abs(lastResidual - res);
 		if (delta < 1E-5f) {
 			opt->setLearningRate(opt->getLearningRate()*learningRateDelta.toFloat());
-			std::cout << "Learning Rate=" << opt->getLearningRate() << std::endl;
+			std::cout << "Learning Rate=" << opt->getLearningRate()*B << std::endl;
 		}
 		lastResidual = res;
 		sys->optimize();
