@@ -35,7 +35,7 @@ namespace tgr {
 	}
 	Neuron::Neuron(const NeuronFunction& func) :transform(func),value(nullptr),change(nullptr),active(false) {
 	}
-	int64_t Signal::ID_COUNT = 0;
+	//int64_t Signal::ID_COUNT = 0;
 	std::vector<Neuron*> Neuron::getInputNeurons()  const {
 		std::vector<Neuron*> out;
 		for (SignalPtr sig : input) {
@@ -69,6 +69,7 @@ namespace tgr {
 		}
 	}
 	void Neuron::print() {
+		/*
 		std::cout << "====== Neuron " << id << " ======" << std::endl;
 		std::cout << "Input: " << input.size() << " Output: " << output.size() << std::endl;
 		for (SignalPtr sig : output) {
@@ -83,6 +84,7 @@ namespace tgr {
 				std::cout << "+++++ Input Neuron: " << inner->id << std::endl;
 			}
 		}
+		*/
 	}
 	std::string Neuron::getType() const {
 		return aly::MakeString() << transform.type();

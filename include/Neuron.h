@@ -45,27 +45,27 @@ namespace tgr {
 	class Neuron;
 	class Signal {
 	protected:
-		static int64_t ID_COUNT;
+		//static int64_t ID_COUNT;
 	public:
 		float* weight;
 		float* change;
-		int64_t id;
+		//int64_t id;
 		std::map<const Neuron*,std::vector<Neuron*>> forwardMapping;
 		std::map<const Neuron*, std::vector<Neuron*>> backwardMapping;
-		Signal() :weight(nullptr),change(nullptr),id(ID_COUNT++) {
+		Signal() :weight(nullptr),change(nullptr){//,id(ID_COUNT++) 
 
 		}
-		static void ResetIdCount() {
-			ID_COUNT = 0;
-		}
-		Signal(const Signal& sig) :weight(sig.weight), change(sig.change), id(sig.id) {
+		//static void ResetIdCount() {
+		//	ID_COUNT = 0;
+		//}
+		Signal(const Signal& sig) :weight(sig.weight), change(sig.change) {//, id(sig.id)
 
 		}
 		Signal& operator=(const Signal& other)
 		{
 			weight = other.weight;
 			change = other.change;
-			id = other.id;
+			//id = other.id;
 			return *this;
 		}
 		std::vector<Neuron*>& getForward(const Neuron* n) {
@@ -99,7 +99,7 @@ namespace tgr {
 		float* value;
 		float* change;
 		bool active;
-		aly::int3 id;
+		//aly::int3 id;
 		friend class NeuralLayer;
 		float normalizedValue() const {
 			return aly::clamp((*value - transform.min()) / std::max(1E-10f,transform.max() - transform.min()),0.0f,1.0f);
