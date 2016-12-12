@@ -34,6 +34,7 @@ namespace tgr {
 		for (NeuralLayerPtr layer : sys->getLayers()) {
 			layer->getGraph()->points.clear();
 		}
+
 		switch (optimizationMethod) {
 			case 0:
 				sys->setOptimizer(opt = std::shared_ptr<NeuralOptimization>(new GradientDescentOptimizer(learningRateInitial.toFloat(), weightDecay.toFloat())));
@@ -86,6 +87,9 @@ namespace tgr {
 		double res = 0;
 		sys->reset();
 		int B = std::min(batchSize.toInteger(),(int)sampleIndexes.size());
+		if (iteration == 0) {
+			opt->setLearningRate(opt->getLearningRate() / B);
+		}
 		if (iter%iterationsPerStep.toInteger() == 0) {
 			std::shuffle(sampleIndexes.begin(), sampleIndexes.end(), rd);
 		}
@@ -104,7 +108,7 @@ namespace tgr {
 		res /= (sampleIndexes.size());
 		std::cout << iter<<") Residual Error=" << res << " " << std::endl;
 		double delta = std::abs(lastResidual - res);
-		if (delta < 1E-3f) {
+		if (delta < 1E-5f) {
 			opt->setLearningRate(opt->getLearningRate()*learningRateDelta.toFloat());
 			std::cout << "Learning Rate=" << opt->getLearningRate() << std::endl;
 		}

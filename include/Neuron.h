@@ -55,6 +55,9 @@ namespace tgr {
 		Signal() :weight(nullptr),change(nullptr),id(ID_COUNT++) {
 
 		}
+		static void ResetIdCount() {
+			ID_COUNT = 0;
+		}
 		Signal(const Signal& sig) :weight(sig.weight), change(sig.change), id(sig.id) {
 
 		}
@@ -96,6 +99,7 @@ namespace tgr {
 		float* value;
 		float* change;
 		bool active;
+		aly::int3 id;
 		friend class NeuralLayer;
 		float normalizedValue() const {
 			return aly::clamp((*value - transform.min()) / std::max(1E-10f,transform.max() - transform.min()),0.0f,1.0f);
@@ -119,6 +123,7 @@ namespace tgr {
 			}
 			return count;
 		}
+		void print();
 		std::string getType() const;
 		size_t getOutputNeuronSize() const {
 			return output.size();

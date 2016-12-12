@@ -119,9 +119,7 @@ namespace tgr {
 			int getId() const {
 				return id;
 			}
-			void setId(int i) {
-				id = i;
-			}
+			void setId(int id);
 			void set(const Knowledge& k,const Knowledge& bk);
 			Knowledge& getWeights() {
 				return weights;
@@ -271,6 +269,12 @@ namespace tgr {
 			void set(const std::vector<float>& input);
 			void get(aly::Image1f& input);
 			void get(std::vector<float>& input);
+			std::vector<Neuron>& getNeurons() {
+				return neurons;
+			}
+			const std::vector<Neuron>& getNeurons() const {
+				return neurons;
+			}
 			aly::Vector1f toVector() const;
 			NeuralLayer() {}
 			NeuralLayer(int width,int height,int bins,bool bias=false, const NeuronFunction& func = ReLU());

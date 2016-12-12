@@ -68,6 +68,22 @@ namespace tgr {
 			}
 		}
 	}
+	void Neuron::print() {
+		std::cout << "====== Neuron " << id << " ======" << std::endl;
+		std::cout << "Input: " << input.size() << " Output: " << output.size() << std::endl;
+		for (SignalPtr sig : output) {
+			std::cout << "***** Output Signal: " << sig->id << std::endl;
+			for (Neuron* inner : sig->getBackward(this)) {
+				std::cout << "***** Output Neuron: " << inner->id << std::endl;
+			}
+		}
+		for (SignalPtr sig : input) {
+			std::cout << "+++++ Input Signal: " << sig->id << std::endl;
+			for (Neuron* inner : sig->getForward(this)) {
+				std::cout << "+++++ Input Neuron: " << inner->id << std::endl;
+			}
+		}
+	}
 	std::string Neuron::getType() const {
 		return aly::MakeString() << transform.type();
 	}
@@ -80,11 +96,13 @@ namespace tgr {
 				sum2 = 0.0f;
 				for (Neuron* inner : sig->getBackward(this)) {
 					sum2 += *inner->change;
+					count++;
 				}
 				sum1 += *sig->weight*sum2;
-				//std::cout << std::setfill(' ') << std::setw(5) << aly::round(sig->value, 3) << " * [" << aly::round(sum2, 3) << "] ";
+				//std::cout << std::setfill(' ') << std::setw(5) << aly::round(*sig->weight, 3) << " * [" << aly::round(sum2, 3) << "] ";
 			}
-			*change = sum1*transform.change(*value) / output.size();
+			//Normalize change so that derivative doesn't blow up
+			*change = sum1*transform.change(*value) / count;
 		}
 		//std::cout << "] " << change << std::endl;
 		for (SignalPtr sig : input) {

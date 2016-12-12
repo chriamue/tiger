@@ -100,6 +100,15 @@ namespace tgr {
 		state.biasResponseChanges = biasResponseChanges;
 		return state;
 	}
+	void NeuralLayer::setId(int i) {
+		id = i;
+		for (Neuron& n : neurons) {
+			n.id.z = id;
+		}
+		for (Neuron& n : biasNeurons) {
+			n.id.z = id;
+		}
+	}
 	NeuralLayer::NeuralLayer(int width, int height, int bins, bool bias, const NeuronFunction& func) :width(width), height(height), bins(bins),bias(bias),compiled(false),id(-1),visited(false),trainable(true),residualError(0.0) {
 		neurons.resize(width*height*bins, Neuron(func));
 		graph.reset(new GraphData(getName()));
@@ -212,6 +221,13 @@ namespace tgr {
 			neuron.value = &responses[n];
 			neuron.change = &responseChanges[n];
 			*neuron.value = 0.0f;
+			for (int j = 0; j < height; j++) {
+				for (int i = 0; i < width; i++) {
+					Neuron& n = neurons[i + j*width];
+					n.id.x = i;
+					n.id.y = j;
+				}
+			}
 		}
 		
 		if (bias) {
@@ -221,6 +237,13 @@ namespace tgr {
 			biasWeightChanges.resize(N);
 			biasResponses.resize(N);
 			biasResponseChanges.resize(N);
+			for (int j = 0; j < height; j++) {
+				for (int i = 0; i < width; i++) {
+					Neuron& n = biasNeurons[i+j*width];
+					n.id.x = i;
+					n.id.y = j;
+				}
+			}
 			for (size_t n = 0; n < N; n++) {
 				Neuron& neuron = biasNeurons[n];
 				SignalPtr sig = MakeConnection(&neuron, &neurons[n]);

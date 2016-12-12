@@ -413,10 +413,10 @@ bool TigerApp::initializeWaves() {
 	int dir = 4;
 	float freq = 0.1f;
 	int shifts = 4;
-	ConvolutionFilterPtr firstFilter(new ConvolutionFilter(w, h, 5, 1, true));
+	ConvolutionFilterPtr firstFilter(new ConvolutionFilter(w, h, 5, 2, true));
 	sys->add(firstFilter);
 
-	FullyConnectedFilterPtr secondFilter(new FullyConnectedFilter("Output Layer", firstFilter->getOutputLayer(0), dir, 1, true));
+	FullyConnectedFilterPtr secondFilter(new FullyConnectedFilter("Output Layer", firstFilter->getOutputLayers(), dir, 1, true));
 	sys->add(secondFilter);
 
 	secondFilter->getOutputLayer(0)->setFunction(tgr::Linear());
@@ -456,6 +456,9 @@ bool TigerApp::initializeWaves() {
 	sys->initialize();
 	setSampleRange(0, (int)trainInputData.size() - 1);
 	setSampleIndex(0);
+	//NeuralLayerPtr inputLayer = sys->getInput();
+	//Neuron* n=inputLayer->get(inputLayer->width/2,inputLayer->height/2);
+	//n->print();
 	return true;
 }
 
@@ -505,6 +508,8 @@ bool TigerApp::initializeLeNet5() {
 	parse_mnist_images(trainFile, trainInputData, 0.0f, 1.0f, 2, 2);
 	parse_mnist_labels(trainLabelFile, trainOutputData);
 	if (trainInputData.size() > 0) {
+		trainInputData.erase(trainInputData.begin() + 100, trainInputData.end());
+		trainOutputData.erase(trainOutputData.begin() + 100, trainOutputData.end());
 		const Image1f& ref = trainInputData[0];
 		ConvolutionFilterPtr conv1(new ConvolutionFilter(ref.width, ref.height, 5, 6,false));
 		conv1->setName("conv1");
@@ -558,8 +563,8 @@ bool TigerApp::initializeLeNet5() {
 		};
 		sys->initialize();
 		setSampleRange(0, (int)trainInputData.size() - 1);
-		setSampleIndex(2600);
-		worker->setSelectedSamples(0, (int)trainInputData.size() - 1);
+		setSampleIndex(1);
+		worker->setSelectedSamples(0, 5);
 		return true;
 	}
 	return false;
