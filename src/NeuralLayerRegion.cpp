@@ -45,7 +45,7 @@ namespace aly {
 		nvgRect(nvg, bounds.position.x, bounds.position.y, bounds.dimensions.x, bounds.dimensions.y);
 		nvgFillColor(nvg, context->theme.DARKER);
 		nvgFill(nvg);
-		float rOuter = 0.5f*scale;
+		//float rOuter = 0.5f*scale;
 		float rInner = 0.25f*scale;
 		float lineWidth = scale*0.01f;
 		for (int j = 0; j < height; j++) {
@@ -90,7 +90,7 @@ namespace aly {
 		}
 		setDragEnabled(true);
 		setClampDragToParentBounds(false);
-		AlloyContext* context = AlloyApplicationContext().get();
+		//AlloyContext* context = AlloyApplicationContext().get();
 		cancelButton = std::shared_ptr<IconButton>(new IconButton(0xf070, CoordPX(2.0f, 2.0f), CoordPX(24, 24), IconType::CIRCLE));
 		cancelButton->setOrigin(Origin::TopLeft);
 		cancelButton->setRescaleOnHover(false);
@@ -162,11 +162,11 @@ namespace aly {
 		int width = layer->width;
 		int height = layer->height;
 		float scale = bounds.dimensions.x / width;
-		pixel2 origin = bounds.position;
+		//pixel2 origin = bounds.position;
 		pixel2 padding = getPadding();
 		bounds.position += float2(0.0f, fontSize + 8.0f);
 		bounds.dimensions -= padding;
-		int bins = layer->bins;
+		//int bins = layer->bins;
 		pixel2 pos = pixel2(-1, -1);
 		int2 selected = int2(-1, -1);
 		if (bounds.contains(cursorPosition)) {
@@ -310,7 +310,7 @@ namespace aly {
 		return false;
 	}
 	float  NeuralLayerRegion::setSize(float w) {
-		AlloyContext* context = AlloyApplicationContext().get();
+		//AlloyContext* context = AlloyApplicationContext().get();
 		pixel2 padding = getPadding();
 		float aspectRatio = layer->width / (float)layer->height;
 		pixel2 newBounds = aly::round(pixel2(w, w / aspectRatio) + padding);
@@ -321,7 +321,7 @@ namespace aly {
 		return newBounds.y;
 	}
 	void  NeuralLayerRegion::setScale(float s, pixel2 cursor) {
-		AlloyContext* context = AlloyApplicationContext().get();
+		//AlloyContext* context = AlloyApplicationContext().get();
 		box2px bounds = getBounds(false);
 		float lastScale = scale;
 		scale = clamp(scale * (1.0f + s * 0.1f), 0.1f, 10.0f);

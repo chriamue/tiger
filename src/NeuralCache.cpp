@@ -44,7 +44,7 @@ namespace tgr {
 		}
 		elem->set(nknow);
 		if (elem->isLoaded()) {
-			while (loadedList.size() >= maxElements) {
+			while ((int)loadedList.size() >= maxElements) {
 				cache[loadedList.begin()->second]->unload();
 				loadedList.erase(loadedList.begin());
 			}
@@ -58,7 +58,7 @@ namespace tgr {
 		if (iter != cache.end()) {
 			std::shared_ptr<CacheElement> elem = iter->second;
 			if (!elem->isLoaded()) {
-				while (loadedList.size() >= maxElements) {
+				while ((int)loadedList.size() >= maxElements) {
 					cache[loadedList.begin()->second]->unload();
 					loadedList.erase(loadedList.begin());
 				}

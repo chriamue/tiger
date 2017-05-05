@@ -35,7 +35,7 @@ namespace tgr {
 		std::vector<SignalPtr> signals;
 		outputLayers.push_back(NeuralLayerPtr(new NeuralLayer( name, width, height, 1, bias, func)));
 		NeuralLayerPtr outputLayer = outputLayers[0];
-		for (int k = 0; k < inputLayers.size(); k++) {
+		for (int k = 0; k < (int)inputLayers.size(); k++) {
 			NeuralLayerPtr inputLayer = inputLayers[k];
 			inputLayer->addChild(outputLayer);
 			for (int j = 0; j < inputLayer->height; j++) {

@@ -276,7 +276,6 @@ namespace tgr {
 				return neurons;
 			}
 			aly::Vector1f toVector() const;
-			NeuralLayer() {}
 			NeuralLayer(int width,int height,int bins,bool bias=false, const NeuronFunction& func = ReLU());
 			NeuralLayer(const std::string& name,int width, int height, int bins, bool bias = false, const NeuronFunction& func=ReLU());
 	};

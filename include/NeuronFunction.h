@@ -21,6 +21,10 @@
 #ifndef NEURONFUNCTION_H_
 #define NEURONFUNCTION_H_
 #include <AlloyMath.h>
+#include <AlloyCommon.h>
+#include <cereal/cereal.hpp>
+#include <cereal/types/string.hpp>
+using namespace aly;
 namespace tgr {
 	enum class NeuronFunctionType {
 		Sigmoid, Tanh, ReLU, LeakyReLU, Linear, Constant
@@ -52,6 +56,7 @@ namespace tgr {
 			virtual float min() const = 0;
 			virtual float max() const = 0;
 			virtual NeuronFunctionType type() const = 0;
+			virtual std::string toString() const = 0;
 		};
 	private:
 		template<class T> struct Impl : public Interface {
@@ -72,6 +77,9 @@ namespace tgr {
 			}
 			virtual float max() const {
 				return value.max();
+			}
+			virtual std::string toString() const {
+				return aly::MakeString()<<value.type();
 			}
 		};
 		std::shared_ptr<Interface> impl;

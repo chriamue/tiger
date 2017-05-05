@@ -94,7 +94,7 @@ namespace tgr {
 	void NeuralSystem::getLayer(const NeuralLayerPtr& layer, std::vector<float>& input) {
 		layer->get(input);
 	}
-	NeuralSystem::NeuralSystem(const std::shared_ptr<aly::NeuralFlowPane>& pane) :flowPane(pane),initialized(false) {
+	NeuralSystem::NeuralSystem(const std::shared_ptr<aly::NeuralFlowPane>& pane) :initialized(false),flowPane(pane) {
 
 	}
 	void NeuralSystem::evaluate() {

@@ -50,7 +50,7 @@ namespace aly{
 			return;
 		const float scale = 1.0f;// flow->getScale();
 		NVGcontext* nvg = context->nvgContext;
-		float lineWidth = 6.0f*scale;
+		//float lineWidth = 6.0f*scale;
 		if (source->isFocused()) {
 			nvgStrokeWidth(nvg, std::max(scale * 6.0f, 1.0f));
 			nvgStrokeColor(nvg, context->theme.LIGHTEST);

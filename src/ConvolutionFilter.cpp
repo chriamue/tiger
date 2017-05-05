@@ -150,7 +150,7 @@ namespace tgr {
 		std::vector<SignalPtr> signals(kernelSize*kernelSize);
 		int index = 0;
 		if (connectionMap.size() == 0) {
-			for (int f = 0; f < outputLayers.size(); f++) {
+			for (int f = 0; f < (int)outputLayers.size(); f++) {
 				NeuralLayerPtr outputLayer = NeuralLayerPtr(new NeuralLayer(MakeString() << name << " [" << f << "]", ow, oh, 1, bias, func));
 				outputLayers[f] = outputLayer;
 				index = 0;

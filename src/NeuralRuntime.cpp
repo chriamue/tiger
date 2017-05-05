@@ -116,7 +116,7 @@ namespace tgr {
 		for (NeuralLayerPtr layer : sys->getLayers()) {
 			layer->getGraph()->points.push_back(float2(float(iter),float(layer->getResidual())));
 		}
-		if (delta<1E-7f||iteration>=getMaxIteration()) {
+		if (delta<1E-7f||iteration>=(int)getMaxIteration()) {
 			ret = false;
 		}
 		if (onUpdate) {
@@ -131,7 +131,7 @@ namespace tgr {
 		return ret;
 	}
 	NeuralRuntime::NeuralRuntime(const std::shared_ptr<tgr::NeuralSystem>& system) :
-		RecurrentTask([this](uint64_t iteration) {return step();}, 5),sys(system),paused(false) {
+		RecurrentTask([this](uint64_t iteration) {return step();}, 5),paused(false),sys(system) {
 		optimizationMethod = 1;
 		iterationsPerEpoch = Integer(200);
 		iterationsPerStep = Integer(10);

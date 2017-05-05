@@ -111,7 +111,8 @@ namespace tgr {
 		}
 		*/
 	}
-	NeuralLayer::NeuralLayer(int width, int height, int bins, bool bias, const NeuronFunction& func) :width(width), height(height), bins(bins),bias(bias),compiled(false),id(-1),visited(false),trainable(true),residualError(0.0) {
+	NeuralLayer::NeuralLayer(int width, int height, int bins, bool bias, const NeuronFunction& func) :
+			bias(bias),compiled(false),visited(false),trainable(true),residualError(0.0),id(-1),width(width), height(height), bins(bins){
 		neurons.resize(width*height*bins, Neuron(func));
 		graph.reset(new GraphData(getName()));
 	}
@@ -136,7 +137,8 @@ namespace tgr {
 			*sig->change=0.0f;
 		}
 	}
-	NeuralLayer::NeuralLayer(const std::string& name,int width, int height, int bins,bool bias, const NeuronFunction& func) :name(name), width(width), height(height), bins(bins),bias(bias), id(-1), visited(false), trainable(true), residualError(0.0) {
+	NeuralLayer::NeuralLayer(const std::string& name,int width, int height, int bins,bool bias, const NeuronFunction& func) :
+			name(name), bias(bias), compiled(false),visited(false), trainable(true), residualError(0.0),id(-1), width(width), height(height), bins(bins) {
 		neurons.resize(width*height*bins,Neuron(func));
 		graph.reset(new GraphData(getName()));
 	}
@@ -196,7 +198,6 @@ namespace tgr {
 	};
 	void NeuralLayer::compile() {
 		if (compiled)return;
-		int idx = 0;
 		signals.clear();
 		std::set<SignalPtr, SignalCompare> tmp;
 		for (Neuron& n : neurons) {
@@ -235,7 +236,7 @@ namespace tgr {
 		}
 		
 		if (bias) {
-			int N = width*height;
+			size_t N = width*height;
 			biasNeurons.resize(N, Bias());
 			biasWeights.resize(N);
 			biasWeightChanges.resize(N);
@@ -296,15 +297,19 @@ namespace tgr {
 		return neurons[i];
 	}
 	const Neuron* NeuralLayer::get(const int i, const int j) const {
+		if(neurons.size()==0)throw std::runtime_error("Neurons not initialized.");
 		return &neurons[aly::clamp(i, 0, width - 1) + aly::clamp(j, 0, height - 1) * width];
 	}
 	Neuron* NeuralLayer::get(const int i, const int j) {
+		if(neurons.size()==0)throw std::runtime_error("Neurons not initialized.");
 		return &neurons[aly::clamp(i, 0, width - 1) + aly::clamp(j, 0, height - 1) * width];
 	}
 	const Neuron* NeuralLayer::get(const size_t i) const {
+		if(neurons.size()==0)throw std::runtime_error("Neurons not initialized.");
 		return &neurons[i];
 	}
 	Neuron* NeuralLayer::get(const size_t i) {
+		if(neurons.size()==0)throw std::runtime_error("Neurons not initialized.");
 		return &neurons[i];
 	}
 
@@ -375,7 +380,6 @@ namespace tgr {
 	void NeuralLayer::expand() {
 		std::shared_ptr<NeuralFlowPane> flowPane = sys->getFlow();
 		box2px bounds = layerRegion->getBounds();
-		int idx = 0;
 		int N = int(getChildren().size());
 		float layoutWidth = 0.0f;
 		float width = 120.0f;
@@ -392,9 +396,13 @@ namespace tgr {
 		flowPane->update();
 	}
 	void NeuralLayer::set(const Image1f& input) {
+		if(input.width!=width||input.height!=height){
+			throw std::runtime_error(MakeString()<<"Image dimensions ("<<input.width<<","<<input.height<<") do not match neuron dimensions ("<<width<<","<<height<<")");
+		}
 		for (int j = 0; j < input.height; j++) {
 			for (int i = 0; i < input.width; i++) {
-				*get(i, j)->value = input(i, j).x;
+				float* ptr=get(i, j)->value;
+				*ptr = input(i, j).x;
 			}
 		}
 		if (layerRegion.get() != nullptr) {
@@ -402,6 +410,9 @@ namespace tgr {
 		}
 	}
 	void NeuralLayer::set(const std::vector<float>& input) {
+		if(input.size()!=neurons.size()){
+			throw std::runtime_error(MakeString()<<"Vector dimension ("<<input.size()<<") do not match neuron dimension ("<<neurons.size()<<")");
+		}
 		for (size_t i = 0; i < input.size(); i++) {
 			*get(i)->value = input[i];
 		}

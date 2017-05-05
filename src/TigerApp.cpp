@@ -42,10 +42,10 @@ static const bool MNIST_TABLE[] = {
 #undef O
 #undef X
 TigerApp::TigerApp(int example) :
-	Application(1800, 800, "Tiger Machine",true),exampleIndex(example), selectedLayer(nullptr){
+	Application(1800, 800, "Tiger Machine",true),selectedLayer(nullptr),exampleIndex(example){
 }
 void TigerApp::setSampleIndex(int idx){
-	bool dirty = (sampleIndex.toInteger() != idx);
+	//bool dirty = (sampleIndex.toInteger() != idx);
 	sampleIndex.setValue(idx);
 	tweenRegion->setValue(idx);
 	valueRegion->setNumberValue(sampleIndex);
@@ -515,7 +515,7 @@ bool TigerApp::initializeLeNet5() {
 		conv1->setName("conv1");
 		sys->add(conv1,Tanh());
 		std::vector<NeuralLayerPtr> all;
-		for (int i = 0; i < conv1->getOutputSize(); i++) {
+		for (int i = 0; i < (int)conv1->getOutputSize(); i++) {
 			AveragePoolFilterPtr avg1(new AveragePoolFilter(conv1->getOutputLayer(i), 2, true));
 			avg1->setName(MakeString() << "Sub-Sample [" << i << "]");
 			sys->add(avg1, Tanh());
@@ -536,7 +536,7 @@ bool TigerApp::initializeLeNet5() {
 		sys->add(conv2, Tanh());
 
 		all.clear();
-		for (int i = 0; i < conv2->getOutputSize(); i++) {
+		for (int i = 0; i < (int)conv2->getOutputSize(); i++) {
 			AveragePoolFilterPtr avg2(new AveragePoolFilter(conv2->getOutputLayer(i), 2, true));
 			avg2->setName(MakeString() << "Sub-Sample [" << i << "]");
 			sys->add(avg2);

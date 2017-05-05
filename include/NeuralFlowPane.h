@@ -78,7 +78,7 @@ namespace aly {
 		}
 		std::set<NeuralConnectionPtr> connections;
 		virtual void pack(const pixel2& pos, const pixel2& dims, const double2& dpmm, double pixelRatio, bool clamp) override;
-		virtual bool NeuralFlowPane::onEventHandler(AlloyContext* context, const InputEvent& e) override;
+		virtual bool onEventHandler(AlloyContext* context, const InputEvent& e) override;
 		NeuralFlowPane(const std::string& name, const AUnit2D& pos, const AUnit2D& dims);
 		void add(tgr::NeuralLayer* layer, const pixel2& cursor);
 		virtual void draw(AlloyContext* context) override;

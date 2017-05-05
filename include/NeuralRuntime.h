@@ -58,7 +58,6 @@ namespace tgr {
 		int iteration;
 		std::thread simulationThread;
 		std::shared_ptr<tgr::NeuralSystem> sys;
-
 		std::shared_ptr<tgr::NeuralCache> cache;
 	public:
 		std::function<void(int iteration, bool lastIteration)> onUpdate;
