@@ -96,8 +96,8 @@ namespace tgr {
 			//std::cout << "dw= [";
 			for (SignalPtr sig : output) {
 				sum2 = 0.0f;
-				for (Neuron* inner : sig->getBackward(this)) {
-					sum2 += *inner->change;
+				for (Neuron* outer : sig->getBackward(this)) {
+					sum2 += *outer->change;
 					count++;
 				}
 				sum1 += *sig->weight*sum2;

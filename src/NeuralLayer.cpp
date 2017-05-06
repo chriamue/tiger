@@ -156,12 +156,13 @@ namespace tgr {
 	}
 	void NeuralLayer::backpropagate() {
 		int N = (int)neurons.size();
-		double residual = 0.0;
-#pragma omp parallel for reduction(+:residual)
+		//double residual = 0.0;
+		//reduction(+:residual)
+#pragma omp parallel for
 		for (int n = 0; n < N; n++) {
-			residual+=std::abs(neurons[n].backpropagate());
+			neurons[n].backpropagate();
 		}
-		residual /= N;
+        //		residual /= N;
 		//std::cout << "Backprop [" << getName() << "|" << N << "] Residual="<<residual << std::endl;
 	}
 	void NeuralLayer::setRegionDirty(bool b) {

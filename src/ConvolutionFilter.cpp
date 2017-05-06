@@ -45,14 +45,12 @@ namespace tgr {
 		outputLayers.resize(features);
 	}
 	void ConvolutionFilter::evaluate() {
-		NeuralFilter::evaluate();
-		/*
+		//NeuralFilter::evaluate();
 		int pad = kernelSize / 2;
 		int width = inputLayers[0]->width;
 		int height = inputLayers[0]->height;
 		int ow = width - 2 * pad;
 		int oh = height - 2 * pad;
-		int K = kernelSize*kernelSize;
 		bool hasBias;
 		const Knowledge& inResponses = inputLayers.front()->responses;
 		for (NeuralLayerPtr layer : outputLayers) {
@@ -75,16 +73,15 @@ namespace tgr {
 			}
 			layer->setRegionDirty(true);
 		}
-		*/
 	}
 	void ConvolutionFilter::backpropagate() {
 		NeuralFilter::backpropagate();
 		/*
+		//Backprop parallelization is broken! It is super complicated ...
 		NeuralLayerPtr inLayer = inputLayers.front();
 		for (NeuralLayerPtr layer : outputLayers) {
 			if (layer->isLeaf())layer->backpropagate();
 		}
-
 		int pad = kernelSize / 2;
 		int width = inLayer->width;
 		int height = inLayer->height;
@@ -110,7 +107,9 @@ namespace tgr {
 				for (int i = 0; i < ow; i++) {
 					int idx = i + j*ow;
 					float change = outResponseChanges[idx];
-					if (hasBias)outBiasResponseChanges[idx] = biasWeights[0] * change*transform.change(biasResponses[idx]);
+					if (hasBias){
+						outBiasResponseChanges[idx] = biasWeights[0] * change*transform.change(biasResponses[idx]);
+					}
 					for (int jj = 0; jj < kernelSize; jj++) {
 						for (int ii = 0; ii < kernelSize; ii++) {
 							int shifted = (i + ii) + width*(j + jj);
