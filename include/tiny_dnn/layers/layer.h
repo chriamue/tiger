@@ -719,7 +719,35 @@ class layer : public node {
 
   template <class Archive>
   void serialize_prolog(Archive &ar);
+  /* @brief Creates an edge between the current node and one incoming
+   * or previous node.
+   *
+   * @param i The position to store the previous edge.
+   *
+   * The method checks if the edge already exists, otherwise we create it
+   * and the necessary memory it's allocated. The method returns the pointer
+   * to the previous edge.
+   */
+  edgeptr_t ith_in_node(serial_size_t i) {
+    // in case that the  edge doesn't exist, we create it
+    if (!prev_[i]) alloc_input(i);
+    return prev()[i];
+  }
 
+  /* @brief Creates an edge between the current node and one outcoming
+   * or next node.
+   *
+   * @param i The position to store the next edge.
+   *
+   * The method checks if the edge already exists, otherwise we create it
+   * and the necessary memory it's allocated. The method returns the pointer
+   * to the next edge.
+   */
+  edgeptr_t ith_out_node(serial_size_t i) {
+    // in case that the  edge doesn't exist, we create it
+    if (!next_[i]) alloc_output(i);
+    return next()[i];
+  }
  protected:
   /** Flag indication whether the layer/node is initialized */
   bool initialized_;
@@ -797,35 +825,7 @@ class layer : public node {
                                       out_type_[i]);
   }
 
-  /* @brief Creates an edge between the current node and one incoming
-   * or previous node.
-   *
-   * @param i The position to store the previous edge.
-   *
-   * The method checks if the edge already exists, otherwise we create it
-   * and the necessary memory it's allocated. The method returns the pointer
-   * to the previous edge.
-   */
-  edgeptr_t ith_in_node(serial_size_t i) {
-    // in case that the  edge doesn't exist, we create it
-    if (!prev_[i]) alloc_input(i);
-    return prev()[i];
-  }
 
-  /* @brief Creates an edge between the current node and one outcoming
-   * or next node.
-   *
-   * @param i The position to store the next edge.
-   *
-   * The method checks if the edge already exists, otherwise we create it
-   * and the necessary memory it's allocated. The method returns the pointer
-   * to the next edge.
-   */
-  edgeptr_t ith_out_node(serial_size_t i) {
-    // in case that the  edge doesn't exist, we create it
-    if (!next_[i]) alloc_output(i);
-    return next()[i];
-  }
   edgeptr_t ith_out_node(serial_size_t i) const { return next()[i]; }
 
   /* @brief Retrieves weight vector from incoming edge

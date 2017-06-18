@@ -578,6 +578,41 @@ void TigerApp::initialize() {
 	}
 	sys->initialize(expandTree);
 }
+/*
+ * void TigerApp::initialize() {
+	sys.reset(new NeuralSystem(flowRegion));
+	network<graph> nn;
+	// declare nodes
+	input_layer i1(shape3d(32, 32, 1));
+	convolutional_layer c1(32, 32, 5, 1, 6);
+	tanh_layer c1_tanh(28, 28, 6);
+	average_pooling_layer p1(28, 28, 6, 2);
+	tanh_layer p1_tanh(14, 14, 6);
+	deconvolutional_layer d1(14, 14, 5, 6, 16, connection_table(MNIST_TABLE, 6, 16));
+	tanh_layer d1_tanh(18, 18, 16);
+	average_pooling_layer p2(18, 18, 16, 2);
+	tanh_layer p2_tanh(9, 9, 16);
+	convolutional_layer c2(9, 9, 9, 16, 120);
+	tanh_layer c2_tanh(1, 1, 120);
+	fully_connected_layer fc1(120, 10);
+	tanh_layer fc1_tanh(10);
+
+	// connecting activation layers behind other layers
+	c1 << c1_tanh;
+	p1 << p1_tanh;
+	d1 << d1_tanh;
+	c2 << c2_tanh;
+	p2 << p2_tanh;
+	fc1 << fc1_tanh;
+
+	// connect them to graph
+	i1 << c1 << p1 << d1 << p2 << c2 << fc1;
+	construct_graph(nn, { &i1 }, { &fc1 });
+	NeuralNetwork net;
+	net.build(nn);
+	sys->initialize(expandTree);
+}
+ */
 void TigerApp::draw(AlloyContext* context) {
 	/*
 	if (running) {

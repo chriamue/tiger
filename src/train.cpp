@@ -14,11 +14,6 @@ using namespace tiny_dnn::activation;
 ///////////////////////////////////////////////////////////////////////////////
 // recongnition on MNIST similar to LaNet-5 adding deconvolution
 
-void deconv_lanet(network<graph> &nn,
-                  std::vector<label_t> train_labels,
-                  std::vector<label_t> test_labels,
-                  std::vector<vec_t> train_images,
-                  std::vector<vec_t> test_images) {
 // connection table [Y.Lecun, 1998 Table.1]
 #define O true
 #define X false
@@ -34,6 +29,13 @@ void deconv_lanet(network<graph> &nn,
 // clang-format on
 #undef O
 #undef X
+
+void deconv_lanet(network<graph> &nn,
+                  std::vector<label_t> train_labels,
+                  std::vector<label_t> test_labels,
+                  std::vector<vec_t> train_images,
+                  std::vector<vec_t> test_images) {
+
 
   // declare nodes
   input_layer i1(shape3d(32, 32, 1));

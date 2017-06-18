@@ -579,6 +579,13 @@ class graph : public nodes {
   }
   std::vector<layer *> input_layers_;
   std::vector<layer *> output_layers_;
+ public:
+  std::vector<layer *>& input_layers(){
+	  return input_layers_;
+  }
+  std::vector<layer *>& output_layers(){
+	  return output_layers_;
+  }
 };
 
 template <typename OutputArchive>
