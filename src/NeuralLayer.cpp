@@ -112,7 +112,7 @@ namespace tgr {
 		*/
 	}
 	NeuralLayer::NeuralLayer(int width, int height, int bins, bool bias, const NeuronFunction& func) :
-			bias(bias),compiled(false),visited(false),trainable(true),residualError(0.0),id(-1),width(width), height(height), bins(bins){
+			bias(bias),compiled(false),visited(false),trainable(true),residualError(0.0),id(-1),width(width), height(height), depth(bins){
 		neurons.resize(width*height*bins, Neuron(func));
 		graph.reset(new GraphData(getName()));
 	}
@@ -138,7 +138,7 @@ namespace tgr {
 		}
 	}
 	NeuralLayer::NeuralLayer(const std::string& name,int width, int height, int bins,bool bias, const NeuronFunction& func) :
-			name(name), bias(bias), compiled(false),visited(false), trainable(true), residualError(0.0),id(-1), width(width), height(height), bins(bins) {
+			name(name), bias(bias), compiled(false),visited(false), trainable(true), residualError(0.0),id(-1), width(width), height(height), depth(bins) {
 		neurons.resize(width*height*bins,Neuron(func));
 		graph.reset(new GraphData(getName()));
 	}
@@ -152,7 +152,7 @@ namespace tgr {
 		neurons.shrink_to_fit();
 		width = w;
 		height = h;
-		bins = b;
+		depth = b;
 	}
 	void NeuralLayer::backpropagate() {
 		int N = (int)neurons.size();
@@ -285,10 +285,10 @@ namespace tgr {
 		}
 	}
 	int NeuralLayer::getBin(size_t index) const {
-		return clamp((int)std::floor(*neurons[index].value*bins), 0, bins-1);
+		return clamp((int)std::floor(*neurons[index].value*depth), 0, depth-1);
 	}
 	int NeuralLayer::getBin(const Neuron& n) const {
-		return clamp((int)std::floor(*n.value*bins), 0, bins-1);
+		return clamp((int)std::floor(*n.value*depth), 0, depth-1);
 	}
 	
 	const Neuron& NeuralLayer::operator[](const size_t i) const {
@@ -452,7 +452,7 @@ namespace tgr {
 			drawText(nvg, bounds.position.x, yoff, label.c_str(), FontStyle::Normal, context->theme.LIGHTER);
 			yoff += fontSize + 2;
 
-			label = MakeString() << "Size: " << width << " x " << height << " x " << bins;
+			label = MakeString() << "Size: " << width << " x " << height << " x " << depth;
 			drawText(nvg, bounds.position.x, yoff, label.c_str(), FontStyle::Normal, context->theme.LIGHTER);
 			yoff += fontSize + 2;
 

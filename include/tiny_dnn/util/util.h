@@ -7,6 +7,7 @@
 */
 #pragma once
 
+#include <AlignedAllocator.h>
 #include <cassert>
 #include <cstdarg>
 #include <cstdio>
@@ -32,7 +33,6 @@
 #include <cereal/types/vector.hpp>
 #endif
 
-#include "tiny_dnn/util/aligned_allocator.h"
 #include "tiny_dnn/util/macro.h"
 #include "tiny_dnn/util/nn_error.h"
 #include "tiny_dnn/util/parallel_for.h"
@@ -56,7 +56,7 @@ typedef serial_size_t label_t;
 
 typedef serial_size_t layer_size_t;  // for backward compatibility
 
-typedef std::vector<float_t, aligned_allocator<float_t, 64>> vec_t;
+typedef std::vector<float_t, aly::aligned_allocator<float_t, 64>> vec_t;
 
 typedef std::vector<vec_t> tensor_t;
 

@@ -8,7 +8,7 @@
 #pragma once
 
 #include <tiny_dnn/core/params/params.h>
-
+#include <tiny_dnn/util/util.h>
 namespace tiny_dnn {
 namespace core {
 

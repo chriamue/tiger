@@ -103,7 +103,7 @@ namespace tgr {
 		public:
 			int width;
 			int height;
-			int bins;
+			int depth;
 			Knowledge weights;
 			Knowledge weightChanges;
 			Knowledge biasWeights;
