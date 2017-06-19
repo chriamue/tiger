@@ -6,7 +6,7 @@ namespace tgr {
 #pragma omp parallel for reduction(+:delta)
 		for (int n = 0; n < N;n++) {
 			SignalPtr sig = signals[n];
-			float* w=sig->weight;
+			Vec1f* w=sig->weight;
 			delta += std::abs(*sig->change);
 			*w = *w - learningRate*(*sig->change + weightDecay*(*w));
 		}

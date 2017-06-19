@@ -20,7 +20,7 @@
 */
 #ifndef _NEURALOPTIMIZATION_H_
 #define _NEURALOPTIMIZATION_H_
-#include "Neuron.h"
+#include <Signal.h>
 namespace tgr {
 	enum class NeuralOptimizer{GradientDescent,GradientMomentum};
 	struct NeuralOptimization {

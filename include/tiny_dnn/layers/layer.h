@@ -214,8 +214,8 @@ class layer : public node {
       if (out_type_[i] != vector_type::data) continue;
       tensor_t &dst_grad = *ith_out_node(i)->get_gradient();
       assert(n < cnt);
-      const auto &src_grad = grad[n++];
-      size_t sz            = src_grad.size();
+      const auto& src_grad = grad[n++];
+      size_t sz  = src_grad.size();
       dst_grad.resize(sz);
       for (size_t j = 0; j < sz; ++j) {
         dst_grad[j] = *src_grad[j];
