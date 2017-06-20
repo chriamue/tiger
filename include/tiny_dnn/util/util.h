@@ -8,6 +8,7 @@
 #pragma once
 
 #include <AlignedAllocator.h>
+#include <AlloyOptimizationMath.h>
 #include <cassert>
 #include <cstdarg>
 #include <cstdio>
@@ -57,6 +58,7 @@ typedef serial_size_t label_t;
 typedef serial_size_t layer_size_t;  // for backward compatibility
 
 typedef std::vector<float_t, aly::aligned_allocator<float_t, 64>> vec_t;
+//typedef aly::Vec1f vec_t;
 
 typedef std::vector<vec_t> tensor_t;
 

@@ -414,15 +414,12 @@ class graph : public nodes {
     std::vector<layer *> sorted;
     std::vector<node *> input_nodes(input.begin(), input.end());
     std::unordered_map<node *, std::vector<uint8_t>> removed_edge;
-
     // topological-sorting
     while (!input_nodes.empty()) {
       sorted.push_back(dynamic_cast<layer *>(input_nodes.back()));
       input_nodes.pop_back();
-
       layer *curr              = sorted.back();
       std::vector<node *> next = curr->next_nodes();
-
       for (size_t i = 0; i < next.size(); i++) {
         if (!next[i]) continue;
         // remove edge between next[i] and current

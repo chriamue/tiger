@@ -58,9 +58,6 @@ protected:
 	aly::GraphPanePtr graphRegion;
 	std::shared_ptr<tgr::NeuralCache> cache;
 	int exampleIndex;
-	bool initializeXOR();
-	bool initializeLeNet5();
-	bool initializeWaves();
 	void initialize();
 	void setSelectedLayer(tgr::NeuralLayer* layer);
 public:

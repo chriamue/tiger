@@ -9,7 +9,7 @@
 namespace tgr {
 class NeuralLayer;
 class NeuralSystem;
-typedef std::vector<Vec1f> Knowledge;
+typedef std::vector<aly::Vec1f> Knowledge;
 class NeuralKnowledge {
 protected:
 	std::map<int, Knowledge> weights;

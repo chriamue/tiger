@@ -266,6 +266,7 @@ namespace aly{
 			NeuralLayer* layer = selectedLayer;
 			pixel2 cursorPosition = selectedLayer->getRegion()->cursorPosition;
 			if (selected.x != -1 && selected.y != -1 && glfwGetKey(context->window,GLFW_KEY_LEFT)==GLFW_RELEASE&&glfwGetKey(context->window, GLFW_KEY_RIGHT) == GLFW_RELEASE) {
+				/*
 				Neuron* neuron = layer->get(selected.x, selected.y);
 				context->setCursor(&Cursor::CrossHairs);
 				nvgFontFaceId(nvg, context->getFontHandle(FontType::Bold));
@@ -287,6 +288,7 @@ namespace aly{
 				if (neuron->getOutputNeuronSize() > 0) {
 					drawText(nvg, cursorPosition + pixel2(0.0f, yoffset), MakeString() << "outputs: " << neuron->getOutputNeuronSize(), FontStyle::Outline, context->theme.LIGHTER, context->theme.DARKER);
 				}
+				*/
 			}
 		}
 	}
@@ -294,12 +296,12 @@ namespace aly{
 		for (NeuralLayerRegionPtr layerRegion : layerRegions) {
 			NeuralLayer* layer = layerRegion->getLayer();
 			bool visible = false;
-			for (auto child : layer->getChildren()) {
+			for (auto child : layer->getOutputLayers()) {
 				if (child->isVisible()) {
 					visible = true;
 				}
 			}
-			layerRegion->setExpandable(!visible&&layer->getChildren().size()>0);
+			layerRegion->setExpandable(!visible&&layer->getOutputLayers().size()>0);
 		}
 	}
 	void NeuralFlowPane::add(tgr::NeuralLayer* layer,const pixel2& cursor) {
@@ -310,13 +312,13 @@ namespace aly{
 			float2 dims = layerRegion->dimensions.toPixels(float2(context->screenDimensions()), context->dpmm, context->pixelRatio);
 			layerRegion->position = CoordPX(aly::round(cursor - offset - 0.5f*dims));
 			Composite::add(layerRegion);
-			for(auto child:layer->getChildren()){
+			for(auto child:layer->getOutputLayers()){
 				if (child->hasRegion()) {
 					NeuralConnectionPtr con = NeuralConnectionPtr(new NeuralConnection(layerRegion, child->getRegion()));
 					connections.insert(con);
 				}
 			}
-			for (auto dep : layer->getDependencies()) {
+			for (auto dep : layer->getInputLayers()) {
 				if (dep->hasRegion()) {
 					NeuralConnectionPtr con = NeuralConnectionPtr(new NeuralConnection(dep->getRegion(), layerRegion));
 					connections.insert(con);

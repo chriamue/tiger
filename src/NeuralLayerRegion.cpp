@@ -34,6 +34,7 @@ namespace aly {
 	}
 	void NeuralLayerRegion::drawCache(AlloyContext* context) {
 		if (!cacheDirty)return;
+		/*
 		box2px bounds = box2px(pixel2(0, 0), pixel2(float(cacheImage.width), float(cacheImage.height)));
 		NVGcontext* nvg = context->nvgContext;
 		renderBuffer.begin(RGBAf(0.0f));
@@ -73,10 +74,12 @@ namespace aly {
 		ConvertImage(img, cacheImage);
 		cacheGlyph.reset(new ImageGlyph(cacheImage, AlloyApplicationContext().get(), true));
 		cacheDirty = false;
+		*/
 	}
 	NeuralLayerRegion::NeuralLayerRegion(const std::string& name, tgr::NeuralLayer* layer,
 		const AUnit2D& pos, const AUnit2D& dims, bool resizeable) :
 		Composite(name, pos, dims), layer(layer), scale(1.0f) {
+		/*
 		selectionRadius = 2;
 		cacheDirty = true;
 		const int GLYPH_SIZE = 32;
@@ -125,9 +128,11 @@ namespace aly {
 			return true;
 		};
 		Composite::add(expandButton);
+		*/
 	}
 
 	void NeuralLayerRegion::draw(AlloyContext* context) {
+		/*
 		NVGcontext* nvg = context->nvgContext;
 		aly::box2px bounds = getBounds();
 		pushScissor(nvg, parent->getCursorBounds());
@@ -271,7 +276,7 @@ namespace aly {
 		popScissor(context->nvgContext);
 		
 		Composite::draw(context);
-
+		 */
 	}
 	bool NeuralLayerRegion::onEventHandler(AlloyContext* context, const InputEvent& e) {
 		if (Composite::onEventHandler(context, e))
@@ -301,7 +306,7 @@ namespace aly {
 		bool ret = (activeList.size() > 0 || lastSelected.x != -1);
 		if (ret)return true;
 		if (recurse) {
-			for (auto child : layer->getChildren()) {
+			for (auto child : layer->getOutputLayers()) {
 				if (child->hasRegion() && child->getRegion()->isFocused(false)) {
 					return true;
 				}
@@ -310,6 +315,7 @@ namespace aly {
 		return false;
 	}
 	float  NeuralLayerRegion::setSize(float w) {
+		/*
 		//AlloyContext* context = AlloyApplicationContext().get();
 		pixel2 padding = getPadding();
 		float aspectRatio = layer->width / (float)layer->height;
@@ -319,8 +325,11 @@ namespace aly {
 		dimensions = CoordPX(bounds.dimensions);
 		setDragOffset(pixel2(0, 0));
 		return newBounds.y;
+		*/
+		return 0;
 	}
 	void  NeuralLayerRegion::setScale(float s, pixel2 cursor) {
+		/*
 		//AlloyContext* context = AlloyApplicationContext().get();
 		box2px bounds = getBounds(false);
 		float lastScale = scale;
@@ -336,6 +345,7 @@ namespace aly {
 		setDragOffset(pixel2(0, 0));
 		position = CoordPX(bounds.position - parent->getBoundsPosition());
 		dimensions = CoordPX(bounds.dimensions);
+		*/
 	}
 
 }

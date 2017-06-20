@@ -50,7 +50,6 @@ namespace tgr {
 		aly::Number maxSample;
 		aly::Number lowerSample;
 		aly::Number upperSample;
-		std::shared_ptr<NeuralOptimization> opt;
 		int optimizationMethod;
 
 		std::vector<int> sampleIndexes;

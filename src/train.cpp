@@ -119,11 +119,12 @@ void deconv_ae(network<sequential> &nn,
 
   std::vector<vec_t> training_images_corrupted(train_images);
 
+  /*
   for (auto &d : training_images_corrupted) {
     d = corrupt(move(d), tiny_dnn::float_t(0.1),
                 tiny_dnn::float_t(0.0));  // corrupt 10% data
   }
-
+*/
   gradient_descent optimizer;
 
   // learning deconcolutional Auto-encoder

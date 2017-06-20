@@ -22,7 +22,6 @@
 #define NEURON_H_
 #include <AlloyMath.h>
 #include <AlloyOptimizationMath.h>
-#include "NeuronFunction.h"
 #include <memory>
 #include <map>
 namespace tgr {
@@ -36,10 +35,36 @@ enum class ChannelType
 	label = 0x0004000,
 	aux = 0x0010000  // layer-specific storage
 };
-inline bool is_trainable_weight(ChannelType vtype) {
-	return (vtype & ChannelType::weight) == ChannelType::weight;
+
+enum class BackendType {
+	internal, nnpack, libdnn, avx, opencl
+};
+
+inline std::ostream &operator<<(std::ostream &os, BackendType type) {
+	switch (type) {
+	case BackendType::internal:
+		os << "Internal";
+		break;
+	case BackendType::nnpack:
+		os << "NNPACK";
+		break;
+	case BackendType::libdnn:
+		os << "LibDNN";
+		break;
+	case BackendType::avx:
+		os << "AVX";
+		break;
+	case BackendType::opencl:
+		os << "OpenCL";
+		break;
+	default:
+		throw std::runtime_error("Not supported ostream enum.");
+		break;
+	}
+	return os;
 }
-typedef Vec1f Storage;
+bool isTrainableWeight(ChannelType vtype);
+typedef aly::Vec1f Storage;
 typedef std::vector<Storage> Tensor;
 class NeuralLayer;
 struct Terminal {
@@ -60,52 +85,21 @@ struct Terminal {
 	bool operator <(const Terminal & r) const;
 	bool operator >(const Terminal & r) const;
 };
-inline size_t ShapeVolume(int3 dims) {
-	return (size_t) dims.x * (size_t) dims.y * (size_t) dims.z;
-}
+size_t ShapeVolume(aly::int3 dims);
 class Signal {
 public:
 	ChannelType type;
-	int3 dimensions;
+	aly::int3 dimensions;
 	int64_t id;
 	Tensor weight;
 	Tensor change;
 	NeuralLayer* input;
-	std::vector<NeuralLayer*> outputs;
-	Signal(NeuralLayer* input, int3 dimensions, ChannelType type) :
-			type(type), id(-1), weight( { Storage(ShapeVolume(dimensions)) }), change(
-					{ Storage(ShapeVolume(dimensions)) }), input(input) {
-	}
-	void clearGradients() {
-		for (Storage& store : change) {
-			store.set(0.0f);
-		}
-	}
-	void mergeGradients(Storage& dst) {
-		const auto &grad_head = change[0];
-		size_t sz = grad_head.size();
-		dst.resize(sz);
-		std::copy(grad_head.data.begin(), grad_head.data.end(), dst.ptr());
-#pragma omp parallel for
-		for (int i = 0; i < sz; i++) {
-			for (size_t sample = 1; sample < (int) change.size(); ++sample) {
-				Storage& cur = change[sample];
-				dst[i] += cur[i];
-			}
-		}
-	}
-	void addOutput(NeuralLayer* output) {
-		outputs.push_back(output);
-	}
-	Signal& operator=(const Signal& other) {
-		//Does not copy references to inputs and outputs.
-		weight = other.weight;
-		change = other.change;
-		dimensions = other.dimensions;
-		type = other.type;
-		id = other.id;
-		return *this;
-	}
+	std::vector<std::shared_ptr<NeuralLayer>> outputs;
+	Signal(NeuralLayer* input, aly::int3 dimensions, ChannelType type);
+	void clearGradients();
+	void mergeGradients(Storage& dst);
+	void addOutput(const std::shared_ptr<NeuralLayer>& output);
+	Signal& operator=(const Signal& other);
 };
 typedef std::shared_ptr<Signal> SignalPtr;
 }

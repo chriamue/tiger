@@ -21,12 +21,9 @@
 #include "TigerApp.h"
 #include "AlloyParameterPane.h"
 #include "AlloyExpandTree.h"
-#include "NeuralFilter.h"
-#include "ConvolutionFilter.h"
-#include "AveragePoolFilter.h"
 #include "AlloyDrawUtil.h"
-#include "FullyConnectedFilter.h"
 #include "MNIST.h"
+#include "tiny_dnn/tiny_dnn.h"
 using namespace aly;
 using namespace tgr;
 #define O true
@@ -49,14 +46,14 @@ void TigerApp::setSampleIndex(int idx){
 	sampleIndex.setValue(idx);
 	tweenRegion->setValue(idx);
 	valueRegion->setNumberValue(sampleIndex);
-	sys->getInput()->set(trainInputData[idx]);
-	sys->evaluate();
+	//sys->getInput()->set(trainInputData[idx]);
+	//sys->evaluate();
 }
 void TigerApp::setNeuralTime(int idx) {
 	auto elem = worker->getCache()->get(idx);
 	if (elem.get() != nullptr) {
-		sys->setKnowledge(*elem->getKnowledge());
-		sys->evaluate();
+		//sys->setKnowledge(*elem->getKnowledge());
+		//sys->evaluate();
 	}
 }
 void TigerApp::setSampleRange(int mn, int mx){
@@ -331,9 +328,12 @@ bool TigerApp::init(Composite& rootNode) {
 	};
 	getContext()->addDeferredTask([this]() {
 		box2px bounds=flowRegion->getBounds();
-		flowRegion->add(sys->getInput().get(), bounds.position + pixel2(0.25f*bounds.dimensions.x, 0.3f*bounds.dimensions.y));
-		flowRegion->add(sys->getOutput().get(), bounds.position + pixel2(0.75f*bounds.dimensions.x,0.3f*bounds.dimensions.y));
-		
+		for(NeuralLayerPtr input:sys->getInputLayers()){
+			flowRegion->add(input.get(), bounds.position + pixel2(0.25f*bounds.dimensions.x, 0.3f*bounds.dimensions.y));
+		}
+		for(NeuralLayerPtr output:sys->getOutputLayers()){
+			flowRegion->add(output.get(), bounds.position + pixel2(0.75f*bounds.dimensions.x,0.3f*bounds.dimensions.y));
+		}
 	});
 	initialize();
 	worker->onUpdate = [this](int iteration, bool lastIteration) {
@@ -356,9 +356,7 @@ bool TigerApp::init(Composite& rootNode) {
 	timelineSlider->setMinorTick(worker->getIterationsPerStep());
 	timelineSlider->setMajorTick(worker->getIterationsPerEpoch());
 	timelineSlider->setMaxValue((int)worker->getMaxIteration());
-
-	graphRegion->add(sys->getOutput()->getGraph());
-	
+	//graphRegion->add(sys->getOutput()->getGraph());
 	return true;
 }
 void TigerApp::setSelectedLayer(tgr::NeuralLayer* layer) {
@@ -407,103 +405,7 @@ bool TigerApp::onEventHandler(AlloyContext* context, const aly::InputEvent& e) {
 	}
 	return false;
 }
-bool TigerApp::initializeWaves() {
-	int w = 16;
-	int h = 16;
-	int dir = 4;
-	float freq = 0.1f;
-	int shifts = 4;
-	ConvolutionFilterPtr firstFilter(new ConvolutionFilter(w, h, 5, 2, true));
-	sys->add(firstFilter);
-
-	FullyConnectedFilterPtr secondFilter(new FullyConnectedFilter("Output Layer", firstFilter->getOutputLayers(), dir, 1, true));
-	sys->add(secondFilter);
-
-	secondFilter->getOutputLayer(0)->setFunction(tgr::Linear());
-	sys->setInput(firstFilter->getInputLayer(0));
-	sys->setOutput(secondFilter->getOutputLayer(0));
-	worker.reset(new NeuralRuntime(sys));
-
-	worker->inputSampler = [this](const NeuralLayerPtr& input, int idx) {
-		aly::Image1f& inputData = trainInputData[idx];
-		input->set(inputData);
-	};
-	worker->outputSampler = [this,dir](std::vector<float>& outputData, int idx) {
-		int out = trainOutputData[idx];
-		outputData.resize(dir);
-		for (int d = 0; d < dir; d++) {
-			outputData[d] = (out==d)?1.0f:0.0f;
-		}
-	};
-
-	Image1f img(w, h);
-	std::vector<int> samples;
-	for (int d = 0; d < dir; d++) {
-		for (int s = 0; s < shifts; s++) {
-			for (int i = 0; i < w; i++) {
-				for (int j = 0; j < h; j++) {
-					float x = std::cos(d*ALY_PI / dir)*(i - w*0.5f);
-					float y = std::sin(d*ALY_PI / dir)*(j - h*0.5f);
-					float t = x + y;
-					img(i, j).x = std::cos((2 * t*freq+(s+0.5f)/(float)shifts)*ALY_PI);
-				}
-			}
-			samples.push_back(int(samples.size()));
-			trainInputData.push_back(img);
-			trainOutputData.push_back(d);
-		}
-	}
-	sys->initialize();
-	setSampleRange(0, (int)trainInputData.size() - 1);
-	setSampleIndex(0);
-	//NeuralLayerPtr inputLayer = sys->getInput();
-	//Neuron* n=inputLayer->get(inputLayer->width/2,inputLayer->height/2);
-	//n->print();
-	return true;
-}
-
-bool TigerApp::initializeXOR() {
-	FullyConnectedFilterPtr firstFilter(new FullyConnectedFilter("First Layer",2,2, 2, 2,true));
-	sys->add(firstFilter);
-
-	FullyConnectedFilterPtr secondFilter(new FullyConnectedFilter("Second Layer",firstFilter->getOutputLayer(0), 2, 2, true));
-	sys->add(secondFilter);
-
-	FullyConnectedFilterPtr thirdFilter(new FullyConnectedFilter("Output Layer", secondFilter->getOutputLayer(0), 1, 1, true));
-	sys->add(thirdFilter);
-	thirdFilter->getOutputLayer(0)->setFunction(tgr::Linear());
-	sys->setInput(firstFilter->getInputLayer(0));
-	sys->setOutput(thirdFilter->getOutputLayer(0));
-	worker.reset(new NeuralRuntime(sys));
-	worker->inputSampler = [this](const NeuralLayerPtr& input, int idx) {
-		aly::Image1f& inputData = trainInputData[idx];
-		input->set(inputData);
-	};
-	worker->outputSampler = [this](std::vector<float>& outputData, int idx) {
-		int out = trainOutputData[idx];
-		outputData.resize(1);
-		outputData[0] = float(out);
-	};
-	Image1f img(2, 2);
-	std::vector<int> samples;
-	for (int i = 0; i < 2; i++) {
-		for (int j = 0; j < 2; j++) {
-			int b = i^j;
-			for (int ii = 0; ii < 2; ii++) {
-				for (int jj = 0; jj < 2; jj++) {
-					img(ii, jj).x = (ii == i&&jj == j)?1.0f:-1.0f;
-				}
-			}
-			samples.push_back(int(samples.size()));
-			trainInputData.push_back(img);
-			trainOutputData.push_back(b);
-		}
-	}
-	sys->initialize();
-	setSampleRange(0, (int)trainInputData.size() - 1);
-	setSampleIndex(0);
-	return true;
-}
+/*
 bool TigerApp::initializeLeNet5() {
 	parse_mnist_images(trainFile, trainInputData, 0.0f, 1.0f, 2, 2);
 	parse_mnist_labels(trainLabelFile, trainOutputData);
@@ -569,18 +471,12 @@ bool TigerApp::initializeLeNet5() {
 	}
 	return false;
 }
+*/
 void TigerApp::initialize() {
-	sys.reset(new NeuralSystem(flowRegion));
-	switch (exampleIndex) {
-		case 0: initializeXOR(); break;
-		case 1: initializeWaves(); break;
-		case 2: initializeLeNet5(); break;
-	}
-	sys->initialize(expandTree);
-}
-/*
- * void TigerApp::initialize() {
-	sys.reset(new NeuralSystem(flowRegion));
+	using namespace tiny_dnn;
+	using namespace tiny_dnn::core;
+
+	sys.reset(new NeuralSystem("LaNet5",flowRegion));
 	network<graph> nn;
 	// declare nodes
 	input_layer i1(shape3d(32, 32, 1));
@@ -608,17 +504,12 @@ void TigerApp::initialize() {
 	// connect them to graph
 	i1 << c1 << p1 << d1 << p2 << c2 << fc1;
 	construct_graph(nn, { &i1 }, { &fc1 });
-	NeuralNetwork net;
-	net.build(nn);
 	sys->initialize(expandTree);
 }
- */
 void TigerApp::draw(AlloyContext* context) {
-	/*
 	if (running) {
 		if (!worker->step()) {
 			running = false;
 		}
 	}
-	*/
 }

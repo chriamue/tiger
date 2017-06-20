@@ -27,7 +27,6 @@
 #include <AlloyGraphPane.h>
 #include <Signal.h>
 #include "NeuralLayerRegion.h"
-#include "NeuralOptimization.h"
 #include "NeuralKnowledge.h"
 #include <vector>
 #include <set>
@@ -70,17 +69,16 @@ protected:
 	std::vector<SignalPtr> outputs;
 	std::vector<ChannelType> inputTypes;
 	std::vector<ChannelType> outputTypes;
-	std::vector<NeuralLayer*> children;
-	std::vector<NeuralLayer*> dependencies;
-	std::shared_ptr<NeuralOptimization> optimizer;
+	int id;
 	std::string name;
 	bool trainable;
 	bool visited;
 	bool initialized;
+	bool parallelize;
+	BackendType backendType;
+	NeuralSystem* sys;
 	aly::NeuralLayerRegionPtr layerRegion;
 	aly::GraphDataPtr graph;
-	NeuralSystem* sys;
-	int id;
 	std::function<void(Storage& data, int fanIn, int fanOut)> weightInitFunc;
 	std::function<void(Storage& data, int fanIn, int fanOut)> biasInitFunc;
 	std::vector<Tensor *> fowardInData;
@@ -91,15 +89,24 @@ protected:
 	std::vector<Tensor *> backwardOutGradient;
 	Storage weightDifference;
 public:
+	friend void Connect(const std::shared_ptr<NeuralLayer>& head,
+			const std::shared_ptr<NeuralLayer>& tail, int head_index,
+			int tail_index);
 	int inputChannels;
 	int outputChannels;
-	virtual std::vector<int3> getInputDimensions() const = 0;
-	virtual std::vector<int3> getOutputDimensions() const = 0;
+	virtual std::vector<aly::int3> getInputDimensions() const = 0;
+	virtual std::vector<aly::int3> getOutputDimensions() const = 0;
+	virtual void setInputShape(const aly::int3& in_shape) {
+		throw std::runtime_error(
+				"Can't set shape. Shape inferring not applicable for this "
+						"layer (yet).");
+	}
+	;
 	void clearGradients();
-	int3 getOutputDimensions(size_t idx) const {
+	aly::int3 getOutputDimensions(size_t idx) const {
 		return getOutputDimensions()[idx];
 	}
-	int3 getInputDimensions(size_t idx) const {
+	aly::int3 getInputDimensions(size_t idx) const {
 		return getInputDimensions()[idx];
 	}
 	size_t getOutputDimensionSize() const {
@@ -107,6 +114,9 @@ public:
 	}
 	size_t getInputDimensionSize() const {
 		return getInputDimensions().size();
+	}
+	float getAspect() const {
+		return 1.0f;
 	}
 	SignalPtr getInput(size_t i) {
 		if (inputs[i].get() == nullptr) {
@@ -140,24 +150,37 @@ public:
 	const Storage& getOutputWeights(size_t idx) const {
 		return getOutput(idx)->weight.front();
 	}
+	void setParallelize(bool parallelize) {
+		this->parallelize = parallelize;
+	}
+	void set_backend_type(BackendType backend_type) {
+		backendType = backend_type;
+	}
+
 	std::vector<const Storage*> getInputWeights() const;
 	std::vector<const Storage*> getOutputWeights() const;
 	std::vector<const Storage*> getInputGradient() const;
 	std::vector<const Storage*> getOutputGradient() const;
-	void updateWeights(const std::function<void(Storage& dW,Storage& W,bool parallel)>& optimizer, int batch_size);
-	bool hasSameWeights(const NeuralLayer &rhs, float_t eps) const;
 	virtual void forwardPropagation(const std::vector<Tensor*>&in_data,
 			std::vector<Tensor*> &out_data) = 0;
 	virtual void backwardPropagation(const std::vector<Tensor*> &in_data,
 			const std::vector<Tensor*> &out_data,
 			std::vector<Tensor*> &out_grad, std::vector<Tensor*> &in_grad) = 0;
 	virtual void setSampleCount(size_t sample_count);
+
+	void updateWeights(
+			const std::function<void(Storage& dW, Storage& W, bool parallel)>& optimizer,
+			int batch_size);
+	bool hasSameWeights(const NeuralLayer &rhs, float_t eps) const;
 	void initializeWeights();
 	void setup(bool reset_weight);
 	void setOutputGradients(
 			const std::vector<std::vector<const Storage*>>& grad);
 	void setInputData(const std::vector<std::vector<const Storage*>>& data);
 	void getOutput(std::vector<Tensor*>& out) const;
+	void getOutput(std::vector<const Tensor*>& out) const;
+	std::vector<std::shared_ptr<NeuralLayer>> getOutputLayers() const;
+	std::vector<NeuralLayer*> getInputLayers() const;
 	void forward(const std::vector<Tensor>&input, std::vector<Tensor*>& out);
 	std::vector<Tensor> backward(const std::vector<Tensor>& out_grads);
 	void forward();
@@ -196,7 +219,7 @@ public:
 	void expand();
 	double accumulate(double r);
 	bool hasChildren() const {
-		return (children.size() != 0);
+		return (outputs.size() != 0);
 	}
 	bool isVisited() const {
 		return visited;
@@ -211,9 +234,6 @@ public:
 		visited = v;
 	}
 
-	void setOptimizer(const std::shared_ptr<NeuralOptimization>& opt) {
-		optimizer = opt;
-	}
 	void setSystem(NeuralSystem* s) {
 		sys = s;
 	}
@@ -235,28 +255,13 @@ public:
 	const std::vector<std::shared_ptr<Signal>>& getOutputSignals() const {
 		return outputs;
 	}
-	std::vector<NeuralLayer*>& getChildren() {
-		return children;
-	}
-	std::vector<NeuralLayer*>& getDependencies() {
-		return dependencies;
-	}
-	bool visitedChildren() const;
-	bool visitedDependencies() const;
 
-	const std::vector<NeuralLayer*>& getChildren() const {
-		return children;
-	}
-	const std::vector<NeuralLayer*>& getDependencies() const {
-		return dependencies;
-	}
 	bool isRoot() const {
-		return (dependencies.size() == 0);
+		return (inputs.size() == 0);
 	}
 	bool isLeaf() const {
-		return (children.size() == 0);
+		return (outputs.size() == 0);
 	}
-	void addChild(const std::shared_ptr<NeuralLayer>& layer);
 	void setName(const std::string& n) {
 		name = n;
 	}
@@ -268,7 +273,12 @@ public:
 	NeuralLayer(const std::string& name,
 			const std::vector<ChannelType>& inTypes,
 			const std::vector<ChannelType>& outTypes);
+	virtual ~NeuralLayer() {
+	}
 };
+
 typedef std::shared_ptr<NeuralLayer> NeuralLayerPtr;
+void Connect(const std::shared_ptr<NeuralLayer>& head, const std::shared_ptr<NeuralLayer>& tail,
+		int head_index = 0, int tail_index = 0);
 }
 #endif
