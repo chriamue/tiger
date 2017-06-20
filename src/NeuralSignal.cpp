@@ -18,7 +18,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#include <Signal.h>
+#include <NeuralSignal.h>
 #include "NeuralLayer.h"
 namespace tgr {
 bool Terminal::operator ==(const Terminal & r) const {
@@ -41,20 +41,20 @@ bool isTrainableWeight(ChannelType vtype) {
 size_t ShapeVolume(aly::int3 dims) {
 	return (size_t) dims.x * (size_t) dims.y * (size_t) dims.z;
 }
-Signal::Signal(NeuralLayer* input, aly::int3 dimensions, ChannelType type) :
+NeuralSignal::NeuralSignal(NeuralLayer* input, aly::int3 dimensions, ChannelType type) :
 		type(type), id(-1), weight( { Storage(ShapeVolume(dimensions)) }), change(
 				{ Storage(ShapeVolume(dimensions)) }), input(input) {
 }
-void Signal::clearGradients() {
+void NeuralSignal::clearGradients() {
 	for (Storage& store : change) {
-		store.set(0.0f);
+		store.assign(store.size(),0.0f);
 	}
 }
-void Signal::mergeGradients(Storage& dst) {
+void NeuralSignal::mergeGradients(Storage& dst) {
 	const auto &grad_head = change[0];
 	size_t sz = grad_head.size();
 	dst.resize(sz);
-	std::copy(grad_head.data.begin(), grad_head.data.end(), dst.ptr());
+	std::copy(grad_head.begin(), grad_head.end(), &dst[0]);
 #pragma omp parallel for
 	for (int i = 0; i < sz; i++) {
 		for (size_t sample = 1; sample < (int) change.size(); ++sample) {
@@ -63,10 +63,10 @@ void Signal::mergeGradients(Storage& dst) {
 		}
 	}
 }
-void Signal::addOutput(const NeuralLayerPtr& output) {
+void NeuralSignal::addOutput(const NeuralLayerPtr& output) {
 	outputs.push_back(output);
 }
-Signal& Signal::operator=(const Signal& other) {
+NeuralSignal& NeuralSignal::operator=(const NeuralSignal& other) {
 	//Does not copy references to inputs and outputs.
 	weight = other.weight;
 	change = other.change;

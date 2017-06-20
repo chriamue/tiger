@@ -20,8 +20,8 @@ namespace tgr {
 		return biasWeights.at(layer.getId());
 	}
 	void NeuralKnowledge::add(const NeuralLayer& layer) {
-		weights[layer.getId()] = layer.getWeights();
-		biasWeights[layer.getId()] = layer.getBiasWeights();
+		//weights[layer.getId()].data = layer.getWeights();
+		//biasWeights[layer.getId()].data = layer.getBiasWeights();
 	}
 	void NeuralKnowledge::set(const NeuralSystem& sys) {
 		weights.clear();

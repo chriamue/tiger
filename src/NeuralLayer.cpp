@@ -461,7 +461,7 @@ void NeuralLayer::setup(bool reset_weight) {
 	for (size_t i = 0; i < outputChannels; i++) {
 		if (outputs[i].get() == nullptr) {
 			outputs[i] = SignalPtr(
-					new Signal(this, getOutputDimensions(i), outputTypes[i]));
+					new NeuralSignal(this, getOutputDimensions(i), outputTypes[i]));
 		}
 	}
 

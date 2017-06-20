@@ -25,7 +25,7 @@
 #include <AlloyExpandTree.h>
 #include <AlloyWidget.h>
 #include <AlloyGraphPane.h>
-#include <Signal.h>
+#include <NeuralSignal.h>
 #include "NeuralLayerRegion.h"
 #include "NeuralKnowledge.h"
 #include <vector>
@@ -121,14 +121,14 @@ public:
 	SignalPtr getInput(size_t i) {
 		if (inputs[i].get() == nullptr) {
 			inputs[i] = SignalPtr(
-					new Signal(nullptr, getInputDimensions(i), inputTypes[i]));
+					new NeuralSignal(nullptr, getInputDimensions(i), inputTypes[i]));
 		}
 		return inputs[i];
 	}
 	SignalPtr getOutput(size_t i) {
 		if (outputs[i].get() == nullptr) {
 			outputs[i] = SignalPtr(
-					new Signal(this, getOutputDimensions(i), outputTypes[i]));
+					new NeuralSignal(this, getOutputDimensions(i), outputTypes[i]));
 		}
 		return outputs[i];
 	}
@@ -243,16 +243,16 @@ public:
 		return (layerRegion.get() != nullptr && layerRegion->parent != nullptr);
 	}
 	bool isVisible() const;
-	std::vector<std::shared_ptr<Signal>>& getInputSignals() {
+	std::vector<std::shared_ptr<NeuralSignal>>& getInputSignals() {
 		return inputs;
 	}
-	const std::vector<std::shared_ptr<Signal>>& getInputSignals() const {
+	const std::vector<std::shared_ptr<NeuralSignal>>& getInputSignals() const {
 		return inputs;
 	}
-	std::vector<std::shared_ptr<Signal>>& getOutputSignals() {
+	std::vector<std::shared_ptr<NeuralSignal>>& getOutputSignals() {
 		return outputs;
 	}
-	const std::vector<std::shared_ptr<Signal>>& getOutputSignals() const {
+	const std::vector<std::shared_ptr<NeuralSignal>>& getOutputSignals() const {
 		return outputs;
 	}
 

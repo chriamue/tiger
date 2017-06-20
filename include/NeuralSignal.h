@@ -18,8 +18,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-#ifndef NEURON_H_
-#define NEURON_H_
+#ifndef NEURALSIGNAL_H_
+#define NEURALSIGNAL_H_
 #include <AlloyMath.h>
 #include <AlloyOptimizationMath.h>
 #include <memory>
@@ -64,7 +64,7 @@ inline std::ostream &operator<<(std::ostream &os, BackendType type) {
 	return os;
 }
 bool isTrainableWeight(ChannelType vtype);
-typedef aly::Vec1f Storage;
+typedef std::vector<float,aly::aligned_allocator<float,64>> Storage;
 typedef std::vector<Storage> Tensor;
 class NeuralLayer;
 struct Terminal {
@@ -86,7 +86,7 @@ struct Terminal {
 	bool operator >(const Terminal & r) const;
 };
 size_t ShapeVolume(aly::int3 dims);
-class Signal {
+class NeuralSignal {
 public:
 	ChannelType type;
 	aly::int3 dimensions;
@@ -95,12 +95,12 @@ public:
 	Tensor change;
 	NeuralLayer* input;
 	std::vector<std::shared_ptr<NeuralLayer>> outputs;
-	Signal(NeuralLayer* input, aly::int3 dimensions, ChannelType type);
+	NeuralSignal(NeuralLayer* input, aly::int3 dimensions, ChannelType type);
 	void clearGradients();
 	void mergeGradients(Storage& dst);
 	void addOutput(const std::shared_ptr<NeuralLayer>& output);
-	Signal& operator=(const Signal& other);
+	NeuralSignal& operator=(const NeuralSignal& other);
 };
-typedef std::shared_ptr<Signal> SignalPtr;
+typedef std::shared_ptr<NeuralSignal> SignalPtr;
 }
 #endif
