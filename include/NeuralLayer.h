@@ -153,7 +153,7 @@ public:
 	void setParallelize(bool parallelize) {
 		this->parallelize = parallelize;
 	}
-	void set_backend_type(BackendType backend_type) {
+	void setBackendType(BackendType backend_type) {
 		backendType = backend_type;
 	}
 

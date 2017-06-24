@@ -35,11 +35,27 @@ enum class ChannelType
 	label = 0x0004000,
 	aux = 0x0010000  // layer-specific storage
 };
-
+inline std::vector<ChannelType> ChannelOrder(bool has_bias) {
+	if (has_bias) {
+		return {ChannelType::data, ChannelType::weight, ChannelType::bias};
+	} else {
+		return {ChannelType::data, ChannelType::weight};
+	}
+}
 enum class BackendType {
 	internal, nnpack, libdnn, avx, opencl
 };
-
+inline BackendType DefaultEngine() {
+#ifdef CNN_USE_AVX
+#if defined(__AVX__) || defined(__AVX2__)
+  return BackendType::avx;
+#else
+#error "your compiler does not support AVX"
+#endif
+#else
+  return BackendType::internal;
+#endif
+}
 inline std::ostream &operator<<(std::ostream &os, BackendType type) {
 	switch (type) {
 	case BackendType::internal:
@@ -64,7 +80,7 @@ inline std::ostream &operator<<(std::ostream &os, BackendType type) {
 	return os;
 }
 bool isTrainableWeight(ChannelType vtype);
-typedef std::vector<float,aly::aligned_allocator<float,64>> Storage;
+typedef std::vector<float, aly::aligned_allocator<float, 64>> Storage;
 typedef std::vector<Storage> Tensor;
 class NeuralLayer;
 struct Terminal {
