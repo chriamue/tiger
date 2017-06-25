@@ -24,6 +24,7 @@
 #include <AlloyOptimizationMath.h>
 #include <memory>
 #include <map>
+#include "tiny_dnn/util/util.h"
 namespace tgr {
 enum class ChannelType
 	: int32_t {
@@ -43,17 +44,36 @@ inline std::vector<ChannelType> ChannelOrder(bool has_bias) {
 	}
 }
 enum class BackendType {
-	internal, nnpack, libdnn, avx, opencl
+	internal = 0, nnpack = 1, libdnn = 2, avx = 3, opencl = 4
 };
+inline std::vector<aly::dim3> Convert(
+		const std::vector<tiny_dnn::shape3d>& shapes) {
+	std::vector<aly::dim3> out(shapes.size());
+	for (int i = 0; i < out.size(); i++) {
+		tiny_dnn::shape3d s = shapes[i];
+		out[i] = aly::dim3(s.width_, s.height_, s.depth_);
+	}
+	return out;
+}
+inline std::vector<tiny_dnn::shape3d> Convert(
+		const std::vector<aly::dim3>& shapes) {
+	std::vector<tiny_dnn::shape3d> out(shapes.size());
+	for (int i = 0; i < out.size(); i++) {
+		aly::dim3 s = shapes[i];
+		out[i] = tiny_dnn::shape3d(s.x, s.y, s.z);
+	}
+	return out;
+}
+
 inline BackendType DefaultEngine() {
 #ifdef CNN_USE_AVX
 #if defined(__AVX__) || defined(__AVX2__)
-  return BackendType::avx;
+	return BackendType::avx;
 #else
 #error "your compiler does not support AVX"
 #endif
 #else
-  return BackendType::internal;
+	return BackendType::internal;
 #endif
 }
 inline std::ostream &operator<<(std::ostream &os, BackendType type) {

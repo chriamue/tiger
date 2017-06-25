@@ -94,14 +94,13 @@ public:
 			int tail_index);
 	int inputChannels;
 	int outputChannels;
-	virtual std::vector<aly::int3> getInputDimensions() const = 0;
-	virtual std::vector<aly::int3> getOutputDimensions() const = 0;
+	virtual std::vector<aly::dim3> getInputDimensions() const = 0;
+	virtual std::vector<aly::dim3> getOutputDimensions() const = 0;
 	virtual void setInputShape(const aly::int3& in_shape) {
 		throw std::runtime_error(
 				"Can't set shape. Shape inferring not applicable for this "
 						"layer (yet).");
-	}
-	;
+	};
 	void clearGradients();
 	aly::int3 getOutputDimensions(size_t idx) const {
 		return getOutputDimensions()[idx];
