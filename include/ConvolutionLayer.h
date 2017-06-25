@@ -10,14 +10,10 @@
 
 #include "NeuralLayer.h"
 #include "NeuralSignal.h"
-
 #include "tiny_dnn/tiny_dnn.h"
-#include "tiny_dnn/util/util.h"
 #include <AlloyImage.h>
 #include <AlloyMath.h>
-
 namespace tgr {
-;
 class ConvolutionLayer: public NeuralLayer {
 	ConvolutionLayer(int in_width, int in_height, int window_width,
 			int window_height, int in_channels, int out_channels,
@@ -38,16 +34,15 @@ class ConvolutionLayer: public NeuralLayer {
 	virtual int getFanOutSize() const override;
 private:
 	/* The convolution parameters */
-	conv_params params_;
+	tiny_dnn::core::conv_params params_;
 
 	/* Padding operation */
-	Conv2dPadding padding_op_;
+	tiny_dnn::core::Conv2dPadding padding_op_;
 
 	/* forward op context */
-	OpKernelContext fwd_ctx_;
-
+	tiny_dnn::core::OpKernelContext fwd_ctx_;
 	/* backward op context */
-	OpKernelContext bwd_ctx_;
+	tiny_dnn::core::OpKernelContext bwd_ctx_;
 
 	/* Forward and backward ops */
 	std::shared_ptr<tiny_dnn::core::OpKernel> kernel_fwd_;

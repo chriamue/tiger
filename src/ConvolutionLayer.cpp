@@ -10,8 +10,8 @@ using namespace tiny_dnn::core;
 using namespace aly;
 namespace tgr {
 
-int ConvolutionLayer::conv_out_dim(int in_width, int in_height,
-		int window_size, int w_stride, int h_stride, Padding pad_type) {
+int ConvolutionLayer::conv_out_dim(int in_width, int in_height, int window_size,
+		int w_stride, int h_stride, Padding pad_type) {
 	return tiny_dnn::conv_out_length(in_width, window_size, w_stride,
 			static_cast<tiny_dnn::padding>(pad_type))
 			* tiny_dnn::conv_out_length(in_height, window_size, h_stride,
@@ -85,16 +85,16 @@ ConvolutionLayer::ConvolutionLayer(int in_width, int in_height,
 		NeuralLayer("Convolution", ChannelOrder(has_bias),
 				{ ChannelType::data }) {
 	conv_set_params(shape3d(in_width, in_height, in_channels), window_width,
-			window_height, out_channels,static_cast<padding>(pad_type), has_bias, w_stride, h_stride,
-			connection_table);
+			window_height, out_channels, static_cast<padding>(pad_type),
+			has_bias, w_stride, h_stride, connection_table);
 	init_backend(static_cast<backend_t>(backend_type));
 	setBackendType(backend_type);
 }
 std::vector<aly::dim3> ConvolutionLayer::getInputDimensions() const {
 	if (params_.has_bias) {
-		return {dim3(params_.in.width_,params_.in.height_,params_.in.depth_), dim3(params_.weight.width_,params_.weight.height_,params_.weight.depth_),dim3(1, 1, params_.out.depth_)};
+		return {Convert(params_.in), Convert(params_.weight),dim3(1, 1, params_.out.depth_)};
 	} else {
-		return {dim3(params_.in.width_,params_.in.height_,params_.in.depth_), dim3(params_.weight.width_,params_.weight.height_,params_.weight.depth_)};
+		return {Convert(params_.in), Convert(params_.weight)};
 	}
 }
 std::vector<aly::dim3> ConvolutionLayer::getOutputDimensions() const {

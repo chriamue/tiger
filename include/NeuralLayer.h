@@ -169,9 +169,11 @@ public:
 	std::vector<const Storage*> getOutputGradient() const;
 	virtual void forwardPropagation(const std::vector<Tensor*>&in_data,
 			std::vector<Tensor*> &out_data) = 0;
-	virtual void backwardPropagation(const std::vector<Tensor*> &in_data,
+	virtual void backwardPropagation(
+			const std::vector<Tensor*> &in_data,
 			const std::vector<Tensor*> &out_data,
-			std::vector<Tensor*> &out_grad, std::vector<Tensor*> &in_grad) = 0;
+			std::vector<Tensor*> &out_grad,
+			std::vector<Tensor*> &in_grad) = 0;
 	virtual void setSampleCount(size_t sample_count);
 
 	void updateWeights(

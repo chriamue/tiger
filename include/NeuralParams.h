@@ -51,7 +51,7 @@ class maxpool_params : public Params {
   int pool_size_y;
   int stride_x;
   int stride_y;
-  PaddingType pad_type;
+  Padding pad_type;
 
   /* mapping out => max_index(in) (1:1) */
   std::vector<std::vector<int>> out2inmax;

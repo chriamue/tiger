@@ -50,6 +50,12 @@ inline std::vector<ChannelType> ChannelOrder(bool has_bias) {
 enum class BackendType {
 	internal = 0, nnpack = 1, libdnn = 2, avx = 3, opencl = 4
 };
+inline aly::dim3 Convert(const tiny_dnn::shape3d& s) {
+	return aly::dim3(s.width_, s.height_, s.depth_);
+}
+inline tiny_dnn::shape3d Convert(const aly::dim3& d) {
+	return tiny_dnn::shape3d(d.x, d.y, d.z);
+}
 inline std::vector<aly::dim3> Convert(
 		const std::vector<tiny_dnn::shape3d>& shapes) {
 	std::vector<aly::dim3> out(shapes.size());
