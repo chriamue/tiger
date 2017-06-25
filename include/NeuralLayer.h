@@ -30,7 +30,9 @@
 #include "NeuralKnowledge.h"
 #include <vector>
 #include <set>
-
+namespace tiny_dnn{
+	class Device;
+}
 class TigerApp;
 namespace aly {
 class NeuralFlowPane;
@@ -81,13 +83,8 @@ protected:
 	aly::GraphDataPtr graph;
 	std::function<void(Storage& data, int fanIn, int fanOut)> weightInitFunc;
 	std::function<void(Storage& data, int fanIn, int fanOut)> biasInitFunc;
-	std::vector<Tensor *> fowardInData;
-	std::vector<Tensor *> fowardInGradient;
-	std::vector<Tensor *> backwardInData;
-	std::vector<Tensor *> backwardInGradient;
-	std::vector<Tensor *> backwardOutData;
-	std::vector<Tensor *> backwardOutGradient;
 	Storage weightDifference;
+	tiny_dnn::Device* device_ptr_=nullptr;
 public:
 	friend void Connect(const std::shared_ptr<NeuralLayer>& head,
 			const std::shared_ptr<NeuralLayer>& tail, int head_index,
@@ -101,6 +98,8 @@ public:
 				"Can't set shape. Shape inferring not applicable for this "
 						"layer (yet).");
 	};
+
+	tiny_dnn::Device* device() const { return device_ptr_; }
 	void clearGradients();
 	aly::int3 getOutputDimensions(size_t idx) const {
 		return getOutputDimensions()[idx];
@@ -155,7 +154,9 @@ public:
 	void setBackendType(BackendType backend_type) {
 		backendType = backend_type;
 	}
-
+	BackendType getBackendType() const {
+		return backendType;
+	}
 	std::vector<const Storage*> getInputWeights() const;
 	std::vector<const Storage*> getOutputWeights() const;
 	std::vector<const Storage*> getInputGradient() const;
