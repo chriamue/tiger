@@ -85,6 +85,12 @@ protected:
 	std::function<void(Storage& data, int fanIn, int fanOut)> biasInitFunc;
 	Storage weightDifference;
 	tiny_dnn::Device* device_ptr_=nullptr;
+	std::vector<Tensor *> fowardInData;
+	std::vector<Tensor *> fowardInGradient;
+	std::vector<Tensor *> backwardInData;
+	std::vector<Tensor *> backwardInGradient;
+	std::vector<Tensor *> backwardOutData;
+	std::vector<Tensor *> backwardOutGradient;
 public:
 	friend void Connect(const std::shared_ptr<NeuralLayer>& head,
 			const std::shared_ptr<NeuralLayer>& tail, int head_index,

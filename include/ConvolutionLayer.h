@@ -17,9 +17,7 @@
 #include <AlloyMath.h>
 
 namespace tgr {
-enum class Padding {
-	Valid = tiny_dnn::padding::valid, Same = tiny_dnn::padding::same
-};
+;
 class ConvolutionLayer: public NeuralLayer {
 	ConvolutionLayer(int in_width, int in_height, int window_width,
 			int window_height, int in_channels, int out_channels,

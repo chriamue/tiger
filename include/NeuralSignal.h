@@ -36,6 +36,10 @@ enum class ChannelType
 	label = 0x0004000,
 	aux = 0x0010000  // layer-specific storage
 };
+enum class Padding {
+	Valid = tiny_dnn::padding::valid, Same = tiny_dnn::padding::same
+};
+
 inline std::vector<ChannelType> ChannelOrder(bool has_bias) {
 	if (has_bias) {
 		return {ChannelType::data, ChannelType::weight, ChannelType::bias};
