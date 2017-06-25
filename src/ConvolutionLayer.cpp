@@ -9,6 +9,7 @@ using namespace tiny_dnn;
 using namespace tiny_dnn::core;
 using namespace aly;
 namespace tgr {
+
 int ConvolutionLayer::conv_out_dim(int in_width, int in_height,
 		int window_size, int w_stride, int h_stride, Padding pad_type) {
 	return tiny_dnn::conv_out_length(in_width, window_size, w_stride,

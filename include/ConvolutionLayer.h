@@ -21,6 +21,24 @@ enum class Padding {
 	Valid = tiny_dnn::padding::valid, Same = tiny_dnn::padding::same
 };
 class ConvolutionLayer: public NeuralLayer {
+	ConvolutionLayer(int in_width, int in_height, int window_width,
+			int window_height, int in_channels, int out_channels,
+			const tiny_dnn::core::connection_table& connection_table,
+			Padding pad_type = Padding::Valid, bool has_bias = true,
+			int w_stride = 1, int h_stride = 1, BackendType backend_type =
+					DefaultEngine());
+	virtual std::vector<aly::dim3> getInputDimensions() const override;
+	virtual std::vector<aly::dim3> getOutputDimensions() const override;
+	virtual void forwardPropagation(const std::vector<Tensor*>&in_data,
+			std::vector<Tensor*> &out_data) override;
+	virtual void backwardPropagation(const std::vector<Tensor*> &in_data,
+			const std::vector<Tensor*> &out_data,
+			std::vector<Tensor*> &out_grad, std::vector<Tensor*> &in_grad)
+					override;
+	virtual void setSampleCount(size_t sample_count) override;
+	virtual int getFanInSize() const override;
+	virtual int getFanOutSize() const override;
+private:
 	/* The convolution parameters */
 	conv_params params_;
 
@@ -56,23 +74,6 @@ class ConvolutionLayer: public NeuralLayer {
 	int conv_out_dim(int in_width, int in_height, int window_width,
 			int window_height, int w_stride, int h_stride,
 			Padding pad_type) const;
-	ConvolutionLayer(int in_width, int in_height, int window_width,
-			int window_height, int in_channels, int out_channels,
-			const tiny_dnn::core::connection_table& connection_table,
-			Padding pad_type = Padding::Valid, bool has_bias = true,
-			int w_stride = 1, int h_stride = 1, BackendType backend_type =
-					DefaultEngine());
-	virtual std::vector<aly::dim3> getInputDimensions() const override;
-	virtual std::vector<aly::dim3> getOutputDimensions() const override;
-	virtual void forwardPropagation(const std::vector<Tensor*>&in_data,
-			std::vector<Tensor*> &out_data) override;
-	virtual void backwardPropagation(const std::vector<Tensor*> &in_data,
-			const std::vector<Tensor*> &out_data,
-			std::vector<Tensor*> &out_grad, std::vector<Tensor*> &in_grad)
-					override;
-	virtual void setSampleCount(size_t sample_count) override;
-	virtual int getFanInSize() const override;
-	virtual int getFanOutSize() const override;
 };
 
 }
