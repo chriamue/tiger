@@ -64,7 +64,7 @@ private:
 	void connect_kernel(int pooling_size_x, int pooling_size_y, int x, int y,
 			int inc);
 };
-
+typedef std::shared_ptr<AveragePoolingLayer> AveragePoolingLayerPtr;
 }
 
 #endif /* INCLUDE_AVERAGEPOOLINGLAYER_H_ */

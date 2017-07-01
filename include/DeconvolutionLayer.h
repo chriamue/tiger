@@ -108,6 +108,7 @@ private:
 	std::shared_ptr<tiny_dnn::core::backend> backend_;
 	tiny_dnn::core::deconv_layer_worker_specific_storage deconv_layer_worker_storage_;
 };
+typedef std::shared_ptr<DeconvolutionLayer> DeconvolutionLayerPtr;
 }
 
 #endif /* INCLUDE_DECONVOLUTIONLAYER_H_ */

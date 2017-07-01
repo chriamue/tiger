@@ -475,21 +475,21 @@ bool TigerApp::initializeLeNet5() {
 void TigerApp::initialize() {
 
 	sys.reset(new NeuralSystem("LaNet5",flowRegion));
-	InputLayer i1(dim3(32,32,1));
-	ConvolutionLayer c1(32,32,5,1,6);
-	TanhLayer c1_tanh(28,28,6);
-	AveragePoolingLayer p1(28,28,6,2);
-	TanhLayer p1_tanh(14,14,6);
-	DeconvolutionLayer d1(14, 14, 5, 6, 16, connection_table(MNIST_TABLE, 6, 16));
-	TanhLayer d1_tanh(18,18,16);
-	AveragePoolingLayer p2(18,18,16,2);
-	TanhLayer p2_tanh(9,9,16);
-	ConvolutionLayer c2(9,9,9,16,120);
-	TanhLayer c2_tanh(1,1,120);
-	FullyConnectedLayer fc1(120,10);
-	TanhLayer fc1_tanh(10);
 
-	/*
+	InputLayerPtr i1=MakeShared<InputLayer>(dim3(32,32,1));
+	ConvolutionLayerPtr c1=MakeShared<ConvolutionLayer>(32,32,5,1,6);
+	TanhLayerPtr c1_tanh=MakeShared<TanhLayer>(28,28,6);
+	AveragePoolingLayerPtr p1=MakeShared<AveragePoolingLayer>(28,28,6,2);
+	TanhLayerPtr p1_tanh=MakeShared<TanhLayer>(14,14,6);
+	DeconvolutionLayerPtr d1=MakeShared<DeconvolutionLayer>(14, 14, 5, 6, 16, connection_table(MNIST_TABLE, 6, 16));
+	TanhLayerPtr d1_tanh=MakeShared<TanhLayer>(18,18,16);
+	AveragePoolingLayerPtr p2=MakeShared<AveragePoolingLayer>(18,18,16,2);
+	TanhLayerPtr p2_tanh=MakeShared<TanhLayer>(9,9,16);
+	ConvolutionLayerPtr c2=MakeShared<ConvolutionLayer>(9,9,9,16,120);
+	TanhLayerPtr c2_tanh=MakeShared<TanhLayer>(1,1,120);
+	FullyConnectedLayerPtr fc1=MakeShared<FullyConnectedLayer>(120,10);
+	TanhLayerPtr fc1_tanh=MakeShared<TanhLayer>(10);
+
 	c1 << c1_tanh;
 	p1 << p1_tanh;
 	d1 << d1_tanh;
@@ -497,9 +497,10 @@ void TigerApp::initialize() {
 	p2 << p2_tanh;
 	fc1 << fc1_tanh;
 	i1 << c1 << p1 << d1 << p2 << c2 << fc1;
-	*/
-
+	sys->build(i1,fc1_tanh);
 	/*
+
+
 	using namespace tiny_dnn;
 	using namespace tiny_dnn::core;
 
@@ -530,8 +531,8 @@ void TigerApp::initialize() {
 	// connect them to graph
 	i1 << c1 << p1 << d1 << p2 << c2 << fc1;
 	construct_graph(nn, { &i1 }, { &fc1 });
-	sys->initialize(expandTree);
 	*/
+	sys->initialize(expandTree);
 }
 void TigerApp::draw(AlloyContext* context) {
 	if (running) {

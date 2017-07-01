@@ -114,6 +114,8 @@ public:
 private:
 	aly::dim3 in_shape_;
 };
+
+typedef std::shared_ptr<ActivationLayer> ActivationLayerPtr;
 }
 
 #endif /* INCLUDE_ACTIVATIONLAYER_H_ */

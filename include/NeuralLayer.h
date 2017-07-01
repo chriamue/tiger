@@ -30,8 +30,8 @@
 #include "NeuralKnowledge.h"
 #include <vector>
 #include <set>
-namespace tiny_dnn{
-	class Device;
+namespace tiny_dnn {
+class Device;
 }
 class TigerApp;
 namespace aly {
@@ -84,7 +84,7 @@ protected:
 	std::function<void(Storage& data, int fanIn, int fanOut)> weightInitFunc;
 	std::function<void(Storage& data, int fanIn, int fanOut)> biasInitFunc;
 	Storage weightDifference;
-	tiny_dnn::Device* device_ptr_=nullptr;
+	tiny_dnn::Device* device_ptr_ = nullptr;
 	std::vector<Tensor *> fowardInData;
 	std::vector<Tensor *> fowardInGradient;
 	std::vector<Tensor *> backwardInData;
@@ -103,9 +103,12 @@ public:
 		throw std::runtime_error(
 				"Can't set shape. Shape inferring not applicable for this "
 						"layer (yet).");
-	};
+	}
+	;
 
-	tiny_dnn::Device* device() const { return device_ptr_; }
+	tiny_dnn::Device* device() const {
+		return device_ptr_;
+	}
 	void clearGradients();
 	aly::int3 getOutputDimensions(size_t idx) const {
 		return getOutputDimensions()[idx];
@@ -125,14 +128,16 @@ public:
 	SignalPtr getInput(size_t i) {
 		if (inputs[i].get() == nullptr) {
 			inputs[i] = SignalPtr(
-					new NeuralSignal(nullptr, getInputDimensions(i), inputTypes[i]));
+					new NeuralSignal(nullptr, getInputDimensions(i),
+							inputTypes[i]));
 		}
 		return inputs[i];
 	}
 	SignalPtr getOutput(size_t i) {
 		if (outputs[i].get() == nullptr) {
 			outputs[i] = SignalPtr(
-					new NeuralSignal(this, getOutputDimensions(i), outputTypes[i]));
+					new NeuralSignal(this, getOutputDimensions(i),
+							outputTypes[i]));
 		}
 		return outputs[i];
 	}
@@ -169,11 +174,9 @@ public:
 	std::vector<const Storage*> getOutputGradient() const;
 	virtual void forwardPropagation(const std::vector<Tensor*>&in_data,
 			std::vector<Tensor*> &out_data) = 0;
-	virtual void backwardPropagation(
-			const std::vector<Tensor*> &in_data,
+	virtual void backwardPropagation(const std::vector<Tensor*> &in_data,
 			const std::vector<Tensor*> &out_data,
-			std::vector<Tensor*> &out_grad,
-			std::vector<Tensor*> &in_grad) = 0;
+			std::vector<Tensor*> &out_grad, std::vector<Tensor*> &in_grad) = 0;
 	virtual void setSampleCount(size_t sample_count);
 
 	void updateWeights(
@@ -286,7 +289,12 @@ public:
 };
 
 typedef std::shared_ptr<NeuralLayer> NeuralLayerPtr;
-void Connect(const std::shared_ptr<NeuralLayer>& head, const std::shared_ptr<NeuralLayer>& tail,
-		int head_index = 0, int tail_index = 0);
+void Connect(const std::shared_ptr<NeuralLayer>& head,
+		const std::shared_ptr<NeuralLayer>& tail, int head_index = 0,
+		int tail_index = 0);
+inline const NeuralLayerPtr& operator<<(const NeuralLayerPtr& lhs,const NeuralLayerPtr& rhs) {
+	Connect(lhs, rhs);
+	return rhs;
+}
 }
 #endif

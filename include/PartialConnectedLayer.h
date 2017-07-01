@@ -38,6 +38,7 @@ protected:
 	std::vector<size_t> out2bias_;
 	float_t scale_factor_;
 };
+typedef std::shared_ptr<PartialConnectedLayer> PartialConnectedLayerPtr;
 }
 
 #endif /* INCLUDE_PARTIALCONNECTEDLAYER_H_ */

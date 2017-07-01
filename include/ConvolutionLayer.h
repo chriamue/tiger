@@ -103,6 +103,7 @@ private:
 			int window_height, int w_stride, int h_stride,
 			Padding pad_type) const;
 };
+typedef std::shared_ptr<ConvolutionLayer> ConvolutionLayerPtr;
 
 }
 

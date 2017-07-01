@@ -25,7 +25,7 @@ public:
 private:
 	aly::dim3 shape_;
 };
-
+typedef std::shared_ptr<InputLayer> InputLayerPtr;
 }
 
 #endif /* INCLUDE_INPUTLAYER_H_ */

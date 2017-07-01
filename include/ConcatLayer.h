@@ -26,7 +26,7 @@ private:
 	std::vector<aly::dim3> in_shapes_;
 	aly::dim3 out_shape_;
 };
-
+typedef std::shared_ptr<ConcatLayer> ConcatLayerPtr;
 }
 
 #endif /* INCLUDE_CONCATLAYER_H_ */

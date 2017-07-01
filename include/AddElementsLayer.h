@@ -22,4 +22,5 @@ private:
 	int num_args_;
 	int dim_;
 };
+typedef std::shared_ptr<AddElementsLayer> AddElementsLayerPtr;
 }

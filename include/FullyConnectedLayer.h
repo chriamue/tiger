@@ -76,6 +76,7 @@ private:
 	std::shared_ptr<tiny_dnn::core::OpKernel> kernel_fwd_;
 	std::shared_ptr<tiny_dnn::core::OpKernel> kernel_back_;
 };
+typedef std::shared_ptr<FullyConnectedLayer> FullyConnectedLayerPtr;
 }
 
 #endif /* INCLUDE_FULLYCONNECTEDLAYER_H_ */

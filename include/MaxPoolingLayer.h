@@ -19,11 +19,9 @@ class MaxPoolingLayer: public NeuralLayer {
 					DefaultEngine());
 	virtual void forwardPropagation(const std::vector<Tensor*>&in_data,
 			std::vector<Tensor*> &out_data) override;
-	virtual void backwardPropagation(
-			const std::vector<Tensor*> &in_data,
+	virtual void backwardPropagation(const std::vector<Tensor*> &in_data,
 			const std::vector<Tensor*> &out_data,
-			std::vector<Tensor*> &out_grad,
-			std::vector<Tensor*> &in_grad)
+			std::vector<Tensor*> &out_grad, std::vector<Tensor*> &in_grad)
 					override;
 	virtual int getFanInSize() const override;
 	virtual int getFanOutSize() const override;
@@ -53,6 +51,7 @@ private:
 	void init_connection();
 	void init_backend(BackendType backend_type);
 };
+typedef std::shared_ptr<MaxPoolingLayer> MaxPoolingLayerPtr;
 }
 
 #endif /* INCLUDE_MAXPOOLINGLAYER_H_ */

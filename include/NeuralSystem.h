@@ -137,8 +137,17 @@ public:
 	void setup(bool reset_weight);
 	void clearGradients();
 	void backward(const std::vector<Tensor> &out_grad);
-	void build(const std::vector<NeuralLayerPtr> &input,
+	void build(const std::vector<NeuralLayerPtr>& input,
 			const std::vector<NeuralLayerPtr> &output);
+	void build(NeuralLayerPtr input, NeuralLayerPtr output) {
+		build(std::vector<NeuralLayerPtr> { input },
+				std::vector<NeuralLayerPtr> { output });
+	}
+	void build(const std::initializer_list<NeuralLayerPtr>& input,
+			const std::initializer_list<NeuralLayerPtr> &output) {
+		build(std::vector<NeuralLayerPtr>(input.begin(), input.end()),
+				std::vector<NeuralLayerPtr>(output.begin(), output.end()));
+	}
 };
 typedef std::shared_ptr<NeuralSystem> NeuralSystemPtr;
 

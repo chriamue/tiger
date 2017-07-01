@@ -42,7 +42,7 @@ private:
 	void init_connection(int pooling_size);
 	void connect_kernel(int pooling_size, int x, int y, int inc);
 };
-
+typedef std::shared_ptr<AverageUnpoolingLayer> AverageUnpoolingLayerPtr;
 }
 
 #endif /* INCLUDE_AVERAGEUNPOOLINGLAYER_H_ */

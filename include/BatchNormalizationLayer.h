@@ -68,6 +68,8 @@ private:
 	// for test
 	bool update_immidiately_;
 };
+typedef std::shared_ptr<BatchNormalizationLayer> BatchNormalizationLayerPtr;
+
 }
 
 #endif /* INCLUDE_BATCHNORMALIZATIONLAYER_H_ */
