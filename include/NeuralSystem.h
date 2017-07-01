@@ -23,6 +23,22 @@
 #include "NeuralLayer.h"
 #include "AlloyExpandTree.h"
 #include "NeuralKnowledge.h"
+
+#include "ActivationLayer.h"
+#include "AddElementsLayer.h"
+#include "AveragePoolingLayer.h"
+#include "AverageUnpoolingLayer.h"
+#include "BatchNormalizationLayer.h"
+#include "ConcatLayer.h"
+#include "DeconvolutionLayer.h"
+#include "FullyConnectedLayer.h"
+#include "InputLayer.h"
+#include "LinearLayer.h"
+#include "MaxPoolingLayer.h"
+#include "PartialConnectedLayer.h"
+#include "TanhLayer.h"
+#include "ConvolutionLayer.h"
+
 #include <map>
 namespace aly {
 class NeuralFlowPane;

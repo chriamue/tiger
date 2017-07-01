@@ -46,6 +46,19 @@ public:
 			Padding pad_type = Padding::Valid, bool has_bias = true,
 			int w_stride = 1, int h_stride = 1, BackendType backend_type =
 					DefaultEngine());
+
+	DeconvolutionLayer(int in_width, int in_height, int window_size,
+			int in_channels, int out_channels,
+			const tiny_dnn::core::connection_table &connection_table,
+			Padding pad_type = Padding::Valid, bool has_bias = true,
+			int w_stride = 1, int h_stride = 1, BackendType backend_type =
+					DefaultEngine()) :
+			DeconvolutionLayer(in_width, in_height, window_size, window_size,
+					in_channels, out_channels, connection_table, pad_type,
+					has_bias, w_stride, h_stride, backend_type) {
+
+	}
+
 	///< number of incoming connections for each output unit
 	virtual int getFanInSize() const override;
 

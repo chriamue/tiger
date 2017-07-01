@@ -26,14 +26,21 @@ public:
 	 *input
 	 * @param pad_type     [in] padding mode(same/valid)
 	 **/
-	AveragePoolingLayer( int in_width,
-			int in_height,
-			int in_channels,
-			int pool_size_x,
-			int pool_size_y,
-			int stride_x,
-			int stride_y,
+	AveragePoolingLayer(int in_width, int in_height, int in_channels,
+			int pool_size_x, int pool_size_y, int stride_x, int stride_y,
 			Padding pad_type = Padding::Valid);
+	AveragePoolingLayer(int in_width, int in_height, int in_channels,
+			int pool_size) :
+			AveragePoolingLayer(in_width, in_height, in_channels, pool_size,
+					(in_height == 1 ? 1 : pool_size)) {
+	}
+	AveragePoolingLayer(int in_width, int in_height, int in_channels,
+			int pool_size, int stride) :
+			AveragePoolingLayer(in_width, in_height, in_channels, pool_size,
+					(in_height == 1 ? 1 : pool_size), stride, stride,
+					Padding::Valid) {
+
+	}
 	virtual std::vector<aly::dim3> getInputDimensions() const override;
 	virtual std::vector<aly::dim3> getOutputDimensions() const override;
 	virtual void forwardPropagation(const std::vector<Tensor*>&in_data,

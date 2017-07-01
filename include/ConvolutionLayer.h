@@ -15,12 +15,47 @@
 #include <AlloyMath.h>
 namespace tgr {
 class ConvolutionLayer: public NeuralLayer {
+public:
 	ConvolutionLayer(int in_width, int in_height, int window_width,
 			int window_height, int in_channels, int out_channels,
 			const tiny_dnn::core::connection_table& connection_table,
 			Padding pad_type = Padding::Valid, bool has_bias = true,
 			int w_stride = 1, int h_stride = 1, BackendType backend_type =
 					DefaultEngine());
+	ConvolutionLayer(int in_width, int in_height, int window_size, int in_channels, int out_channels,
+			Padding pad_type = Padding::Valid, bool has_bias = true,
+			int w_stride = 1, int h_stride = 1, BackendType backend_type =
+					DefaultEngine()):ConvolutionLayer(in_width,
+                          in_height,
+                          window_size,
+                          window_size,
+                          in_channels,
+                          out_channels,
+                          tiny_dnn::core::connection_table(),
+                          pad_type,
+                          has_bias,
+                          w_stride,
+                          h_stride,
+                          backend_type){
+
+	}
+	ConvolutionLayer(int in_width, int in_height, int window_width,int window_height, int in_channels, int out_channels,
+			Padding pad_type = Padding::Valid, bool has_bias = true,
+			int w_stride = 1, int h_stride = 1, BackendType backend_type =
+					DefaultEngine()):ConvolutionLayer(in_width,
+                          in_height,
+                          window_width,
+                          window_height,
+                          in_channels,
+                          out_channels,
+                          tiny_dnn::core::connection_table(),
+                          pad_type,
+                          has_bias,
+                          w_stride,
+                          h_stride,
+                          backend_type){
+
+	}
 	virtual std::vector<aly::dim3> getInputDimensions() const override;
 	virtual std::vector<aly::dim3> getOutputDimensions() const override;
 	virtual void forwardPropagation(const std::vector<Tensor*>&in_data,
