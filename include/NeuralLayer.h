@@ -28,6 +28,7 @@
 #include <NeuralSignal.h>
 #include "NeuralLayerRegion.h"
 #include "NeuralKnowledge.h"
+#include "Neuron.h"
 #include <vector>
 #include <set>
 namespace tiny_dnn {
@@ -63,6 +64,8 @@ struct NeuralState {
 				CEREAL_NVP(biasResponses), CEREAL_NVP(biasResponseChanges));
 	}
 };
+
+typedef std::shared_ptr<Neuron> NeuronPtr;
 void WriteNeuralStateToFile(const std::string& file, const NeuralState& params);
 void ReadNeuralStateFromFile(const std::string& file, NeuralState& params);
 class NeuralLayer {
@@ -72,6 +75,8 @@ protected:
 	std::vector<ChannelType> inputTypes;
 	std::vector<ChannelType> outputTypes;
 	int id;
+	aly::dim3 inputSize;
+	aly::dim3 outputSize;
 	std::string name;
 	bool trainable;
 	bool visited;
@@ -99,21 +104,21 @@ public:
 	int outputChannels;
 	virtual std::vector<aly::dim3> getInputDimensions() const = 0;
 	virtual std::vector<aly::dim3> getOutputDimensions() const = 0;
+	aly::dim3 getInputSize();
+	aly::dim3 getOutputSize();
 	virtual void setInputShape(const aly::dim3& in_shape) {
 		throw std::runtime_error(
 				"Can't set shape. Shape inferring not applicable for this "
 						"layer (yet).");
 	}
-	;
-
 	tiny_dnn::Device* device() const {
 		return device_ptr_;
 	}
 	void clearGradients();
-	aly::int3 getOutputDimensions(size_t idx) const {
+	inline aly::dim3 getOutputDimensions(size_t idx) const {
 		return getOutputDimensions()[idx];
 	}
-	aly::int3 getInputDimensions(size_t idx) const {
+	inline aly::dim3 getInputDimensions(size_t idx) const {
 		return getInputDimensions()[idx];
 	}
 	size_t getOutputDimensionSize() const {
@@ -122,9 +127,7 @@ public:
 	size_t getInputDimensionSize() const {
 		return getInputDimensions().size();
 	}
-	float getAspect() const {
-		return 1.0f;
-	}
+	float getAspect();
 	SignalPtr getInput(size_t i) {
 		if (inputs[i].get() == nullptr) {
 			inputs[i] = SignalPtr(
@@ -148,16 +151,16 @@ public:
 		return outputs[i];
 	}
 	Storage& getInputWeights(size_t idx) {
-		return getInput(idx)->weight.front();
+		return getInput(idx)->value.front();
 	}
 	Storage& getOutputWeights(size_t idx) {
-		return getOutput(idx)->weight.front();
+		return getOutput(idx)->value.front();
 	}
 	const Storage& getInputWeights(size_t idx) const {
-		return getInput(idx)->weight.front();
+		return getInput(idx)->value.front();
 	}
 	const Storage& getOutputWeights(size_t idx) const {
-		return getOutput(idx)->weight.front();
+		return getOutput(idx)->value.front();
 	}
 	void setParallelize(bool parallelize) {
 		this->parallelize = parallelize;
@@ -266,13 +269,18 @@ public:
 	const std::vector<std::shared_ptr<NeuralSignal>>& getOutputSignals() const {
 		return outputs;
 	}
-
-	bool isRoot() const {
-		return (inputs.size() == 0);
+	virtual void getStencilInput(const aly::int3& pos,std::vector<aly::int3>& stencil) const {
+		stencil = std::vector<aly::int3> { pos };
 	}
-	bool isLeaf() const {
-		return (outputs.size() == 0);
+	virtual void getStencilWeight(const aly::int3& pos,std::vector<aly::int3>& stencil) const {
+		stencil = std::vector<aly::int3> { pos };
 	}
+	virtual bool getStencilBias(const aly::int3& pos,aly::int3& stencil) const {
+		stencil = aly::int3(0, 0, pos.z);
+	}
+	void getNeuron(const aly::int3& pos, Neuron& neuron);
+	bool isRoot() const;
+	bool isLeaf() const;
 	void setName(const std::string& n) {
 		name = n;
 	}
@@ -292,7 +300,8 @@ typedef std::shared_ptr<NeuralLayer> NeuralLayerPtr;
 void Connect(const std::shared_ptr<NeuralLayer>& head,
 		const std::shared_ptr<NeuralLayer>& tail, int head_index = 0,
 		int tail_index = 0);
-inline const NeuralLayerPtr& operator<<(const NeuralLayerPtr& lhs,const NeuralLayerPtr& rhs) {
+inline const NeuralLayerPtr& operator<<(const NeuralLayerPtr& lhs,
+		const NeuralLayerPtr& rhs) {
 	Connect(lhs, rhs);
 	return rhs;
 }

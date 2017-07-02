@@ -82,8 +82,7 @@ ConvolutionLayer::ConvolutionLayer(int in_width, int in_height,
 		int window_width, int window_height, int in_channels, int out_channels,
 		const core::connection_table& connection_table, Padding pad_type,
 		bool has_bias, int w_stride, int h_stride, BackendType backend_type) :
-		NeuralLayer("Convolution", ChannelOrder(has_bias),
-				{ ChannelType::data }) {
+		NeuralLayer("Convolution", ChannelOrder(has_bias),{ ChannelType::data }) {
 	conv_set_params(shape3d(in_width, in_height, in_channels), window_width,
 			window_height, out_channels, static_cast<padding>(pad_type),
 			has_bias, w_stride, h_stride, connection_table);

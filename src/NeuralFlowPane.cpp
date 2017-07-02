@@ -262,10 +262,10 @@ namespace aly{
 			nvgLineJoin(nvg, NVG_MITER);
 		}
 		if (selectedLayer != nullptr) {
-			int2 selected = selectedLayer->getRegion()->getSelected();
+			int3 selected = selectedLayer->getRegion()->getSelected();
 			NeuralLayer* layer = selectedLayer;
 			pixel2 cursorPosition = selectedLayer->getRegion()->cursorPosition;
-			if (selected.x != -1 && selected.y != -1 && glfwGetKey(context->window,GLFW_KEY_LEFT)==GLFW_RELEASE&&glfwGetKey(context->window, GLFW_KEY_RIGHT) == GLFW_RELEASE) {
+			if (selected.x != -1 && selected.y != -1&& selected.z != -1 && glfwGetKey(context->window,GLFW_KEY_LEFT)==GLFW_RELEASE&&glfwGetKey(context->window, GLFW_KEY_RIGHT) == GLFW_RELEASE) {
 				/*
 				Neuron* neuron = layer->get(selected.x, selected.y);
 				context->setCursor(&Cursor::CrossHairs);

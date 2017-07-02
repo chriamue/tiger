@@ -105,7 +105,6 @@ public:
 	 **/
 	virtual void backward_activation(const Storage &x, const Storage &y,
 			Storage &dx, const Storage &dy) = 0;
-
 	/**
 	 * Target value range for learning.
 	 */

@@ -120,16 +120,16 @@ public:
 		return layers;
 	}
 	const std::vector<NeuralLayerPtr>& getInputLayers() const {
-		return layers;
+		return inputLayers;
 	}
 	std::vector<NeuralLayerPtr>& getInputLayers() {
-		return layers;
+		return inputLayers;
 	}
 	const std::vector<NeuralLayerPtr>& getOutputLayers() const {
-		return layers;
+		return outputLayers;
 	}
 	std::vector<NeuralLayerPtr>& getOutputLayers() {
-		return layers;
+		return outputLayers;
 	}
 	NeuralSystem(const std::string& name,
 			const std::shared_ptr<aly::NeuralFlowPane>& pane);

@@ -41,8 +41,31 @@ bool isTrainableWeight(ChannelType vtype) {
 size_t ShapeVolume(aly::int3 dims) {
 	return (size_t) dims.x * (size_t) dims.y * (size_t) dims.z;
 }
+float* NeuralSignal::getValuePtr(const aly::int3& pos) {
+	if(pos.z>value.size())return nullptr;
+	if(value[pos.z].size()==0)return nullptr;
+	return &value[pos.z][aly::clamp(pos.x,0, dimensions.x - 1)
+			+ dimensions.x * aly::clamp(pos.y, 0, dimensions.y - 1)];
+}
+float* NeuralSignal::getChangePtr(const aly::int3& pos) {
+	if(pos.z>value.size())return nullptr;
+	if(value[pos.z].size()==0)return nullptr;
+	return &change[pos.z][aly::clamp(pos.x,
+			0, dimensions.x - 1)
+			+ dimensions.x * aly::clamp(pos.y, 0, dimensions.y - 1)];
+}
+float NeuralSignal::getValue(const aly::int3& pos) {
+	return value[aly::clamp(pos.z, 0, dimensions.z - 1)][aly::clamp(pos.x,
+			0, dimensions.x - 1)
+			+ dimensions.x * aly::clamp(pos.y, 0, dimensions.y - 1)];
+}
+float NeuralSignal::getChange(const aly::int3& pos) {
+	return change[aly::clamp(pos.z, 0, dimensions.z - 1)][aly::clamp(pos.x,
+			0, dimensions.x - 1)
+			+ dimensions.x * aly::clamp(pos.y, 0, dimensions.y - 1)];
+}
 NeuralSignal::NeuralSignal(NeuralLayer* input, aly::int3 dimensions, ChannelType type) :
-		type(type), id(-1), weight( { Storage(ShapeVolume(dimensions)) }), change(
+		type(type), id(-1), value( { Storage(ShapeVolume(dimensions)) }), change(
 				{ Storage(ShapeVolume(dimensions)) }), input(input) {
 }
 void NeuralSignal::clearGradients() {
@@ -68,7 +91,7 @@ void NeuralSignal::addOutput(const NeuralLayerPtr& output) {
 }
 NeuralSignal& NeuralSignal::operator=(const NeuralSignal& other) {
 	//Does not copy references to inputs and outputs.
-	weight = other.weight;
+	value = other.value;
 	change = other.change;
 	dimensions = other.dimensions;
 	type = other.type;
