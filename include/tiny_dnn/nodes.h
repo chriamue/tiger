@@ -419,6 +419,7 @@ class graph : public nodes {
       sorted.push_back(dynamic_cast<layer *>(input_nodes.back()));
       input_nodes.pop_back();
       layer *curr              = sorted.back();
+      std::cout<<"DNN Order "<<curr->layer_type()<<std::endl;
       std::vector<node *> next = curr->next_nodes();
       for (size_t i = 0; i < next.size(); i++) {
         if (!next[i]) continue;

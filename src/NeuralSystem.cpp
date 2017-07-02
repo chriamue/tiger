@@ -138,11 +138,18 @@ void NeuralSystem::build(const std::vector<NeuralLayerPtr> &input,const std::vec
 	std::vector<NeuralLayerPtr> sorted;
 	std::vector<NeuralLayerPtr> input_nodes(input.begin(), input.end());
 	std::unordered_map<NeuralLayerPtr, std::vector<uint8_t>> removed_edge;
+	layers.clear();
+	roots.clear();
 // topological-sorting
 	while (!input_nodes.empty()) {
 		sorted.push_back(input_nodes.back());
 		input_nodes.pop_back();
 		NeuralLayerPtr curr = sorted.back();
+		curr->setSystem(this);
+		if(curr->isRoot()){
+			roots.push_back(curr);
+		}
+		std::cout<<"Current "<<curr->getName()<<" ROOT? "<<curr->isRoot()<<" "<<curr->getInputSignals().size()<<" "<<curr->getOutputSignals().size()<<std::endl;
 		std::vector<NeuralLayerPtr> next = curr->getOutputLayers();
 		for (size_t i = 0; i < next.size(); i++) {
 			if (!next[i])

@@ -32,6 +32,7 @@
 #include "AlloyGraphPane.h"
 #include "NeuralRuntime.h"
 #include "NeuralCache.h"
+
 class TigerApp : public aly::Application {
 protected:
 	tgr::NeuralLayer* selectedLayer;

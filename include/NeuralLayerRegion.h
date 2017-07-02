@@ -24,9 +24,9 @@
 #include "AlloyWidget.h"
 #include "AvoidanceRouting.h"
 #include "GLFrameBuffer.h"
+#include "Neuron.h"
 namespace tgr {
 	class NeuralLayer;
-	class Neuron;
 }
 namespace aly {
 	
@@ -36,18 +36,22 @@ namespace aly {
 		tgr::NeuralLayer* layer;
 		TextLabelPtr textLabel;
 		int selectionRadius;
-		int2 lastSelected;
+		int3 lastSelected;
 		std::shared_ptr<IconButton> cancelButton;
 		std::shared_ptr<IconButton> expandButton;
-		std::list<tgr::Neuron*> activeList;
+		std::list<int3> activeList;
 		aly::ImageRGBA cacheImage;
-
 		aly::ImageGlyphPtr cacheGlyph;
 		bool cacheDirty;
 		aly::GLFrameBuffer renderBuffer;
+		int width;
+		int height;
+		int channels;
+		tgr::NeuronVolume neurons;
 		void drawCache(AlloyContext* context);
 	public:
-
+		static const float CellSpacing;
+		static const float CellSize;
 		pixel2 cursorPosition;
 		pixel2 cursorOffset;
 		float scale;
@@ -65,7 +69,7 @@ namespace aly {
 		void setScale(float s) {
 			scale = s;
 		};
-		aly::int2 getSelected() const {
+		aly::int3 getSelected() const {
 			return lastSelected;
 		}
 		void setExpandable(bool t) {
@@ -73,7 +77,7 @@ namespace aly {
 		}
 		void reset() {
 			cursorPosition=float2(0.0f,0.0f);
-			lastSelected=int2(-1);
+			lastSelected=int3(-1);
 			activeList.clear();
 			scale = 1;
 			cursorOffset = float2(0.0f, 0.0f);

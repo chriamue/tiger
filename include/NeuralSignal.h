@@ -28,14 +28,38 @@
 namespace tgr {
 enum class ChannelType
 	: int32_t {
-		// 0x0001XXX : in/out data
-	data = 0x0001000,  // input/output data, fed by other layer or input channel
-	// 0x0002XXX : trainable parameters, updated for each back propagation
-	weight = 0x0002000,
+		data = 0x0001000, // input/output data, fed by other layer or input channel
+	weight = 0x0002000, // 0x0002XXX : trainable parameters, updated for each back propagation
 	bias = 0x0002001,
 	label = 0x0004000,
 	aux = 0x0010000  // layer-specific storage
 };
+inline std::ostream &operator<<(std::ostream &os, ChannelType type) {
+	switch (type) {
+	case ChannelType::data:
+		os << "data";
+		break;
+	case ChannelType::weight:
+		os << "weight";
+		break;
+	case ChannelType::bias:
+		os << "bias";
+		break;
+	case ChannelType::label:
+		os << "label";
+		break;
+	case ChannelType::aux:
+		os << "aux";
+		break;
+	default:
+		os << "unknown";
+	}
+	return os;
+}
+enum class Padding {
+	Valid = tiny_dnn::padding::valid, Same = tiny_dnn::padding::same
+};
+
 inline std::vector<ChannelType> ChannelOrder(bool has_bias) {
 	if (has_bias) {
 		return {ChannelType::data, ChannelType::weight, ChannelType::bias};
@@ -46,6 +70,12 @@ inline std::vector<ChannelType> ChannelOrder(bool has_bias) {
 enum class BackendType {
 	internal = 0, nnpack = 1, libdnn = 2, avx = 3, opencl = 4
 };
+inline aly::dim3 Convert(const tiny_dnn::shape3d& s) {
+	return aly::dim3(s.width_, s.height_, s.depth_);
+}
+inline tiny_dnn::shape3d Convert(const aly::dim3& d) {
+	return tiny_dnn::shape3d(d.x, d.y, d.z);
+}
 inline std::vector<aly::dim3> Convert(
 		const std::vector<tiny_dnn::shape3d>& shapes) {
 	std::vector<aly::dim3> out(shapes.size());
@@ -127,11 +157,21 @@ public:
 	ChannelType type;
 	aly::int3 dimensions;
 	int64_t id;
-	Tensor weight;
+	Tensor value;
 	Tensor change;
 	NeuralLayer* input;
 	std::vector<std::shared_ptr<NeuralLayer>> outputs;
+	float* getValuePtr(const aly::int3& pos);
+	float* getChangePtr(const aly::int3& pos);
+	inline float getValue(const aly::int3& pos);
+	inline float getChange(const aly::int3& pos);
 	NeuralSignal(NeuralLayer* input, aly::int3 dimensions, ChannelType type);
+	inline bool hasInput() const {
+		return (input != nullptr);
+	}
+	inline bool hasOutput() const {
+		return (outputs.size() != 0);
+	}
 	void clearGradients();
 	void mergeGradients(Storage& dst);
 	void addOutput(const std::shared_ptr<NeuralLayer>& output);
