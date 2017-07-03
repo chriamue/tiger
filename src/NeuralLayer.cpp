@@ -128,8 +128,14 @@ bool NeuralLayer::isVisible() const {
 aly::NeuralLayerRegionPtr NeuralLayer::getRegion() {
 	if (layerRegion.get() == nullptr) {
 		aly::dim3 outDims = getOutputSize();
-		float2 dims = float2(240.0f * outDims.z, 240.0f * outDims.y / outDims.x)
-				+ NeuralLayerRegion::getPadding();
+
+		float2 dims = float2(240.0f * outDims.z,
+				240.0f * outDims.y / outDims.x);
+		if (dims.x > 2048.0f) {
+			dims /= 2048.0f;
+		}
+		dims += NeuralLayerRegion::getPadding();
+
 		layerRegion = NeuralLayerRegionPtr(
 				new NeuralLayerRegion(name, this,
 						CoordPerPX(0.5f, 0.5f, -dims.x * 0.5f, -dims.y * 0.5f),
@@ -373,7 +379,9 @@ void NeuralLayer::clearGradients() {
 }
 float NeuralLayer::getAspect() {
 	aly::dim3 dims = getOutputSize();
-	return dims.x * dims.z / (float) dims.y;
+	return (dims.x * dims.z * NeuralLayerRegion::GlyphSize
+			+ (dims.z - 1) * NeuralLayerRegion::GlyphSpacing)
+			/ (float) (dims.y * NeuralLayerRegion::GlyphSize);
 }
 void NeuralLayer::updateWeights(
 		const std::function<void(Storage& dW, Storage& W, bool parallel)>& optimizer,
@@ -507,18 +515,25 @@ void NeuralLayer::expand() {
 	box2px bounds = layerRegion->getBounds();
 	int N = int(getOutputLayers().size());
 	float layoutWidth = 0.0f;
+	int C = 1;
 	float width = 120.0f;
-	float offset = 0.5f * width;
-	layoutWidth = (10.0f + width) * N - 10.0f;
+	const float MAX_WIDTH = 2048.0f;
 	for (auto child : getOutputLayers()) {
-		float height = child->getRegion()->setSize(width);
+		int c = child->getOutputSize().z;
+		C = std::max(c, C);
+		layoutWidth += (10.0f + std::min(width * c, MAX_WIDTH));
+	}
+	layoutWidth -= 10.0f;
+	for (auto child : getOutputLayers()) {
+		int c = child->getOutputSize().z;
+		float offset = aly::round(0.5f * std::min(width * c, MAX_WIDTH));
+		float height = child->getRegion()->setSize(
+				std::min(width * c, MAX_WIDTH));
 		float2 pos = pixel2(
-				bounds.position.x + bounds.dimensions.x * 0.5f
-						- layoutWidth * 0.5f + offset,
-				bounds.position.y + bounds.dimensions.y + 0.5f * height
-						+ 10.0f);
+				aly::round(bounds.position.x + bounds.dimensions.x * 0.5f- layoutWidth * 0.5f + offset),
+				aly::round(bounds.position.y + bounds.dimensions.y + 0.5f * height + 10.0f));
 		flowPane->add(child.get(), pos);
-		offset += width + 10.0f;
+		offset += width * c + 10.0f;
 	}
 	flowPane->update();
 }

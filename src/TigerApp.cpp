@@ -410,8 +410,7 @@ void TigerApp::setSelectedLayer(tgr::NeuralLayer* layer) {
 bool TigerApp::onEventHandler(AlloyContext* context, const aly::InputEvent& e) {
 	if (e.type == InputType::Key && e.isDown()) {
 		if (e.key == GLFW_KEY_LEFT) {
-			int t = std::max(timelineSlider->getTimeValue().toInteger() - 1,
-					timelineSlider->getLowerValue().toInteger());
+			int t = std::max(timelineSlider->getTimeValue().toInteger() - 1,timelineSlider->getLowerValue().toInteger());
 			timelineSlider->setTimeValue(t);
 			setNeuralTime(t);
 		} else if (e.key == GLFW_KEY_RIGHT) {

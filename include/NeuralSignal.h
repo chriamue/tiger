@@ -139,23 +139,20 @@ struct Terminal {
 	NeuralLayer* layer;
 	Terminal(int x = 0, int y = 0, NeuralLayer* l = nullptr) :
 			x(x), y(y), layer(l) {
-
 	}
 	Terminal(int x = 0, int y = 0, const std::shared_ptr<NeuralLayer>& l =
 			nullptr) :
 			x(x), y(y), layer(l.get()) {
-
 	}
 	bool operator ==(const Terminal & r) const;
 	bool operator !=(const Terminal & r) const;
 	bool operator <(const Terminal & r) const;
 	bool operator >(const Terminal & r) const;
 };
-size_t ShapeVolume(aly::int3 dims);
 class NeuralSignal {
 public:
 	ChannelType type;
-	aly::int3 dimensions;
+	aly::dim3 dimensions;
 	int64_t id;
 	Tensor value;
 	Tensor change;

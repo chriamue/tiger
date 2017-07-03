@@ -23,7 +23,6 @@ struct Neuron {
 		active = false;
 	}
 	Neuron() : bias(nullptr), output(nullptr), active(false) {
-
 	}
 };
 class NeuronVolume {

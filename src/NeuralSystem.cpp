@@ -149,7 +149,6 @@ void NeuralSystem::build(const std::vector<NeuralLayerPtr> &input,const std::vec
 		if(curr->isRoot()){
 			roots.push_back(curr);
 		}
-		std::cout<<"Current "<<curr->getName()<<" ROOT? "<<curr->isRoot()<<" "<<curr->getInputSignals().size()<<" "<<curr->getOutputSignals().size()<<std::endl;
 		std::vector<NeuralLayerPtr> next = curr->getOutputLayers();
 		for (size_t i = 0; i < next.size(); i++) {
 			if (!next[i])
