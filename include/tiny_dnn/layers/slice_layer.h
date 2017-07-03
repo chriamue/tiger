@@ -191,19 +191,19 @@ class slice_layer : public layer {
   void set_shape_data() { out_shapes_.resize(num_outputs_, in_shape_); }
 
   void set_shape_channels() {
-    serial_size_t channel_per_out = in_shape_.depth_ / num_outputs_;
+    serial_size_t channel_per_out = in_shape_.depth / num_outputs_;
 
     out_shapes_.resize(num_outputs_);
     for (serial_size_t i = 0; i < num_outputs_; i++) {
       serial_size_t ch = channel_per_out;
 
       if (i == num_outputs_ - 1) {
-        assert(in_shape_.depth_ >= i * channel_per_out);
-        ch = in_shape_.depth_ - i * channel_per_out;
+        assert(in_shape_.depth >= i * channel_per_out);
+        ch = in_shape_.depth - i * channel_per_out;
       }
 
       slice_size_.push_back(ch);
-      out_shapes_[i] = shape3d(in_shape_.width_, in_shape_.height_, ch);
+      out_shapes_[i] = shape3d(in_shape_.width, in_shape_.height, ch);
     }
   }
 

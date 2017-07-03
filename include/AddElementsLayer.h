@@ -29,8 +29,8 @@ public:
 		return false;
 	}
 private:
-	int num_args_;
-	int dim_;
+	int num_args;
+	int dim;
 };
 typedef std::shared_ptr<AddElementsLayer> AddElementsLayerPtr;
 }

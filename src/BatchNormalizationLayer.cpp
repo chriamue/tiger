@@ -20,11 +20,9 @@ namespace tgr {
 BatchNormalizationLayer::BatchNormalizationLayer(const NeuralLayer &prev_layer,
 		float epsilon, float momentum, tiny_dnn::net_phase phase) :
 		NeuralLayer("Batch Normalization", { ChannelType::data }, {
-				ChannelType::data }), in_channels_(
-				prev_layer.getOutputDimensions()[0].z), in_spatial_size_(
-				prev_layer.getOutputDimensions()[0].x
-						* prev_layer.getOutputDimensions()[0].y), phase_(phase), momentum_(
-				momentum), eps_(epsilon), update_immidiately_(false) {
+				ChannelType::data }), in_channels(prev_layer.getOutputDimensions()[0].z), in_spatial_size(prev_layer.getOutputDimensions()[0].x
+						* prev_layer.getOutputDimensions()[0].y), phase(phase), momentum(
+				momentum), eps(epsilon), update_immidiately(false) {
 	init();
 }
 
@@ -39,18 +37,18 @@ int BatchNormalizationLayer::getFanOutSize() const {
 }
 
 std::vector<aly::dim3> BatchNormalizationLayer::getInputDimensions() const {
-	return {aly::dim3(in_spatial_size_, 1, in_channels_)};
+	return {aly::dim3(in_spatial_size, 1, in_channels)};
 }
 
 std::vector<aly::dim3> BatchNormalizationLayer::getOutputDimensions() const {
-	return {aly::dim3(in_spatial_size_, 1, in_channels_)};
+	return {aly::dim3(in_spatial_size, 1, in_channels)};
 }
 float BatchNormalizationLayer::getEpsilon() const {
-	return eps_;
+	return eps;
 }
 
 float BatchNormalizationLayer::getMomentum() const {
-	return momentum_;
+	return momentum;
 }
 void BatchNormalizationLayer::backwardPropagation(
 		const std::vector<Tensor *> &in_data,
@@ -72,8 +70,8 @@ void BatchNormalizationLayer::backwardPropagation(
 			delta_dot_y[i][j] *= curr_delta[i][j];
 		}
 	}
-	moments(delta_dot_y, in_spatial_size_, in_channels_, mean_delta_dot_y);
-	moments(curr_delta, in_spatial_size_, in_channels_, mean_delta);
+	moments(delta_dot_y, in_spatial_size, in_channels, mean_delta_dot_y);
+	moments(curr_delta, in_spatial_size, in_channels, mean_delta);
 // if Y = (X-mean(X))/(sqrt(var(X)+eps)), then
 //
 // dE(Y)/dX =
@@ -81,15 +79,15 @@ void BatchNormalizationLayer::backwardPropagation(
 //     ./ sqrt(var(X) + eps)
 //
 	tiny_dnn::for_i(num_samples, [&](int i) {
-		for (int j = 0; j < in_channels_; j++) {
-			for (int k = 0; k < in_spatial_size_; k++) {
-				int index = j * in_spatial_size_ + k;
+		for (int j = 0; j < in_channels; j++) {
+			for (int k = 0; k < in_spatial_size; k++) {
+				int index = j * in_spatial_size + k;
 
 				prev_delta[i][index] = curr_delta[i][index] - mean_delta[j] -
 				mean_delta_dot_y[j] * curr_out[i][index];
 
 				// stddev_ is calculated in the forward pass
-			prev_delta[i][index] /= stddev_[j];
+			prev_delta[i][index] /= stddevStorage[j];
 		}
 	}
 });
@@ -97,15 +95,15 @@ void BatchNormalizationLayer::backwardPropagation(
 
 void BatchNormalizationLayer::forwardPropagation(
 		const std::vector<Tensor *> &in_data, std::vector<Tensor *> &out_data) {
-	Storage &mean = (phase_ == net_phase::train) ? mean_current_ : mean_;
+	Storage &mean = (phase == net_phase::train) ? mean_current : meanStorage;
 	Storage &variance =
-			(phase_ == net_phase::train) ? variance_current_ : variance_;
+			(phase == net_phase::train) ? variance_current : varianceStorage;
 	Tensor &in = *in_data[0];
 	Tensor &out = *out_data[0];
 
-	if (phase_ == net_phase::train) {
+	if (phase == net_phase::train) {
 		// calculate mean/variance from this batch in train phase
-		moments(*in_data[0], in_spatial_size_, in_channels_, mean, variance);
+		moments(*in_data[0], in_spatial_size, in_channels, mean, variance);
 	}
 
 // y = (x - mean) ./ sqrt(variance + eps)
@@ -115,64 +113,64 @@ void BatchNormalizationLayer::forwardPropagation(
 		const float_t *inptr = &in[i][0];
 		float_t *outptr = &out[i][0];
 
-		for (size_t j = 0; j < in_channels_; j++) {
+		for (size_t j = 0; j < in_channels; j++) {
 			float_t m = mean[j];
 
-			for (size_t k = 0; k < in_spatial_size_; k++) {
-				*outptr++ = (*inptr++ - m) / stddev_[j];
+			for (size_t k = 0; k < in_spatial_size; k++) {
+				*outptr++ = (*inptr++ - m) / stddevStorage[j];
 			}
 		}
 	});
 
-	if (phase_ == tiny_dnn::net_phase::train && update_immidiately_) {
-		mean_ = mean_current_;
-		variance_ = variance_current_;
+	if (phase == tiny_dnn::net_phase::train && update_immidiately) {
+		meanStorage = mean_current;
+		varianceStorage = variance_current;
 	}
 }
 
 void BatchNormalizationLayer::setContext(tiny_dnn::net_phase ctx) {
-	phase_ = ctx;
+	phase = ctx;
 }
 void BatchNormalizationLayer::post() {
-	for (int i = 0; i < mean_.size(); i++) {
-		mean_[i] = momentum_ * mean_[i] + (1 - momentum_) * mean_current_[i];
-		variance_[i] = momentum_ * variance_[i]
-				+ (1 - momentum_) * variance_current_[i];
+	for (int i = 0; i < meanStorage.size(); i++) {
+		meanStorage[i] = momentum * meanStorage[i] + (1 - momentum) * mean_current[i];
+		varianceStorage[i] = momentum * varianceStorage[i]
+				+ (1 - momentum) * variance_current[i];
 	}
 }
 
-void BatchNormalizationLayer::update_immidiately(bool update) {
-	update_immidiately_ = update;
+void BatchNormalizationLayer::updateImmidiately(bool update) {
+	update_immidiately = update;
 }
 
-void BatchNormalizationLayer::set_stddev(const Storage &stddev) {
-	stddev_ = stddev;
+void BatchNormalizationLayer::setStddev(const Storage &stddev) {
+	stddevStorage = stddev;
 }
 
-void BatchNormalizationLayer::set_mean(const Storage &mean) {
-	mean_ = mean;
+void BatchNormalizationLayer::setMean(const Storage &mean) {
+	meanStorage = mean;
 }
 
-void BatchNormalizationLayer::set_variance(const Storage &variance) {
-	variance_ = variance;
+void BatchNormalizationLayer::setVariance(const Storage &variance) {
+	varianceStorage = variance;
 	calc_stddev(variance);
 }
 
 
 
 void BatchNormalizationLayer::calc_stddev(const Storage &variance) {
-	for (size_t i = 0; i < in_channels_; i++) {
-		stddev_[i] = sqrt(variance[i] + eps_);
+	for (size_t i = 0; i < in_channels; i++) {
+		stddevStorage[i] = sqrt(variance[i] + eps);
 	}
 }
 
 void BatchNormalizationLayer::init() {
-	mean_current_.resize(in_channels_);
-	mean_.resize(in_channels_);
-	variance_current_.resize(in_channels_);
-	variance_.resize(in_channels_);
-	tmp_mean_.resize(in_channels_);
-	stddev_.resize(in_channels_);
+	mean_current.resize(in_channels);
+	meanStorage.resize(in_channels);
+	variance_current.resize(in_channels);
+	varianceStorage.resize(in_channels);
+	tmp_mean.resize(in_channels);
+	stddevStorage.resize(in_channels);
 }
 }
 

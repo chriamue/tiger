@@ -37,7 +37,7 @@ inline void tiny_average_unpooling_kernel(
 
     auto oarea = out_dim.area();
     size_t idx = 0;
-    for (size_t d = 0; d < out_dim.depth_; ++d) {
+    for (size_t d = 0; d < out_dim.depth; ++d) {
       float_t weight = W[d];  // * scale_factor;
       float_t bias   = b[d];
       for (size_t i = 0; i < oarea; ++i, ++idx) {
@@ -78,7 +78,7 @@ inline void tiny_average_unpooling_back_kernel(
 
     auto inarea = in_dim.area();
     size_t idx  = 0;
-    for (size_t i = 0; i < in_dim.depth_; ++i) {
+    for (size_t i = 0; i < in_dim.depth; ++i) {
       float_t weight = W[i];  // * scale_factor;
       for (size_t j = 0; j < inarea; ++j, ++idx) {
         prev_delta[idx] = weight * curr_delta[in2wo[idx][0].second];
@@ -164,7 +164,7 @@ class average_unpooling_layer : public partial_connected_layer {
   }
 
   std::vector<index3d<serial_size_t>> in_shape() const override {
-    return {in_, w_, index3d<serial_size_t>(1, 1, out_.depth_)};
+    return {in_, w_, index3d<serial_size_t>(1, 1, out_.depth)};
   }
 
   std::vector<index3d<serial_size_t>> out_shape() const override {
@@ -203,17 +203,17 @@ class average_unpooling_layer : public partial_connected_layer {
   }
 
   void init_connection(serial_size_t pooling_size) {
-    for (serial_size_t c = 0; c < in_.depth_; ++c) {
-      for (serial_size_t y = 0; y < in_.height_; ++y) {
-        for (serial_size_t x = 0; x < in_.width_; ++x) {
+    for (serial_size_t c = 0; c < in_.depth; ++c) {
+      for (serial_size_t y = 0; y < in_.height; ++y) {
+        for (serial_size_t x = 0; x < in_.width; ++x) {
           connect_kernel(pooling_size, x, y, c);
         }
       }
     }
 
-    for (serial_size_t c = 0; c < in_.depth_; ++c) {
-      for (serial_size_t y = 0; y < out_.height_; ++y) {
-        for (serial_size_t x = 0; x < out_.width_; ++x) {
+    for (serial_size_t c = 0; c < in_.depth; ++c) {
+      for (serial_size_t y = 0; y < out_.height; ++y) {
+        for (serial_size_t x = 0; x < out_.width; ++x) {
           this->connect_bias(c, out_.get_index(x, y, c));
         }
       }
@@ -224,8 +224,8 @@ class average_unpooling_layer : public partial_connected_layer {
                       serial_size_t x,
                       serial_size_t y,
                       serial_size_t inc) {
-    serial_size_t dymax = std::min(pooling_size, out_.height_ - y);
-    serial_size_t dxmax = std::min(pooling_size, out_.width_ - x);
+    serial_size_t dymax = std::min(pooling_size, out_.height - y);
+    serial_size_t dxmax = std::min(pooling_size, out_.width - x);
     serial_size_t dstx  = x * stride_;
     serial_size_t dsty  = y * stride_;
     serial_size_t inidx = in_.get_index(x, y, inc);

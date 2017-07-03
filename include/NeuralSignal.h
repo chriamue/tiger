@@ -71,7 +71,7 @@ enum class BackendType {
 	internal = 0, nnpack = 1, libdnn = 2, avx = 3, opencl = 4
 };
 inline aly::dim3 Convert(const tiny_dnn::shape3d& s) {
-	return aly::dim3(s.width_, s.height_, s.depth_);
+	return aly::dim3(s.width, s.height, s.depth);
 }
 inline tiny_dnn::shape3d Convert(const aly::dim3& d) {
 	return tiny_dnn::shape3d(d.x, d.y, d.z);
@@ -81,7 +81,7 @@ inline std::vector<aly::dim3> Convert(
 	std::vector<aly::dim3> out(shapes.size());
 	for (int i = 0; i < out.size(); i++) {
 		tiny_dnn::shape3d s = shapes[i];
-		out[i] = aly::dim3(s.width_, s.height_, s.depth_);
+		out[i] = aly::dim3(s.width, s.height, s.depth);
 	}
 	return out;
 }

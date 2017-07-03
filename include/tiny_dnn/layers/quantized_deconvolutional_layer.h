@@ -221,13 +221,13 @@ class quantized_deconvolutional_layer : public layer {
 
   ///< number of incoming connections for each output unit
   serial_size_t fan_in_size() const override {
-    return params_.weight.width_ * params_.weight.height_ * params_.in.depth_;
+    return params_.weight.width * params_.weight.height * params_.in.depth;
   }
 
   ///< number of outgoing connections for each input unit
   serial_size_t fan_out_size() const override {
-    return (params_.weight.width_ * params_.w_stride) *
-           (params_.weight.height_ * params_.h_stride) * params_.out.depth_;
+    return (params_.weight.width * params_.w_stride) *
+           (params_.weight.height * params_.h_stride) * params_.out.depth;
   }
 
   void forward_propagation(const std::vector<tensor_t *> &in_data,
@@ -263,7 +263,7 @@ class quantized_deconvolutional_layer : public layer {
   std::vector<index3d<serial_size_t>> in_shape() const override {
     if (params_.has_bias) {
       return {params_.in, params_.weight,
-              index3d<serial_size_t>(1, 1, params_.out.depth_)};
+              index3d<serial_size_t>(1, 1, params_.out.depth)};
     } else {
       return {params_.in, params_.weight};
     }
@@ -279,9 +279,9 @@ class quantized_deconvolutional_layer : public layer {
   image<> weightto_image() const {
     image<> img;
     const serial_size_t border_width = 1;
-    const auto pitch                 = params_.weight.width_ + border_width;
-    const auto width  = params_.out.depth_ * pitch + border_width;
-    const auto height = params_.in.depth_ * pitch + border_width;
+    const auto pitch                 = params_.weight.width + border_width;
+    const auto width  = params_.out.depth * pitch + border_width;
+    const auto height = params_.in.depth * pitch + border_width;
     const image<>::intensity_t bg_color = 255;
     const vec_t &W                      = *this->weights()[0];
 
@@ -290,8 +290,8 @@ class quantized_deconvolutional_layer : public layer {
 
     auto minmax = std::minmax_element(W.begin(), W.end());
 
-    for (serial_size_t r = 0; r < params_.in.depth_; ++r) {
-      for (serial_size_t c = 0; c < params_.out.depth_; ++c) {
+    for (serial_size_t r = 0; r < params_.in.depth; ++r) {
+      for (serial_size_t c = 0; c < params_.out.depth; ++c) {
         if (!params_.tbl.is_connected(c, r)) continue;
 
         const auto top  = r * pitch + border_width;
@@ -299,9 +299,9 @@ class quantized_deconvolutional_layer : public layer {
 
         serial_size_t idx = 0;
 
-        for (serial_size_t y = 0; y < params_.weight.height_; ++y) {
-          for (serial_size_t x = 0; x < params_.weight.width_; ++x) {
-            idx = params_.weight.get_index(x, y, c * params_.in.depth_ + r);
+        for (serial_size_t y = 0; y < params_.weight.height; ++y) {
+          for (serial_size_t x = 0; x < params_.weight.width; ++x) {
+            idx = params_.weight.get_index(x, y, c * params_.in.depth + r);
             const float_t w = W[idx];
 
             img.at(left + x, top + y) = static_cast<image<>::intensity_t>(
@@ -352,12 +352,12 @@ class quantized_deconvolutional_layer : public layer {
                          const connection_table &tbl = connection_table()) {
     params_.in = in;
     params_.out =
-      shape3d(deconv_out_length(in.width_, w_width, w_stride),
-              deconv_out_length(in.height_, w_height, h_stride), outc);
+      shape3d(deconv_out_length(in.width, w_width, w_stride),
+              deconv_out_length(in.height, w_height, h_stride), outc);
     params_.out_unpadded = shape3d(
-      deconv_out_unpadded_length(in.width_, w_width, w_stride, ptype),
-      deconv_out_unpadded_length(in.height_, w_height, h_stride, ptype), outc);
-    params_.weight   = shape3d(w_width, w_height, in.depth_ * outc);
+      deconv_out_unpadded_length(in.width, w_width, w_stride, ptype),
+      deconv_out_unpadded_length(in.height, w_height, h_stride, ptype), outc);
+    params_.weight   = shape3d(w_width, w_height, in.depth * outc);
     params_.has_bias = has_bias;
     params_.pad_type = ptype;
     params_.w_stride = w_stride;
@@ -431,13 +431,13 @@ class quantized_deconvolutional_layer : public layer {
         vec_t &dst       = delta_padded[sample];
         const vec_t &src = delta[sample];
 
-        for (serial_size_t c = 0; c < params_.in.depth_; c++) {
+        for (serial_size_t c = 0; c < params_.in.depth; c++) {
           float_t *pdst      = &dst[params_.in.get_index(0, 0, c)];
           const float_t *pin = &src[params_.in.get_index(0, 0, c)];
 
-          for (serial_size_t y = 0; y < params_.in.height_;
-               y++, pdst += params_.in.width_, pin += params_.in.width_) {
-            std::copy(pin, pin + params_.in.width_, pdst);
+          for (serial_size_t y = 0; y < params_.in.height;
+               y++, pdst += params_.in.width, pin += params_.in.width) {
+            std::copy(pin, pin + params_.in.width, pdst);
           }
         }
       }
@@ -459,22 +459,22 @@ class quantized_deconvolutional_layer : public layer {
         serial_size_t idx = 0;
         vec_t &dst        = (*dst_tensor)[sample];
 
-        for (serial_size_t c = 0; c < params_.out_unpadded.depth_; c++) {
+        for (serial_size_t c = 0; c < params_.out_unpadded.depth; c++) {
           float_t *pimg = &dst[params_.out_unpadded.get_index(0, 0, c)];
           idx           = params_.out.get_index(
-            static_cast<serial_size_t>(floor(params_.weight.width_ / 2)),
-            static_cast<serial_size_t>(floor(params_.weight.height_ / 2)), c);
+            static_cast<serial_size_t>(floor(params_.weight.width / 2)),
+            static_cast<serial_size_t>(floor(params_.weight.height / 2)), c);
 
           const float_t *pout = &out[sample][idx];
 
           for (serial_size_t y = static_cast<serial_size_t>(
-                               floor(params_.weight.height_ / 2));
+                               floor(params_.weight.height / 2));
                y <
-               params_.out_unpadded.height_ +
-                 static_cast<serial_size_t>(floor(params_.weight.height_ / 2));
-               y++, pout += params_.out.width_,
-                             pimg += params_.out_unpadded.width_) {
-            std::copy(pout, pout + params_.out_unpadded.width_, pimg);
+               params_.out_unpadded.height +
+                 static_cast<serial_size_t>(floor(params_.weight.height / 2));
+               y++, pout += params_.out.width,
+                             pimg += params_.out_unpadded.width) {
+            std::copy(pout, pout + params_.out_unpadded.width, pimg);
           }
         }
         dws.curr_out_unpadded_ = &dws.curr_out_buf_;

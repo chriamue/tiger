@@ -79,10 +79,10 @@ void MaxPoolingLayer::setSampleCount(size_t sample_count) {
 void MaxPoolingLayer::connect_kernel(int pooling_size_x, int pooling_size_y,
 		int outx, int outy, int c) {
 	int dxmax = static_cast<int>(std::min(static_cast<int>(pooling_size_x),
-			(int) (params_.in.width_ - outx * params_.stride_x)));
+			(int) (params_.in.width - outx * params_.stride_x)));
 
 	int dymax = static_cast<int>(std::min(static_cast<int>(pooling_size_y),
-			(int) (params_.in.height_ - outy * params_.stride_y)));
+			(int) (params_.in.height - outy * params_.stride_y)));
 
 	for (int dy = 0; dy < dymax; dy++) {
 		for (int dx = 0; dx < dxmax; dx++) {
@@ -107,9 +107,9 @@ void MaxPoolingLayer::init_connection() {
 	params_.in2out.resize(params_.in.size());
 	params_.out2in.resize(params_.out.size());
 
-	for (int c = 0; c < params_.in.depth_; ++c) {
-		for (int y = 0; y < params_.out.height_; ++y) {
-			for (int x = 0; x < params_.out.width_; ++x) {
+	for (int c = 0; c < params_.in.depth; ++c) {
+		for (int y = 0; y < params_.out.height; ++y) {
+			for (int x = 0; x < params_.out.width; ++x) {
 				connect_kernel(params_.pool_size_x, params_.pool_size_y, x, y,
 						c);
 			}

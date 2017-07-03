@@ -20,10 +20,10 @@ inline void maxpool_op_nnpack(const tensor_t &in_data,
   // call singleton to initialize NNPACK
   NNPackInitializer::getInstance().initialize();
 
-  const serial_size_t input_channels = params.in.depth_;
+  const serial_size_t input_channels = params.in.depth;
 
-  const nnp_size input_size = {static_cast<size_t>(params.in.width_),
-                               static_cast<size_t>(params.in.height_)};
+  const nnp_size input_size = {static_cast<size_t>(params.in.width),
+                               static_cast<size_t>(params.in.height)};
 
   const nnp_padding input_padding = {
     static_cast<size_t>(0),  // top

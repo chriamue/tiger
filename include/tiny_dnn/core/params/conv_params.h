@@ -109,15 +109,15 @@ class Conv2dPadding {
       buf[sample].resize(params_.in_padded.size());
 
       // make padded version in order to avoid corner-case in fprop/bprop
-      for (serial_size_t c = 0; c < params_.in.depth_; c++) {
+      for (serial_size_t c = 0; c < params_.in.depth; c++) {
         float_t *pimg = &buf[sample][params_.in_padded.get_index(
-          params_.weight.width_ / 2, params_.weight.height_ / 2, c)];
+          params_.weight.width / 2, params_.weight.height / 2, c)];
         const float_t *pin = &in[sample][params_.in.get_index(0, 0, c)];
 
-        for (serial_size_t y = 0; y < params_.in.height_; y++) {
-          std::copy(pin, pin + params_.in.width_, pimg);
-          pin += params_.in.width_;
-          pimg += params_.in_padded.width_;
+        for (serial_size_t y = 0; y < params_.in.height; y++) {
+          std::copy(pin, pin + params_.in.width, pimg);
+          pin += params_.in.width;
+          pimg += params_.in_padded.width;
         }
       }
     });
@@ -142,15 +142,15 @@ class Conv2dPadding {
       // alloc temporary buffer.
       buf[sample].resize(params_.in.size());
 
-      for (serial_size_t c = 0; c < params_.in.depth_; c++) {
+      for (serial_size_t c = 0; c < params_.in.depth; c++) {
         const float_t *pin = &delta[sample][params_.in_padded.get_index(
-          params_.weight.width_ / 2, params_.weight.height_ / 2, c)];
+          params_.weight.width / 2, params_.weight.height / 2, c)];
         float_t *pdst = &buf[sample][params_.in.get_index(0, 0, c)];
 
-        for (serial_size_t y = 0; y < params_.in.height_; y++) {
-          std::copy(pin, pin + params_.in.width_, pdst);
-          pdst += params_.in.width_;
-          pin += params_.in_padded.width_;
+        for (serial_size_t y = 0; y < params_.in.height; y++) {
+          std::copy(pin, pin + params_.in.width, pdst);
+          pdst += params_.in.width;
+          pin += params_.in_padded.width;
         }
       }
     });

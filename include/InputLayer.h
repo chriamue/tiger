@@ -22,6 +22,18 @@ public:
 			const std::vector<Tensor *> &out_data,
 			std::vector<Tensor *> &out_grad, std::vector<Tensor *> &in_grad)
 					override;
+	virtual void getStencilInput(const aly::int3& pos,
+			std::vector<aly::int3>& stencil) const override {
+		stencil.clear();
+	}
+	virtual void getStencilWeight(const aly::int3& pos,
+			std::vector<aly::int3>& stencil) const override {
+		stencil.clear();
+	}
+	virtual bool getStencilBias(const aly::int3& pos, aly::int3& stencil) const
+			override {
+		return false;
+	}
 private:
 	aly::dim3 shape_;
 };

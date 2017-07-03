@@ -240,13 +240,13 @@ class convolutional_layer : public layer {
 
   ///< number of incoming connections for each output unit
   serial_size_t fan_in_size() const override {
-    return params_.weight.width_ * params_.weight.height_ * params_.in.depth_;
+    return params_.weight.width * params_.weight.height * params_.in.depth;
   }
 
   ///< number of outgoing connections for each input unit
   serial_size_t fan_out_size() const override {
-    return (params_.weight.width_ / params_.w_stride) *
-           (params_.weight.height_ / params_.h_stride) * params_.out.depth_;
+    return (params_.weight.width / params_.w_stride) *
+           (params_.weight.height / params_.h_stride) * params_.out.depth;
   }
 
   /**
@@ -318,7 +318,7 @@ class convolutional_layer : public layer {
   std::vector<index3d<serial_size_t>> in_shape() const override {
     if (params_.has_bias) {
       return {params_.in, params_.weight,
-              index3d<serial_size_t>(1, 1, params_.out.depth_)};
+              index3d<serial_size_t>(1, 1, params_.out.depth)};
     } else {
       return {params_.in, params_.weight};
     }
@@ -340,15 +340,15 @@ class convolutional_layer : public layer {
   std::string kernel_header() const override {
     std::stringstream ss;
     ss << "#define MULTI\n";
-    ss << "#define KERNEL_H " << params_.weight.height_ << "\n";
-    ss << "#define KERNEL_W " << params_.weight.width_ << "\n";
-    ss << "#define CHANNELS " << params_.weight.depth_ << "\n";
+    ss << "#define KERNEL_H " << params_.weight.height << "\n";
+    ss << "#define KERNEL_W " << params_.weight.width << "\n";
+    ss << "#define CHANNELS " << params_.weight.depth << "\n";
     ss << "#define STRIDE_H " << params_.h_stride << "\n";
     ss << "#define STRIDE_W " << params_.w_stride << "\n";
     ss << "#define APPLY_BIAS " << params_.has_bias << "\n";
-    ss << "#define OUTPUT_Z " << params_.out.depth_ << "\n";
+    ss << "#define OUTPUT_Z " << params_.out.depth << "\n";
     // TODO(edgar): REVISE THIS
-    ss << "#define ZPAR " << params_.out.depth_ << "\n";
+    ss << "#define ZPAR " << params_.out.depth << "\n";
     return ss.str();
   }
 
@@ -356,9 +356,9 @@ class convolutional_layer : public layer {
   image<> weight_to_image() const {
     image<> img;
     const serial_size_t border_width = 1;
-    const auto pitch                 = params_.weight.width_ + border_width;
-    const auto width  = params_.out.depth_ * pitch + border_width;
-    const auto height = params_.in.depth_ * pitch + border_width;
+    const auto pitch                 = params_.weight.width + border_width;
+    const auto width  = params_.out.depth * pitch + border_width;
+    const auto height = params_.in.depth * pitch + border_width;
     const image<>::intensity_t bg_color = 255;
     const vec_t &W                      = *this->weights()[0];
 
@@ -367,8 +367,8 @@ class convolutional_layer : public layer {
 
     auto minmax = std::minmax_element(W.begin(), W.end());
 
-    for (serial_size_t r = 0; r < params_.in.depth_; ++r) {
-      for (serial_size_t c = 0; c < params_.out.depth_; ++c) {
+    for (serial_size_t r = 0; r < params_.in.depth; ++r) {
+      for (serial_size_t c = 0; c < params_.out.depth; ++c) {
         if (!params_.tbl.is_connected(c, r)) continue;
 
         const auto top  = r * pitch + border_width;
@@ -376,9 +376,9 @@ class convolutional_layer : public layer {
 
         serial_size_t idx = 0;
 
-        for (serial_size_t y = 0; y < params_.weight.height_; ++y) {
-          for (serial_size_t x = 0; x < params_.weight.width_; ++x) {
-            idx             = c * params_.in.depth_ + r;
+        for (serial_size_t y = 0; y < params_.weight.height; ++y) {
+          for (serial_size_t x = 0; x < params_.weight.width; ++x) {
+            idx             = c * params_.in.depth + r;
             idx             = params_.weight.get_index(x, y, idx);
             const float_t w = W[idx];
 
@@ -411,12 +411,12 @@ class convolutional_layer : public layer {
                        const connection_table &tbl = connection_table()) {
     params_.in = in;
     params_.in_padded =
-      shape3d(in_length(in.width_, w_width, ptype),
-              in_length(in.height_, w_height, ptype), in.depth_);
+      shape3d(in_length(in.width, w_width, ptype),
+              in_length(in.height, w_height, ptype), in.depth);
     params_.out =
-      shape3d(conv_out_length(in.width_, w_width, w_stride, ptype),
-              conv_out_length(in.height_, w_height, h_stride, ptype), outc);
-    params_.weight   = shape3d(w_width, w_height, in.depth_ * outc);
+      shape3d(conv_out_length(in.width, w_width, w_stride, ptype),
+              conv_out_length(in.height, w_height, h_stride, ptype), outc);
+    params_.weight   = shape3d(w_width, w_height, in.depth * outc);
     params_.has_bias = has_bias;
     params_.pad_type = ptype;
     params_.w_stride = w_stride;

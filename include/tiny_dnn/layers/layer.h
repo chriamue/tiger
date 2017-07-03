@@ -298,7 +298,7 @@ class layer : public node {
    *is
    *important
    **/
-  virtual serial_size_t fan_in_size() const { return in_shape()[0].width_; }
+  virtual serial_size_t fan_in_size() const { return in_shape()[0].width; }
 
   /**
    * number of outgoing connections for each input unit
@@ -309,7 +309,7 @@ class layer : public node {
    *is
    *important
    **/
-  virtual serial_size_t fan_out_size() const { return out_shape()[0].width_; }
+  virtual serial_size_t fan_out_size() const { return out_shape()[0].width; }
 
   /////////////////////////////////////////////////////////////////////////
   // setter

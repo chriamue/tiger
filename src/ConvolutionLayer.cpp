@@ -10,10 +10,10 @@ using namespace tiny_dnn::core;
 using namespace aly;
 namespace tgr {
 void ConvolutionLayer::getStencilInput(const aly::int3& pos,std::vector<aly::int3>& stencil) const {
-	int w = params_.weight.width_;
-	int h = params_.weight.height_;
-	int inw = params_.in.width_;
-	int inh = params_.in.height_;
+	int w = params_.weight.width;
+	int h = params_.weight.height;
+	int inw = params_.in.width;
+	int inh = params_.in.height;
 	int lowi = (params_.pad_type == padding::valid) ? pos.x : pos.x - w / 2;
 	int lowj = (params_.pad_type == padding::valid) ? pos.y : pos.y - h / 2;
 	int hii = (params_.pad_type == padding::valid) ? pos.x + w : lowi + w;
@@ -28,8 +28,8 @@ void ConvolutionLayer::getStencilInput(const aly::int3& pos,std::vector<aly::int
 }
 void ConvolutionLayer::getStencilWeight(const aly::int3& pos,
 		std::vector<aly::int3>& stencil) const {
-	int w = params_.weight.width_;
-	int h = params_.weight.height_;
+	int w = params_.weight.width;
+	int h = params_.weight.height;
 	stencil.resize(h * w);
 	for (int j = 0; j < h; j++) {
 		for (int i = 0; i < w; i++) {
@@ -57,11 +57,11 @@ void ConvolutionLayer::conv_set_params(const shape3d &in, int w_width,
 		int w_height, int outc, padding ptype, bool has_bias, int w_stride,
 		int h_stride, const connection_table &tbl) {
 	params_.in = in;
-	params_.in_padded = shape3d(in_length(in.width_, w_width, ptype),
-			in_length(in.height_, w_height, ptype), in.depth_);
-	params_.out = shape3d(conv_out_length(in.width_, w_width, w_stride, ptype),
-			conv_out_length(in.height_, w_height, h_stride, ptype), outc);
-	params_.weight = shape3d(w_width, w_height, in.depth_ * outc);
+	params_.in_padded = shape3d(in_length(in.width, w_width, ptype),
+			in_length(in.height, w_height, ptype), in.depth);
+	params_.out = shape3d(conv_out_length(in.width, w_width, w_stride, ptype),
+			conv_out_length(in.height, w_height, h_stride, ptype), outc);
+	params_.weight = shape3d(w_width, w_height, in.depth * outc);
 	params_.has_bias = has_bias;
 	params_.pad_type = ptype;
 	params_.w_stride = w_stride;
@@ -128,13 +128,13 @@ ConvolutionLayer::ConvolutionLayer(int in_width, int in_height,
 }
 std::vector<aly::dim3> ConvolutionLayer::getInputDimensions() const {
 	if (params_.has_bias) {
-		return {Convert(params_.in), Convert(params_.weight),dim3(1, 1, params_.out.depth_)};
+		return {Convert(params_.in), Convert(params_.weight),dim3(1, 1, params_.out.depth)};
 	} else {
 		return {Convert(params_.in), Convert(params_.weight)};
 	}
 }
 std::vector<aly::dim3> ConvolutionLayer::getOutputDimensions() const {
-	return {aly::dim3(params_.out.width_,params_.out.height_,params_.out.depth_)};
+	return {aly::dim3(params_.out.width,params_.out.height,params_.out.depth)};
 }
 Tensor* ConvolutionLayer::in_data_padded(const std::vector<Tensor*> &in) {
 	return (params_.pad_type == padding::valid) ? in[0] : &cws_.prev_out_padded_;
@@ -186,11 +186,11 @@ void ConvolutionLayer::setSampleCount(size_t sample_count) {
 			vec_t(params_.in_padded.size(), float_t(0)));
 }
 int ConvolutionLayer::getFanInSize() const {
-	return params_.weight.width_ * params_.weight.height_ * params_.in.depth_;
+	return params_.weight.width * params_.weight.height * params_.in.depth;
 }
 int ConvolutionLayer::getFanOutSize() const {
-	return (params_.weight.width_ / params_.w_stride)
-			* (params_.weight.height_ / params_.h_stride) * params_.out.depth_;
+	return (params_.weight.width / params_.w_stride)
+			* (params_.weight.height / params_.h_stride) * params_.out.depth;
 }
 
 }

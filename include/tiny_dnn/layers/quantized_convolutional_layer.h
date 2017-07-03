@@ -220,13 +220,13 @@ class quantized_convolutional_layer : public layer {
 
   ///< number of incoming connections for each output unit
   serial_size_t fan_in_size() const override {
-    return params_.weight.width_ * params_.weight.height_ * params_.in.depth_;
+    return params_.weight.width * params_.weight.height * params_.in.depth;
   }
 
   ///< number of outgoing connections for each input unit
   serial_size_t fan_out_size() const override {
-    return (params_.weight.width_ / params_.w_stride) *
-           (params_.weight.height_ / params_.h_stride) * params_.out.depth_;
+    return (params_.weight.width / params_.w_stride) *
+           (params_.weight.height / params_.h_stride) * params_.out.depth;
   }
 
   /**
@@ -266,7 +266,7 @@ class quantized_convolutional_layer : public layer {
   std::vector<index3d<serial_size_t>> in_shape() const override {
     if (params_.has_bias) {
       return {params_.in, params_.weight,
-              index3d<serial_size_t>(1, 1, params_.out.depth_)};
+              index3d<serial_size_t>(1, 1, params_.out.depth)};
     } else {
       return {params_.in, params_.weight};
     }
@@ -282,9 +282,9 @@ class quantized_convolutional_layer : public layer {
   image<> weight_to_image() const {
     image<> img;
     const serial_size_t border_width = 1;
-    const auto pitch                 = params_.weight.width_ + border_width;
-    const auto width  = params_.out.depth_ * pitch + border_width;
-    const auto height = params_.in.depth_ * pitch + border_width;
+    const auto pitch                 = params_.weight.width + border_width;
+    const auto width  = params_.out.depth * pitch + border_width;
+    const auto height = params_.in.depth * pitch + border_width;
     const image<>::intensity_t bg_color = 255;
     const vec_t &W                      = *this->weights()[0];
 
@@ -293,8 +293,8 @@ class quantized_convolutional_layer : public layer {
 
     auto minmax = std::minmax_element(W.begin(), W.end());
 
-    for (serial_size_t r = 0; r < params_.in.depth_; ++r) {
-      for (serial_size_t c = 0; c < params_.out.depth_; ++c) {
+    for (serial_size_t r = 0; r < params_.in.depth; ++r) {
+      for (serial_size_t c = 0; c < params_.out.depth; ++c) {
         if (!params_.tbl.is_connected(c, r)) continue;
 
         const auto top  = r * pitch + border_width;
@@ -302,9 +302,9 @@ class quantized_convolutional_layer : public layer {
 
         serial_size_t idx = 0;
 
-        for (serial_size_t y = 0; y < params_.weight.height_; ++y) {
-          for (serial_size_t x = 0; x < params_.weight.width_; ++x) {
-            idx             = c * params_.in.depth_ + r;
+        for (serial_size_t y = 0; y < params_.weight.height; ++y) {
+          for (serial_size_t x = 0; x < params_.weight.width; ++x) {
+            idx             = c * params_.in.depth + r;
             idx             = params_.weight.get_index(x, y, idx);
             const float_t w = W[idx];
 
@@ -332,12 +332,12 @@ class quantized_convolutional_layer : public layer {
                        const connection_table &tbl = connection_table()) {
     params_.in = in;
     params_.in_padded =
-      shape3d(in_length(in.width_, w_width, ptype),
-              in_length(in.height_, w_height, ptype), in.depth_);
+      shape3d(in_length(in.width, w_width, ptype),
+              in_length(in.height, w_height, ptype), in.depth);
     params_.out =
-      shape3d(conv_out_length(in.width_, w_width, w_stride, ptype),
-              conv_out_length(in.height_, w_height, h_stride, ptype), outc);
-    params_.weight   = shape3d(w_width, w_height, in.depth_ * outc);
+      shape3d(conv_out_length(in.width, w_width, w_stride, ptype),
+              conv_out_length(in.height, w_height, h_stride, ptype), outc);
+    params_.weight   = shape3d(w_width, w_height, in.depth * outc);
     params_.has_bias = has_bias;
     params_.pad_type = ptype;
     params_.w_stride = w_stride;
@@ -418,15 +418,15 @@ class quantized_convolutional_layer : public layer {
 
         // make padded version in order to avoid corner-case in
         // fprop/bprop
-        for (serial_size_t c = 0; c < params_.in.depth_; c++) {
+        for (serial_size_t c = 0; c < params_.in.depth; c++) {
           float_t *pimg = &(*dst)[params_.in_padded.get_index(
-            params_.weight.width_ / 2, params_.weight.height_ / 2, c)];
+            params_.weight.width / 2, params_.weight.height / 2, c)];
           const float_t *pin = &in[sample][params_.in.get_index(0, 0, c)];
 
-          for (serial_size_t y = 0; y < params_.in.height_; y++,
-                             pin += params_.in.width_,
-                             pimg += params_.in_padded.width_) {
-            std::copy(pin, pin + params_.in.width_, pimg);
+          for (serial_size_t y = 0; y < params_.in.height; y++,
+                             pin += params_.in.width,
+                             pimg += params_.in_padded.width) {
+            std::copy(pin, pin + params_.in.width, pimg);
           }
         }
 
@@ -444,16 +444,16 @@ class quantized_convolutional_layer : public layer {
         const vec_t &src  = delta[sample];
         vec_t &dst        = delta_unpadded[sample];
 
-        for (serial_size_t c = 0; c < params_.in.depth_; c++) {
+        for (serial_size_t c = 0; c < params_.in.depth; c++) {
           float_t *pdst = &dst[params_.in.get_index(0, 0, c)];
-          idx           = params_.in_padded.get_index(params_.weight.width_ / 2,
-                                            params_.weight.height_ / 2, c);
+          idx           = params_.in_padded.get_index(params_.weight.width / 2,
+                                            params_.weight.height / 2, c);
           const float_t *pin = &src[idx];
 
-          for (serial_size_t y = 0; y < params_.in.height_; y++) {
-            std::copy(pin, pin + params_.in.width_, pdst);
-            pdst += params_.in.width_;
-            pin += params_.in_padded.width_;
+          for (serial_size_t y = 0; y < params_.in.height; y++) {
+            std::copy(pin, pin + params_.in.width, pdst);
+            pdst += params_.in.width;
+            pin += params_.in_padded.width;
           }
         }
       }

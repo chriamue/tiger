@@ -13,30 +13,43 @@ namespace tgr {
 ConcatLayer::ConcatLayer(const std::vector<aly::dim3> &in_shapes) :
 		NeuralLayer("Concat",
 				std::vector<ChannelType>(in_shapes.size(), ChannelType::data), {
-						ChannelType::data }), in_shapes_(in_shapes) {
+						ChannelType::data }), in_shapes(in_shapes) {
 	set_outshape();
+}
+void ConcatLayer::getStencilInput(const aly::int3& pos,std::vector<aly::int3>& stencil) const {
+	int z=0;
+	int znext=0;
+	stencil.clear();
+	for(int i=0;i<in_shapes.size();i++){
+		znext=z+in_shapes[i].z;
+		if(pos.z>=z&&pos.z<znext){
+			stencil={aly::int3(pos.x,pos.y,pos.z-z)};
+			break;
+		}
+		z=znext;
+	}
 }
 ConcatLayer::ConcatLayer(int num_args, int ndim) :
 		NeuralLayer("Concat",
 				std::vector<ChannelType>(num_args, ChannelType::data), {
-						ChannelType::data }), in_shapes_(
+						ChannelType::data }), in_shapes(
 				std::vector<aly::dim3>(num_args, aly::dim3(ndim, 1, 1))) {
 	set_outshape();
 }
 void ConcatLayer::set_outshape() {
-	out_shape_ = in_shapes_.front();
-	for (size_t i = 1; i < in_shapes_.size(); i++) {
-		if (in_shapes_[i].x * in_shapes_[i].y != out_shape_.x * out_shape_.y)
+	out_shape = in_shapes.front();
+	for (size_t i = 1; i < in_shapes.size(); i++) {
+		if (in_shapes[i].x * in_shapes[i].y != out_shape.x * out_shape.y)
 			throw nn_error(
 					"each input shapes to concat must have same WxH size");
-		out_shape_.z += in_shapes_[i].z;
+		out_shape.z += in_shapes[i].z;
 	}
 }
 std::vector<aly::dim3> ConcatLayer::getInputDimensions() const {
-	return in_shapes_;
+	return in_shapes;
 }
 std::vector<aly::dim3> ConcatLayer::getOutputDimensions() const {
-	return {out_shape_};
+	return {out_shape};
 }
 void ConcatLayer::forwardPropagation(const std::vector<Tensor *> &in_data,
 		std::vector<Tensor *> &out_data) {
@@ -44,9 +57,9 @@ void ConcatLayer::forwardPropagation(const std::vector<Tensor *> &in_data,
 	tiny_dnn::for_i(num_samples, [&](size_t s) {
 		float_t *outs = &(*out_data[0])[s][0];
 
-		for (int i = 0; i < in_shapes_.size(); i++) {
+		for (int i = 0; i < in_shapes.size(); i++) {
 			const float_t *ins = &(*in_data[i])[s][0];
-			int dim = in_shapes_[i].size();
+			int dim = in_shapes[i].size();
 			outs = std::copy(ins, ins + dim, outs);
 		}
 	});
@@ -60,8 +73,8 @@ void ConcatLayer::backwardPropagation(const std::vector<Tensor *> &in_data,
 	tiny_dnn::for_i(num_samples, [&](size_t s) {
 		const float_t *outs = &(*out_grad[0])[s][0];
 
-		for (int i = 0; i < in_shapes_.size(); i++) {
-			int dim = in_shapes_[i].size();
+		for (int i = 0; i < in_shapes.size(); i++) {
+			int dim = in_shapes[i].size();
 			float_t *ins = &(*in_grad[i])[s][0];
 			std::copy(outs, outs + dim, ins);
 			outs += dim;

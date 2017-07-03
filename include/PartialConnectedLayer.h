@@ -35,12 +35,12 @@ private:
 protected:
 	void connect_weight(int input_index, int output_index, int weight_index);
 	void connect_bias(int bias_index, int output_index);
-	std::vector<io_connections> weight2io_;  // weight_id -> [(in_id, out_id)]
-	std::vector<wi_connections> out2wi_;     // out_id -> [(weight_id, in_id)]
-	std::vector<wo_connections> in2wo_;      // in_id -> [(weight_id, out_id)]
-	std::vector<std::vector<int>> bias2out_;
-	std::vector<size_t> out2bias_;
-	float_t scale_factor_;
+	std::vector<io_connections> weight2io;  // weight_id -> [(in_id, out_id)]
+	std::vector<wi_connections> out2wi;     // out_id -> [(weight_id, in_id)]
+	std::vector<wo_connections> in2wo;      // in_id -> [(weight_id, out_id)]
+	std::vector<std::vector<int>> bias2out;
+	std::vector<size_t> out2bias;
+	float scale_factor;
 };
 typedef std::shared_ptr<PartialConnectedLayer> PartialConnectedLayerPtr;
 }

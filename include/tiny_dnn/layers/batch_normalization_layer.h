@@ -36,7 +36,7 @@ class batch_normalization_layer : public layer {
                             float_t momentum = 0.999,
                             net_phase phase  = net_phase::train)
     : Base({vector_type::data}, {vector_type::data}),
-      in_channels_(prev_layer.out_shape()[0].depth_),
+      in_channels_(prev_layer.out_shape()[0].depth),
       in_spatial_size_(prev_layer.out_shape()[0].area()),
       phase_(phase),
       momentum_(momentum),

@@ -42,7 +42,7 @@ inline void tiny_average_pooling_kernel(bool parallelize,
 }
 void AveragePoolingLayer::getStencilInput(const aly::int3& pos,
 		std::vector<aly::int3>& stencil) const {
-	wo_connections outarray = out2wi_[out_(pos)];
+	wo_connections outarray = out2wi[out_(pos)];
 	stencil.resize(outarray.size());
 	for (int i = 0; i < outarray.size(); i++) {
 		stencil[i] = in_(outarray[i].second);
@@ -50,7 +50,7 @@ void AveragePoolingLayer::getStencilInput(const aly::int3& pos,
 }
 void AveragePoolingLayer::getStencilWeight(const aly::int3& pos,
 		std::vector<aly::int3>& stencil) const {
-	wo_connections outarray = out2wi_[out_(pos)];
+	wo_connections outarray = out2wi[out_(pos)];
 	stencil.resize(outarray.size());
 	for (int i = 0; i < outarray.size(); i++) {
 		stencil[i] = in_(outarray[i].first);
@@ -58,8 +58,8 @@ void AveragePoolingLayer::getStencilWeight(const aly::int3& pos,
 }
 bool AveragePoolingLayer::getStencilBias(const aly::int3& pos,
 		aly::int3& stencil) const {
-	if (out2bias_.size() > 0) {
-		stencil = in_(out2bias_[out_(pos)]);
+	if (out2bias.size() > 0) {
+		stencil = in_(out2bias[out_(pos)]);
 		return true;
 	} else {
 		return false;
@@ -124,7 +124,7 @@ std::vector<aly::dim3> AveragePoolingLayer::getOutputDimensions() const {
 void AveragePoolingLayer::forwardPropagation(
 		const std::vector<Tensor *> &in_data, std::vector<Tensor *> &out_data) {
 	tiny_average_pooling_kernel(parallelize, in_data, out_data, out_,
-			Base::scale_factor_, Base::out2wi_);
+			Base::scale_factor, Base::out2wi);
 }
 
 void AveragePoolingLayer::backwardPropagation(
@@ -132,8 +132,8 @@ void AveragePoolingLayer::backwardPropagation(
 		const std::vector<Tensor *> &out_data, std::vector<Tensor *> &out_grad,
 		std::vector<Tensor *> &in_grad) {
 	tiny_average_pooling_back_kernel(parallelize, in_data, out_data, out_grad,
-			in_grad, in_, Base::scale_factor_, Base::weight2io_, Base::in2wo_,
-			Base::bias2out_);
+			in_grad, in_, Base::scale_factor, Base::weight2io, Base::in2wo,
+			Base::bias2out);
 }
 
 std::pair<int, int> AveragePoolingLayer::pool_size() const {

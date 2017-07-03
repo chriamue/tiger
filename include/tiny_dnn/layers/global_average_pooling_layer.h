@@ -27,7 +27,7 @@ class global_average_pooling_layer : public layer {
   global_average_pooling_layer(const shape3d &in_shape,
                                backend_t backend_type = core::default_engine())
     : global_average_pooling_layer(
-        in_shape.width_, in_shape.height_, in_shape.depth_, backend_type) {}
+        in_shape.width, in_shape.height, in_shape.depth, backend_type) {}
 
   /**
    * @param in_width     [in] width of input image
@@ -52,7 +52,7 @@ class global_average_pooling_layer : public layer {
   }
 
   serial_size_t fan_in_size() const override {
-    return static_cast<serial_size_t>(params_.in.width_ * params_.in.height_);
+    return static_cast<serial_size_t>(params_.in.width * params_.in.height);
   }
 
   serial_size_t fan_out_size() const override { return 1; }
@@ -90,7 +90,7 @@ class global_average_pooling_layer : public layer {
   }
 
   std::pair<serial_size_t, serial_size_t> pool_size() const {
-    return std::make_pair(params_.in.width_, params_.in.height_);
+    return std::make_pair(params_.in.width, params_.in.height);
   }
 
   friend struct serialization_buddy;

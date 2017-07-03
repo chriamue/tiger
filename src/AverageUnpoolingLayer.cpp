@@ -93,39 +93,39 @@ AverageUnpoolingLayer::AverageUnpoolingLayer(int in_width, int in_height,
 		PartialConnectedLayer("Average Un-pooling",
 				in_width * in_height * in_channels,
 				in_width * in_height * in_channels * sqr(pooling_size),
-				in_channels, in_channels, float(1) * sqr(pooling_size)), stride_(
-				pooling_size), in_(in_width, in_height, in_channels), out_(
-				in_width * pooling_size, in_height * pooling_size, in_channels), w_(
+				in_channels, in_channels, float(1) * sqr(pooling_size)), stride(
+				pooling_size), in_dim(in_width, in_height, in_channels), out_dim(
+				in_width * pooling_size, in_height * pooling_size, in_channels), w_dim(
 				pooling_size, (in_height == 1 ? 1 : pooling_size), in_channels) {
 	init_connection(pooling_size);
 }
 std::vector<aly::dim3> AverageUnpoolingLayer::getInputDimensions() const {
-	return {in_, w_,aly::dim3(1, 1, out_.z)};
+	return {in_dim, w_dim,aly::dim3(1, 1, out_dim.z)};
 }
 
 std::vector<aly::dim3> AverageUnpoolingLayer::getOutputDimensions() const {
-	return {out_};
+	return {out_dim};
 }
 void AverageUnpoolingLayer::getStencilInput(const aly::int3& pos,
 		std::vector<aly::int3>& stencil) const {
-	wo_connections outarray = out2wi_[out_(pos)];
+	wo_connections outarray = out2wi[out_dim(pos)];
 	stencil.resize(outarray.size());
 	for (int i = 0; i < outarray.size(); i++) {
-		stencil[i] = in_(outarray[i].second);
+		stencil[i] = in_dim(outarray[i].second);
 	}
 }
 void AverageUnpoolingLayer::getStencilWeight(const aly::int3& pos,
 		std::vector<aly::int3>& stencil) const {
-	wo_connections outarray = out2wi_[out_(pos)];
+	wo_connections outarray = out2wi[out_dim(pos)];
 	stencil.resize(outarray.size());
 	for (int i = 0; i < outarray.size(); i++) {
-		stencil[i] = in_(outarray[i].first);
+		stencil[i] = in_dim(outarray[i].first);
 	}
 }
 bool AverageUnpoolingLayer::getStencilBias(const aly::int3& pos,
 		aly::int3& stencil) const {
-	if (out2bias_.size() > 0) {
-		stencil = in_(out2bias_[out_(pos)]);
+	if (out2bias.size() > 0) {
+		stencil = in_dim(out2bias[out_dim(pos)]);
 		return true;
 	} else {
 		return false;
@@ -134,18 +134,18 @@ bool AverageUnpoolingLayer::getStencilBias(const aly::int3& pos,
 }
 void AverageUnpoolingLayer::forwardPropagation(
 		const std::vector<Tensor *> &in_data, std::vector<Tensor *> &out_data) {
-	tiny_average_unpooling_kernel(parallelize, in_data, out_data, out_,
-			PartialConnectedLayer::scale_factor_,
-			PartialConnectedLayer::out2wi_);
+	tiny_average_unpooling_kernel(parallelize, in_data, out_data, out_dim,
+			PartialConnectedLayer::scale_factor,
+			PartialConnectedLayer::out2wi);
 }
 void AverageUnpoolingLayer::backwardPropagation(
 		const std::vector<Tensor *> &in_data,
 		const std::vector<Tensor *> &out_data, std::vector<Tensor *> &out_grad,
 		std::vector<Tensor *> &in_grad) {
 	tiny_average_unpooling_back_kernel(parallelize, in_data, out_data, out_grad,
-			in_grad, in_, PartialConnectedLayer::scale_factor_,
-			PartialConnectedLayer::weight2io_, PartialConnectedLayer::in2wo_,
-			PartialConnectedLayer::bias2out_);
+			in_grad, in_dim, PartialConnectedLayer::scale_factor,
+			PartialConnectedLayer::weight2io, PartialConnectedLayer::in2wo,
+			PartialConnectedLayer::bias2out);
 }
 
 int AverageUnpoolingLayer::unpool_out_dim(int in_size, int pooling_size,
@@ -154,18 +154,18 @@ int AverageUnpoolingLayer::unpool_out_dim(int in_size, int pooling_size,
 }
 
 void AverageUnpoolingLayer::init_connection(int pooling_size) {
-	for (int c = 0; c < in_.z; ++c) {
-		for (int y = 0; y < in_.y; ++y) {
-			for (int x = 0; x < in_.x; ++x) {
+	for (int c = 0; c < in_dim.z; ++c) {
+		for (int y = 0; y < in_dim.y; ++y) {
+			for (int x = 0; x < in_dim.x; ++x) {
 				connect_kernel(pooling_size, x, y, c);
 			}
 		}
 	}
 
-	for (int c = 0; c < in_.z; ++c) {
-		for (int y = 0; y < out_.y; ++y) {
-			for (int x = 0; x < out_.x; ++x) {
-				this->connect_bias(c, out_(x, y, c));
+	for (int c = 0; c < in_dim.z; ++c) {
+		for (int y = 0; y < out_dim.y; ++y) {
+			for (int x = 0; x < out_dim.x; ++x) {
+				this->connect_bias(c, out_dim(x, y, c));
 			}
 		}
 	}
@@ -173,14 +173,14 @@ void AverageUnpoolingLayer::init_connection(int pooling_size) {
 
 void AverageUnpoolingLayer::connect_kernel(int pooling_size, int x, int y,
 		int inc) {
-	int dymax = std::min(pooling_size, out_.y - y);
-	int dxmax = std::min(pooling_size, out_.x - x);
-	int dstx = x * stride_;
-	int dsty = y * stride_;
-	int inidx = in_(x, y, inc);
+	int dymax = std::min(pooling_size, out_dim.y - y);
+	int dxmax = std::min(pooling_size, out_dim.x - x);
+	int dstx = x * stride;
+	int dsty = y * stride;
+	int inidx = in_dim(x, y, inc);
 	for (int dy = 0; dy < dymax; ++dy) {
 		for (int dx = 0; dx < dxmax; ++dx) {
-			this->connect_weight(inidx, out_(dstx + dx, dsty + dy, inc), inc);
+			this->connect_weight(inidx, out_dim(dstx + dx, dsty + dy, inc), inc);
 		}
 	}
 }

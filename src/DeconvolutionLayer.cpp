@@ -26,13 +26,13 @@ DeconvolutionLayer::DeconvolutionLayer(int in_width, int in_height,
 
 ///< number of incoming connections for each output unit
 int DeconvolutionLayer::getFanInSize() const {
-	return params_.weight.width_ * params_.weight.height_ * params_.in.depth_;
+	return params_.weight.width * params_.weight.height * params_.in.depth;
 }
 
 ///< number of outgoing connections for each input unit
 int DeconvolutionLayer::getFanOutSize() const {
-	return (params_.weight.width_ * params_.w_stride)
-			* (params_.weight.height_ * params_.h_stride) * params_.out.depth_;
+	return (params_.weight.width * params_.w_stride)
+			* (params_.weight.height * params_.h_stride) * params_.out.depth;
 }
 
 void DeconvolutionLayer::forwardPropagation(
@@ -63,7 +63,7 @@ void DeconvolutionLayer::backwardPropagation(
 std::vector<aly::dim3> DeconvolutionLayer::getInputDimensions() const {
 	if (params_.has_bias) {
 		return {Convert(params_.in),Convert(params_.weight),
-			aly::dim3(1, 1, params_.out.depth_)};
+			aly::dim3(1, 1, params_.out.depth)};
 	} else {
 		return {Convert(params_.in),Convert(params_.weight)};
 	}
@@ -107,13 +107,13 @@ void DeconvolutionLayer::deconv_set_params(const shape3d &in, int w_width,
 		int w_height, int outc, padding ptype, bool has_bias, int w_stride,
 		int h_stride, const connection_table &tbl = connection_table()) {
 	params_.in = in;
-	params_.out = shape3d(deconv_out_length(in.width_, w_width, w_stride),
-			deconv_out_length(in.height_, w_height, h_stride), outc);
+	params_.out = shape3d(deconv_out_length(in.width, w_width, w_stride),
+			deconv_out_length(in.height, w_height, h_stride), outc);
 	params_.out_unpadded = shape3d(
-			deconv_out_unpadded_length(in.width_, w_width, w_stride, ptype),
-			deconv_out_unpadded_length(in.height_, w_height, h_stride, ptype),
+			deconv_out_unpadded_length(in.width, w_width, w_stride, ptype),
+			deconv_out_unpadded_length(in.height, w_height, h_stride, ptype),
 			outc);
-	params_.weight = shape3d(w_width, w_height, in.depth_ * outc);
+	params_.weight = shape3d(w_width, w_height, in.depth * outc);
 	params_.has_bias = has_bias;
 	params_.pad_type = ptype;
 	params_.w_stride = w_stride;
@@ -122,12 +122,12 @@ void DeconvolutionLayer::deconv_set_params(const shape3d &in, int w_width,
 
 	out2in.resize((size_t) params_.out.area());
 	serial_size_t idx = 0;
-	for (serial_size_t y = 0; y < params_.in.height_; y++) {
-		for (serial_size_t x = 0; x < params_.in.width_; x++) {
-			for (serial_size_t wy = 0; wy < params_.weight.height_; wy++) {
-				for (serial_size_t wx = 0; wx < params_.weight.width_; wx++) {
+	for (serial_size_t y = 0; y < params_.in.height; y++) {
+		for (serial_size_t x = 0; x < params_.in.width; x++) {
+			for (serial_size_t wy = 0; wy < params_.weight.height; wy++) {
+				for (serial_size_t wx = 0; wx < params_.weight.width; wx++) {
 					size_t index = (y * params_.h_stride + wy)
-							* params_.out.width_ + (x * params_.w_stride + wx);
+							* params_.out.width + (x * params_.w_stride + wx);
 					out2in[index].push_back(int2(x, y));
 				}
 			}
@@ -164,7 +164,7 @@ int DeconvolutionLayer::deconv_out_unpadded_length(int in_length,
 }
 void DeconvolutionLayer::getStencilInput(const aly::int3& pos,
 		std::vector<aly::int3>& stencil) const {
-	const std::vector<aly::int2>& out = out2in[pos.x + pos.y * params_.out.width_];
+	const std::vector<aly::int2>& out = out2in[pos.x + pos.y * params_.out.width];
 	stencil.resize(out.size());
 	for (int i = 0; i < out.size(); i++) {
 		stencil[i] = int3(out[i], pos.z);
@@ -172,8 +172,8 @@ void DeconvolutionLayer::getStencilInput(const aly::int3& pos,
 }
 void DeconvolutionLayer::getStencilWeight(const aly::int3& pos,
 		std::vector<aly::int3>& stencil) const {
-	int w = params_.weight.width_;
-	int h = params_.weight.height_;
+	int w = params_.weight.width;
+	int h = params_.weight.height;
 	stencil.resize(h * w);
 	for (int j = 0; j < h; j++) {
 		for (int i = 0; i < w; i++) {
@@ -216,13 +216,13 @@ void DeconvolutionLayer::copy_and_pad_delta(const Tensor &delta,
 			Storage &dst = delta_padded[sample];
 			const Storage &src = delta[sample];
 
-			for (int c = 0; c < params_.in.depth_; c++) {
+			for (int c = 0; c < params_.in.depth; c++) {
 				float *pdst = &dst[params_.in.get_index(0, 0, c)];
 				const float *pin = &src[params_.in.get_index(0, 0, c)];
 
-				for (int y = 0; y < params_.in.height_;
-						y++, pdst += params_.in.width_, pin += params_.in.width_) {
-					std::copy(pin, pin + params_.in.width_, pdst);
+				for (int y = 0; y < params_.in.height;
+						y++, pdst += params_.in.width, pin += params_.in.width) {
+					std::copy(pin, pin + params_.in.width, pdst);
 				}
 			}
 		}
@@ -243,19 +243,19 @@ void DeconvolutionLayer::copy_and_unpad_output(const Tensor &out) {
 		for (int sample = 0; sample < out.size(); sample++) {
 			int idx = 0;
 			Storage &dst = (*dst_tensor)[sample];
-			int wieght_w_half = params_.weight.width_ / 2;
-			int wieght_h_half = params_.weight.height_ / 2;
+			int wieght_w_half = params_.weight.width / 2;
+			int wieght_h_half = params_.weight.height / 2;
 
-			for (int c = 0; c < params_.out_unpadded.depth_; c++) {
+			for (int c = 0; c < params_.out_unpadded.depth; c++) {
 				float *pimg = &dst[params_.out_unpadded.get_index(0, 0, c)];
 				idx = params_.out.get_index(wieght_w_half, wieght_h_half, c);
 				const float *pout = &out[sample][idx];
 
 				for (int y = wieght_h_half;
-						y < params_.out_unpadded.height_ + wieght_h_half;
-						y++, pout += params_.out.width_, pimg +=
-								params_.out_unpadded.width_) {
-					std::copy(pout, pout + params_.out_unpadded.width_, pimg);
+						y < params_.out_unpadded.height + wieght_h_half;
+						y++, pout += params_.out.width, pimg +=
+								params_.out_unpadded.width) {
+					std::copy(pout, pout + params_.out_unpadded.width, pimg);
 				}
 			}
 		}

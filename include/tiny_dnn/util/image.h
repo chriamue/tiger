@@ -94,41 +94,41 @@ class image {
   typedef typename std::vector<intensity_t>::iterator iterator;
   typedef typename std::vector<intensity_t>::const_iterator const_iterator;
 
-  image() : width_(0), height_(0), depth_(1) {}
+  image() : width(0), height(0), depth(1) {}
 
   /**
    * create image from raw pointer
    */
   image(const T *data, size_t width, size_t height, image_type type)
-    : width_(width),
-      height_(height),
-      depth_(type == image_type::grayscale ? 1 : 3),
+    : width(width),
+      height(height),
+      depth(type == image_type::grayscale ? 1 : 3),
       type_(type),
-      data_(depth_ * width_ * height_, 0) {
-    std::copy(data, data + width * height * depth_, &data_[0]);
+      data_(depth * width * height, 0) {
+    std::copy(data, data + width * height * depth, &data_[0]);
   }
 
   /**
    * create WxHxD image filled with 0
    */
   image(const shape3d &size, image_type type)
-    : width_(size.width_),
-      height_(size.height_),
-      depth_(size.depth_),
+    : width(size.width),
+      height(size.height),
+      depth(size.depth),
       type_(type),
-      data_(depth_ * width_ * height_, 0) {
-    if (type == image_type::grayscale && size.depth_ != 1) {
+      data_(depth * width * height, 0) {
+    if (type == image_type::grayscale && size.depth != 1) {
       throw nn_error("depth must be 1 in grayscale");
-    } else if (type != image_type::grayscale && size.depth_ != 3) {
+    } else if (type != image_type::grayscale && size.depth != 3) {
       throw nn_error("depth must be 3 in rgb/bgr");
     }
   }
 
   template <typename U>
   image(const image<U> &rhs)
-    : width_(rhs.width()),
-      height_(rhs.height()),
-      depth_(rhs.depth()),
+    : width(rhs.width()),
+      height(rhs.height()),
+      depth(rhs.depth()),
       type_(rhs.type()),
       data_(rhs.shape().size()) {
     std::transform(rhs.begin(), rhs.end(), data_.begin(),
@@ -150,12 +150,12 @@ class image {
                      std::string(stbi_failure_reason()));
     }
 
-    width_  = static_cast<size_t>(w);
-    height_ = static_cast<size_t>(h);
-    depth_  = type == image_type::grayscale ? 1 : 3;
+    width  = static_cast<size_t>(w);
+    height = static_cast<size_t>(h);
+    depth  = type == image_type::grayscale ? 1 : 3;
     type_   = type;
 
-    data_.resize(width_ * height_ * depth_);
+    data_.resize(width * height * depth);
 
     // reorder to HxWxD -> DxHxW
     from_rgb(input_pixels, input_pixels + data_.size());
@@ -168,12 +168,12 @@ class image {
     std::vector<uint8_t> buf = to_rgb<uint8_t>();
 
     if (detail::ends_with(path, "png")) {
-      ret = stbi_write_png(path.c_str(), static_cast<int>(width_),
-                           static_cast<int>(height_), static_cast<int>(depth_),
+      ret = stbi_write_png(path.c_str(), static_cast<int>(width),
+                           static_cast<int>(height), static_cast<int>(depth),
                            (const void *)&buf[0], 0);
     } else {
-      ret = stbi_write_bmp(path.c_str(), static_cast<int>(width_),
-                           static_cast<int>(height_), static_cast<int>(depth_),
+      ret = stbi_write_bmp(path.c_str(), static_cast<int>(width),
+                           static_cast<int>(height), static_cast<int>(depth),
                            (const void *)&buf[0]);
     }
     if (ret == 0) {
@@ -184,26 +184,26 @@ class image {
   void write(const std::string &path) const { save(path); }
 
   void resize(size_t width, size_t height) {
-    data_.resize(width * height * depth_);
-    width_  = width;
-    height_ = height;
-    // depth_ = depth;
+    data_.resize(width * height * depth);
+    width  = width;
+    height = height;
+    // depth = depth;
   }
 
   void fill(intensity_t value) { std::fill(data_.begin(), data_.end(), value); }
 
   intensity_t &at(size_t x, size_t y, size_t z = 0) {
-    assert(x < width_);
-    assert(y < height_);
-    assert(z < depth_);
-    return data_[z * width_ * height_ + y * width_ + x];
+    assert(x < width);
+    assert(y < height);
+    assert(z < depth);
+    return data_[z * width * height + y * width + x];
   }
 
   const intensity_t &at(size_t x, size_t y, size_t z = 0) const {
-    assert(x < width_);
-    assert(y < height_);
-    assert(z < depth_);
-    return data_[z * width_ * height_ + y * width_ + x];
+    assert(x < width);
+    assert(y < height);
+    assert(z < depth);
+    return data_[z * width * height + y * width + x];
   }
 
   bool empty() const { return data_.empty(); }
@@ -215,30 +215,30 @@ class image {
   intensity_t &operator[](std::size_t idx) { return data_[idx]; }
   const intensity_t &operator[](std::size_t idx) const { return data_[idx]; }
 
-  size_t width() const { return width_; }
-  size_t height() const { return height_; }
-  size_t depth() const { return depth_; }
+  size_t width() const { return width; }
+  size_t height() const { return height; }
+  size_t depth() const { return depth; }
   image_type type() const { return type_; }
   shape3d shape() const {
-    return shape3d(static_cast<serial_size_t>(width_),
-                   static_cast<serial_size_t>(height_),
-                   static_cast<serial_size_t>(depth_));
+    return shape3d(static_cast<serial_size_t>(width),
+                   static_cast<serial_size_t>(height),
+                   static_cast<serial_size_t>(depth));
   }
   const std::vector<intensity_t> &data() const { return data_; }
   vec_t to_vec() const { return vec_t(begin(), end()); }
 
   template <typename U>
   std::vector<U> to_rgb() const {
-    if (depth_ == 1) {
+    if (depth == 1) {
       return std::vector<U>(data_.begin(), data_.end());
     } else {
       std::vector<U> buf(shape().size());
-      auto order = depth_order(type_);
+      auto order = depthorder(type_);
       auto dst   = buf.begin();
 
-      for (size_t y = 0; y < height_; y++)
-        for (size_t x = 0; x < width_; x++)
-          for (size_t i = 0; i < depth_; i++)
+      for (size_t y = 0; y < height; y++)
+        for (size_t x = 0; x < width; x++)
+          for (size_t i = 0; i < depth; i++)
             *dst++ = static_cast<U>(at(x, y, order[i]));
       return buf;
     }
@@ -246,22 +246,22 @@ class image {
 
   template <typename Iter>
   void from_rgb(Iter begin, Iter end) {
-    if (depth_ == 1) {
+    if (depth == 1) {
       std::copy(begin, end, data_.begin());
     } else {
-      auto order = depth_order(type_);
+      auto order = depthorder(type_);
       assert(static_cast<serial_size_t>(std::distance(begin, end)) ==
              data_.size());
 
-      for (size_t y = 0; y < height_; y++)
-        for (size_t x = 0; x < width_; x++)
-          for (size_t i = 0; i < depth_; i++)
+      for (size_t y = 0; y < height; y++)
+        for (size_t x = 0; x < width; x++)
+          for (size_t i = 0; i < depth; i++)
             at(x, y, order[i]) = static_cast<intensity_t>(*begin++);
     }
   }
 
  private:
-  std::array<size_t, 3> depth_order(image_type img) const {
+  std::array<size_t, 3> depthorder(image_type img) const {
     if (img == image_type::rgb) {
       return {{0, 1, 2}};
     } else {
@@ -269,9 +269,9 @@ class image {
       return {{2, 1, 0}};
     }
   }
-  size_t width_;
-  size_t height_;
-  size_t depth_;
+  size_t width;
+  size_t height;
+  size_t depth;
   image_type type_;
   std::vector<intensity_t> data_;
 };
@@ -439,9 +439,9 @@ inline image<T> vec2image(const vec_t &vec,
     throw nn_error("failed to visualize image: vector size invalid");
 
   const serial_size_t border_width = 1;
-  const auto pitch                 = maps.width_ + border_width;
-  const auto width                 = maps.depth_ * pitch + border_width;
-  const auto height                = maps.height_ + 2 * border_width;
+  const auto pitch                 = maps.width + border_width;
+  const auto width                 = maps.depth * pitch + border_width;
+  const auto height                = maps.height + 2 * border_width;
   const typename image<T>::intensity_t bg_color = 255;
   image<T> img;
 
@@ -450,12 +450,12 @@ inline image<T> vec2image(const vec_t &vec,
 
   auto minmax = std::minmax_element(vec.begin(), vec.end());
 
-  for (serial_size_t c = 0; c < maps.depth_; ++c) {
+  for (serial_size_t c = 0; c < maps.depth; ++c) {
     const auto top  = border_width;
     const auto left = c * pitch + border_width;
 
-    for (serial_size_t y = 0; y < maps.height_; ++y) {
-      for (serial_size_t x = 0; x < maps.width_; ++x) {
+    for (serial_size_t y = 0; y < maps.height; ++y) {
+      for (serial_size_t x = 0; x < maps.width; ++x) {
         const float_t val = vec[maps.get_index(x, y, c)];
 
         img.at(left + x, top + y) = static_cast<typename image<T>::intensity_t>(
