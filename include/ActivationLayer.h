@@ -73,7 +73,18 @@ public:
 	virtual std::vector<aly::dim3> getOutputDimensions() const override {
 		return {in_shape_};
 	}
-
+	virtual void getStencilInput(const aly::int3& pos,
+			std::vector<aly::int3>& stencil) const override {
+		stencil = std::vector<aly::int3> { pos };
+	}
+	virtual void getStencilWeight(const aly::int3& pos,
+			std::vector<aly::int3>& stencil) const override {
+		stencil.clear();
+	}
+	virtual bool getStencilBias(const aly::int3& pos, aly::int3& stencil) const
+			override {
+		return false;
+	}
 	virtual void setInputShape(const aly::dim3& in_shape) override {
 		this->in_shape_ = in_shape;
 	}

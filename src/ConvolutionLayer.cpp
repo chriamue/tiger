@@ -9,7 +9,45 @@ using namespace tiny_dnn;
 using namespace tiny_dnn::core;
 using namespace aly;
 namespace tgr {
+void ConvolutionLayer::getStencilInput(const aly::int3& pos,std::vector<aly::int3>& stencil) const {
+	int w = params_.weight.width_;
+	int h = params_.weight.height_;
+	int inw = params_.in.width_;
+	int inh = params_.in.height_;
 
+	int lowi = (params_.pad_type == padding::valid) ? pos.x : pos.x - w / 2;
+	int lowj = (params_.pad_type == padding::valid) ? pos.y : pos.y - h / 2;
+	int hii = (params_.pad_type == padding::valid) ? pos.x + w : lowi + w;
+	int hij = (params_.pad_type == padding::valid) ? pos.y + h : lowj + h;
+
+	for (int j = pos.y; j < hij; j += params_.w_stride) {
+		for (int i = pos.x; i < hij; i += params_.h_stride) {
+			if (i > 0 && j > 0 && i < inw && j < inh) {
+				stencil.push_back(int3(i, j, pos.z));
+			}
+		}
+	}
+}
+void ConvolutionLayer::getStencilWeight(const aly::int3& pos,
+		std::vector<aly::int3>& stencil) const {
+	int w = params_.weight.width_;
+	int h = params_.weight.height_;
+	stencil.resize(h * w);
+	for (int j = 0; j < h; j++) {
+		for (int i = 0; i < w; i++) {
+			stencil[i] = int3(i, j, pos.z);
+		}
+	}
+}
+bool ConvolutionLayer::getStencilBias(const aly::int3& pos,
+		aly::int3& stencil) const {
+	if (params_.has_bias) {
+		stencil = pos;
+		return true;
+	} else {
+		return false;
+	}
+}
 int ConvolutionLayer::conv_out_dim(int in_width, int in_height, int window_size,
 		int w_stride, int h_stride, Padding pad_type) {
 	return tiny_dnn::conv_out_length(in_width, window_size, w_stride,
@@ -82,7 +120,8 @@ ConvolutionLayer::ConvolutionLayer(int in_width, int in_height,
 		int window_width, int window_height, int in_channels, int out_channels,
 		const core::connection_table& connection_table, Padding pad_type,
 		bool has_bias, int w_stride, int h_stride, BackendType backend_type) :
-		NeuralLayer("Convolution", ChannelOrder(has_bias),{ ChannelType::data }) {
+		NeuralLayer("Convolution", ChannelOrder(has_bias),
+				{ ChannelType::data }) {
 	conv_set_params(shape3d(in_width, in_height, in_channels), window_width,
 			window_height, out_channels, static_cast<padding>(pad_type),
 			has_bias, w_stride, h_stride, connection_table);

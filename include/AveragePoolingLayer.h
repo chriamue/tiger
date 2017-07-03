@@ -41,6 +41,10 @@ public:
 					Padding::Valid) {
 
 	}
+	virtual void getStencilInput(const aly::int3& pos,std::vector<aly::int3>& stencil) const override;
+	virtual void getStencilWeight(const aly::int3& pos,std::vector<aly::int3>& stencil) const override;
+	virtual bool getStencilBias(const aly::int3& pos,aly::int3& stencil) const override;
+
 	virtual std::vector<aly::dim3> getInputDimensions() const override;
 	virtual std::vector<aly::dim3> getOutputDimensions() const override;
 	virtual void forwardPropagation(const std::vector<Tensor*>&in_data,
@@ -55,9 +59,9 @@ private:
 	int pool_size_x_;
 	int pool_size_y_;
 	Padding pad_type_;
-	tiny_dnn::shape3d in_;
-	tiny_dnn::shape3d out_;
-	tiny_dnn::shape3d w_;
+	aly::dim3 in_;
+	aly::dim3 out_;
+	aly::dim3 w_;
 	std::pair<int, int> pool_size() const;
 	static int pool_out_dim(int in_size, int pooling_size, int stride);
 	void init_connection(int pooling_size_x, int pooling_size_y);

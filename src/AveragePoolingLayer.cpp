@@ -15,7 +15,7 @@ namespace tgr {
 // forward_propagation
 inline void tiny_average_pooling_kernel(bool parallelize,
 		const std::vector<Tensor *> &in_data, std::vector<Tensor *> &out_data,
-		const shape3d &out_dim, float_t scale_factor,
+		const dim3& out_dim, float_t scale_factor,
 		std::vector<typename PartialConnectedLayer::wi_connections> &out2wi) {
 	tiny_dnn::for_i(parallelize, in_data[0]->size(),
 			[&](size_t sample) {
@@ -23,10 +23,9 @@ inline void tiny_average_pooling_kernel(bool parallelize,
 				const Storage &W = (*in_data[1])[0];
 				const Storage &b = (*in_data[2])[0];
 				Storage &out = (*out_data[0])[sample];
-
 				auto oarea = out_dim.area();
 				size_t idx = 0;
-				for (int d = 0; d < out_dim.depth_; ++d) {
+				for (int d = 0; d < out_dim.z; ++d) {
 					float_t weight = W[d] * scale_factor;
 					float_t bias = b[d];
 					for (int i = 0; i < oarea; ++i, ++idx) {
@@ -38,16 +37,40 @@ inline void tiny_average_pooling_kernel(bool parallelize,
 						out[idx] = value;
 					}
 				}
-
 				assert(out.size() == out2wi.size());
 			});
+}
+void AveragePoolingLayer::getStencilInput(const aly::int3& pos,
+		std::vector<aly::int3>& stencil) const {
+	wo_connections outarray = out2wi_[out_(pos)];
+	stencil.resize(outarray.size());
+	for (int i = 0; i < outarray.size(); i++) {
+		stencil[i] = in_(outarray[i].second);
+	}
+}
+void AveragePoolingLayer::getStencilWeight(const aly::int3& pos,
+		std::vector<aly::int3>& stencil) const {
+	wo_connections outarray = out2wi_[out_(pos)];
+	stencil.resize(outarray.size());
+	for (int i = 0; i < outarray.size(); i++) {
+		stencil[i] = in_(outarray[i].first);
+	}
+}
+bool AveragePoolingLayer::getStencilBias(const aly::int3& pos,
+		aly::int3& stencil) const {
+	if (out2bias_.size() > 0) {
+		stencil = in_(out2bias_(out_(pos)));
+		return true;
+	} else {
+		return false;
+	}
 }
 
 // back_propagation
 inline void tiny_average_pooling_back_kernel(bool parallelize,
 		const std::vector<Tensor *> &in_data,
 		const std::vector<Tensor *> &out_data, std::vector<Tensor *> &out_grad,
-		std::vector<Tensor *> &in_grad, const shape3d &in_dim,
+		std::vector<Tensor *> &in_grad, const dim3 &in_dim,
 		float_t scale_factor,
 		std::vector<typename PartialConnectedLayer::io_connections> &weight2io,
 		std::vector<typename PartialConnectedLayer::wo_connections> &in2wo,
@@ -63,7 +86,7 @@ inline void tiny_average_pooling_back_kernel(bool parallelize,
 
 		auto inarea = in_dim.area();
 		size_t idx = 0;
-		for (size_t i = 0; i < in_dim.depth_; ++i) {
+		for (size_t i = 0; i < in_dim.z; ++i) {
 			float_t weight = W[i] * scale_factor;
 			for (size_t j = 0; j < inarea; ++j, ++idx) {
 				prev_delta[idx] = weight * curr_delta[in2wo[idx][0].second];
@@ -91,11 +114,11 @@ inline void tiny_average_pooling_back_kernel(bool parallelize,
 	});
 }
 std::vector<aly::dim3> AveragePoolingLayer::getInputDimensions() const {
-	return {Convert(in_), Convert(w_), dim3(1, 1, out_.depth_)};
+	return {in_, w_, dim3(1, 1, out_.z)};
 }
 
 std::vector<aly::dim3> AveragePoolingLayer::getOutputDimensions() const {
-	return {Convert(out_)};
+	return {out_};
 }
 
 void AveragePoolingLayer::forwardPropagation(
@@ -124,19 +147,18 @@ int AveragePoolingLayer::pool_out_dim(int in_size, int pooling_size,
 
 void AveragePoolingLayer::init_connection(int pooling_size_x,
 		int pooling_size_y) {
-	for (int c = 0; c < in_.depth_; ++c) {
-		for (int y = 0; y < in_.height_ - pooling_size_y + 1; y += stride_y_) {
-			for (int x = 0; x < in_.width_ - pooling_size_x + 1; x +=
-					stride_x_) {
+	for (int c = 0; c < in_.z; ++c) {
+		for (int y = 0; y < in_.y - pooling_size_y + 1; y += stride_y_) {
+			for (int x = 0; x < in_.x - pooling_size_x + 1; x += stride_x_) {
 				connect_kernel(pooling_size_x, pooling_size_y, x, y, c);
 			}
 		}
 	}
 
-	for (int c = 0; c < in_.depth_; ++c) {
-		for (int y = 0; y < out_.height_; ++y) {
-			for (int x = 0; x < out_.width_; ++x) {
-				this->connect_bias(c, out_.get_index(x, y, c));
+	for (int c = 0; c < in_.z; ++c) {
+		for (int y = 0; y < out_.y; ++y) {
+			for (int x = 0; x < out_.x; ++x) {
+				this->connect_bias(c, out_(x, y, c));
 			}
 		}
 	}
@@ -144,15 +166,14 @@ void AveragePoolingLayer::init_connection(int pooling_size_x,
 
 void AveragePoolingLayer::connect_kernel(int pooling_size_x, int pooling_size_y,
 		int x, int y, int inc) {
-	int dymax = std::min(pooling_size_y, (int) (in_.height_ - y));
-	int dxmax = std::min(pooling_size_x, (int) (in_.width_ - x));
+	int dymax = std::min(pooling_size_y, (int) (in_.y - y));
+	int dxmax = std::min(pooling_size_x, (int) (in_.x - x));
 	int dstx = x / stride_x_;
 	int dsty = y / stride_y_;
-	int outidx = out_.get_index(dstx, dsty, inc);
+	int outidx = out_(dstx, dsty, inc);
 	for (int dy = 0; dy < dymax; ++dy) {
 		for (int dx = 0; dx < dxmax; ++dx) {
-			this->connect_weight(in_.get_index(x + dx, y + dy, inc), outidx,
-					inc);
+			this->connect_weight(in_(x + dx, y + dy, inc), outidx, inc);
 		}
 	}
 }

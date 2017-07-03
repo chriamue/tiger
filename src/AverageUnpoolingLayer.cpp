@@ -11,10 +11,8 @@ using namespace tiny_dnn;
 namespace tgr {
 // forward_propagation
 void tiny_average_unpooling_kernel(bool parallelize,
-		const std::vector<Tensor *> &in_data,
-		std::vector<Tensor *> &out_data,
-		const aly::dim3 &out_dim,
-		float scale_factor,
+		const std::vector<Tensor *> &in_data, std::vector<Tensor *> &out_data,
+		const aly::dim3 &out_dim, float scale_factor,
 		std::vector<typename PartialConnectedLayer::wi_connections> &out2wi) {
 	CNN_UNREFERENCED_PARAMETER(scale_factor);
 	for_i(parallelize, in_data[0]->size(), [&](size_t sample) {
@@ -108,13 +106,38 @@ std::vector<aly::dim3> AverageUnpoolingLayer::getInputDimensions() const {
 std::vector<aly::dim3> AverageUnpoolingLayer::getOutputDimensions() const {
 	return {out_};
 }
+void AverageUnpoolingLayer::getStencilInput(const aly::int3& pos,
+		std::vector<aly::int3>& stencil) const {
+	wo_connections outarray = out2wi_[out_(pos)];
+	stencil.resize(outarray.size());
+	for (int i = 0; i < outarray.size(); i++) {
+		stencil[i] = in_(outarray[i].second);
+	}
+}
+void AverageUnpoolingLayer::getStencilWeight(const aly::int3& pos,
+		std::vector<aly::int3>& stencil) const {
+	wo_connections outarray = out2wi_[out_(pos)];
+	stencil.resize(outarray.size());
+	for (int i = 0; i < outarray.size(); i++) {
+		stencil[i] = in_(outarray[i].first);
+	}
+}
+bool AverageUnpoolingLayer::getStencilBias(const aly::int3& pos,
+		aly::int3& stencil) const {
+	if (out2bias_.size() > 0) {
+		stencil = in_(out2bias_(out_(pos)));
+		return true;
+	} else {
+		return false;
+	}
+	return true;
+}
 void AverageUnpoolingLayer::forwardPropagation(
 		const std::vector<Tensor *> &in_data, std::vector<Tensor *> &out_data) {
 	tiny_average_unpooling_kernel(parallelize, in_data, out_data, out_,
 			PartialConnectedLayer::scale_factor_,
 			PartialConnectedLayer::out2wi_);
 }
-
 void AverageUnpoolingLayer::backwardPropagation(
 		const std::vector<Tensor *> &in_data,
 		const std::vector<Tensor *> &out_data, std::vector<Tensor *> &out_grad,

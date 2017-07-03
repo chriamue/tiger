@@ -57,7 +57,9 @@ public:
 			const std::vector<Tensor *> &out_data,
 			std::vector<Tensor *> &out_grad, std::vector<Tensor *> &in_grad)
 					override;
-
+	virtual void getStencilInput(const aly::int3& pos,std::vector<aly::int3>& stencil) const override;
+	virtual void getStencilWeight(const aly::int3& pos,std::vector<aly::int3>& stencil) const override;
+	virtual bool getStencilBias(const aly::int3& pos,aly::int3& stencil) const override;
 protected:
 	void set_params(const int in_size, const int out_size, bool has_bias);
 	void init_backend(tiny_dnn::core::backend_t backend_type);

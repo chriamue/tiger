@@ -8,7 +8,7 @@
 #include "FullyConnectedLayer.h"
 #include "tiny_dnn/core/kernels/fully_connected_grad_op.h"
 #include "tiny_dnn/core/kernels/fully_connected_op.h"
-
+using namespace aly;
 using namespace tiny_dnn;
 namespace tgr {
 /**
@@ -24,7 +24,28 @@ FullyConnectedLayer::FullyConnectedLayer(int in_dim, int out_dim, bool has_bias,
 	init_backend(static_cast<backend_t>(backend_type));
 	NeuralLayer::setBackendType(backend_type);
 }
-
+void FullyConnectedLayer::getStencilInput(const aly::int3& pos,std::vector<aly::int3>& stencil) const {
+	stencil.resize(params_.in_size_);
+	for (int i = 0; i < (int) stencil.size(); i++) {
+		stencil[i] = int3(i, 0, 0);
+	}
+}
+void FullyConnectedLayer::getStencilWeight(const aly::int3& pos,
+		std::vector<aly::int3>& stencil) const {
+	stencil.resize(params_.in_size_);
+	for (int i = 0; i < (int) stencil.size(); i++) {
+		stencil[i] = int3(i, pos.x, 0);
+	}
+}
+bool FullyConnectedLayer::getStencilBias(const aly::int3& pos,
+		aly::int3& stencil) const {
+	if (params_.has_bias_) {
+		stencil = pos;
+		return true;
+	} else {
+		return false;
+	}
+}
 // move constructor
 FullyConnectedLayer::FullyConnectedLayer(FullyConnectedLayer &&other) :
 		NeuralLayer(std::move(other)), params_(std::move(other.params_)), kernel_fwd_(

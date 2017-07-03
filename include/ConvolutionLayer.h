@@ -56,6 +56,9 @@ public:
                           backend_type){
 
 	}
+	virtual void getStencilInput(const aly::int3& pos,std::vector<aly::int3>& stencil) const override;
+	virtual void getStencilWeight(const aly::int3& pos,std::vector<aly::int3>& stencil) const override;
+	virtual bool getStencilBias(const aly::int3& pos,aly::int3& stencil) const override;
 	virtual std::vector<aly::dim3> getInputDimensions() const override;
 	virtual std::vector<aly::dim3> getOutputDimensions() const override;
 	virtual void forwardPropagation(const std::vector<Tensor*>&in_data,

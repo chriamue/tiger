@@ -26,6 +26,10 @@ public:
 					override;
 	virtual int getFanInSize() const override;
 	virtual int getFanOutSize() const override;
+	virtual void getStencilInput(const aly::int3& pos,std::vector<aly::int3>& stencil) const =0;
+	virtual void getStencilWeight(const aly::int3& pos,std::vector<aly::int3>& stencil) const =0;
+	virtual bool getStencilBias(const aly::int3& pos,aly::int3& stencil) const =0;
+
 private:
 	size_t param_size() const;
 protected:

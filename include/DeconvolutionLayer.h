@@ -84,6 +84,10 @@ public:
 			std::vector<Tensor *> &out_grad, std::vector<Tensor *> &in_grad);
 	virtual std::vector<aly::dim3> getInputDimensions() const override;
 	virtual std::vector<aly::dim3> getOutputDimensions() const override;
+	virtual void getStencilInput(const aly::int3& pos,std::vector<aly::int3>& stencil) const override;
+	virtual void getStencilWeight(const aly::int3& pos,std::vector<aly::int3>& stencil) const override;
+	virtual bool getStencilBias(const aly::int3& pos,aly::int3& stencil) const override;
+
 private:
 	void init_backend(const tiny_dnn::core::backend_t backend_type);
 	void deconv_set_params(const tiny_dnn::shape3d &in, int w_width,

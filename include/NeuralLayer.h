@@ -269,15 +269,9 @@ public:
 	const std::vector<std::shared_ptr<NeuralSignal>>& getOutputSignals() const {
 		return outputs;
 	}
-	virtual void getStencilInput(const aly::int3& pos,std::vector<aly::int3>& stencil) const {
-		stencil = std::vector<aly::int3> { pos };
-	}
-	virtual void getStencilWeight(const aly::int3& pos,std::vector<aly::int3>& stencil) const {
-		stencil = std::vector<aly::int3> { pos };
-	}
-	virtual bool getStencilBias(const aly::int3& pos,aly::int3& stencil) const {
-		stencil = aly::int3(0, 0, pos.z);
-	}
+	virtual void getStencilInput(const aly::int3& pos,std::vector<aly::int3>& stencil) const =0;
+	virtual void getStencilWeight(const aly::int3& pos,std::vector<aly::int3>& stencil) const =0;
+	virtual bool getStencilBias(const aly::int3& pos,aly::int3& stencil) const =0;
 	void getNeuron(const aly::int3& pos, Neuron& neuron);
 	bool isRoot() const;
 	bool isLeaf() const;
