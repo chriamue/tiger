@@ -14,12 +14,10 @@ void ConvolutionLayer::getStencilInput(const aly::int3& pos,std::vector<aly::int
 	int h = params_.weight.height_;
 	int inw = params_.in.width_;
 	int inh = params_.in.height_;
-
 	int lowi = (params_.pad_type == padding::valid) ? pos.x : pos.x - w / 2;
 	int lowj = (params_.pad_type == padding::valid) ? pos.y : pos.y - h / 2;
 	int hii = (params_.pad_type == padding::valid) ? pos.x + w : lowi + w;
 	int hij = (params_.pad_type == padding::valid) ? pos.y + h : lowj + h;
-
 	for (int j = pos.y; j < hij; j += params_.w_stride) {
 		for (int i = pos.x; i < hij; i += params_.h_stride) {
 			if (i > 0 && j > 0 && i < inw && j < inh) {

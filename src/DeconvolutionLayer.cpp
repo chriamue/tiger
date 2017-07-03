@@ -7,6 +7,7 @@
 
 #include "DeconvolutionLayer.h"
 #include "tiny_dnn/tiny_dnn.h"
+using namespace aly;
 using namespace tiny_dnn;
 using namespace tiny_dnn::core;
 namespace tgr {
@@ -95,7 +96,7 @@ void DeconvolutionLayer::init_backend(const backend_t backend_type) {
 	}
 
 	if (backend) {
-		this->backend_=backend;
+		this->backend_ = backend;
 		//backend_->set_layer(this); //Blake: What to do here! Create own Backend class?
 	} else {
 		throw nn_error("Could not allocate the backend.");
@@ -118,6 +119,21 @@ void DeconvolutionLayer::deconv_set_params(const shape3d &in, int w_width,
 	params_.w_stride = w_stride;
 	params_.h_stride = h_stride;
 	params_.tbl = tbl;
+
+	out2in.resize((size_t) params_.out.area());
+	serial_size_t idx = 0;
+	for (serial_size_t y = 0; y < params_.in.height_; y++) {
+		for (serial_size_t x = 0; x < params_.in.width_; x++) {
+			for (serial_size_t wy = 0; wy < params_.weight.height_; wy++) {
+				for (serial_size_t wx = 0; wx < params_.weight.width_; wx++) {
+					size_t index = (y * params_.h_stride + wy)
+							* params_.out.width_ + (x * params_.w_stride + wx);
+					out2in[index].push_back(int2(x, y));
+				}
+			}
+		}
+	}
+
 }
 
 void DeconvolutionLayer::init_workers(int sample_count) {
@@ -132,22 +148,47 @@ void DeconvolutionLayer::init_workers(int sample_count) {
 		dws.curr_out_buf_.clear();
 	}
 }
-
 int DeconvolutionLayer::in_length(int in_length, int window_size,
 		padding pad_type) const {
 	return in_length;
 }
-
 int DeconvolutionLayer::deconv_out_length(int in_length, int window_size,
 		int stride) {
 	return (int) ceil((float) (in_length) * stride + window_size - 1);
 }
-
 int DeconvolutionLayer::deconv_out_unpadded_length(int in_length,
 		int window_size, int stride, padding pad_type) {
 	return pad_type == padding::same ?
 			(int) ceil((float) in_length * stride) :
 			(int) ceil((float) (in_length) * stride + window_size - 1);
+}
+void DeconvolutionLayer::getStencilInput(const aly::int3& pos,
+		std::vector<aly::int3>& stencil) const {
+	const std::vector<aly::int2>& out = out2in[pos.x + pos.y * params_.out.width_];
+	stencil.resize(out.size());
+	for (int i = 0; i < out.size(); i++) {
+		stencil[i] = int3(out[i], pos.z);
+	}
+}
+void DeconvolutionLayer::getStencilWeight(const aly::int3& pos,
+		std::vector<aly::int3>& stencil) const {
+	int w = params_.weight.width_;
+	int h = params_.weight.height_;
+	stencil.resize(h * w);
+	for (int j = 0; j < h; j++) {
+		for (int i = 0; i < w; i++) {
+			stencil[i] = int3(i, j, pos.z);
+		}
+	}
+}
+bool DeconvolutionLayer::getStencilBias(const aly::int3& pos,
+		aly::int3& stencil) const {
+	if (params_.has_bias) {
+		stencil = pos;
+		return true;
+	} else {
+		return false;
+	}
 }
 
 int DeconvolutionLayer::deconv_out_dim(int in_width, int in_height,

@@ -125,7 +125,7 @@ void AverageUnpoolingLayer::getStencilWeight(const aly::int3& pos,
 bool AverageUnpoolingLayer::getStencilBias(const aly::int3& pos,
 		aly::int3& stencil) const {
 	if (out2bias_.size() > 0) {
-		stencil = in_(out2bias_(out_(pos)));
+		stencil = in_(out2bias_[out_(pos)]);
 		return true;
 	} else {
 		return false;

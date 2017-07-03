@@ -87,7 +87,6 @@ public:
 	virtual void getStencilInput(const aly::int3& pos,std::vector<aly::int3>& stencil) const override;
 	virtual void getStencilWeight(const aly::int3& pos,std::vector<aly::int3>& stencil) const override;
 	virtual bool getStencilBias(const aly::int3& pos,aly::int3& stencil) const override;
-
 private:
 	void init_backend(const tiny_dnn::core::backend_t backend_type);
 	void deconv_set_params(const tiny_dnn::shape3d &in, int w_width,
@@ -108,6 +107,7 @@ private:
 	void copy_and_pad_delta(const Tensor &delta, Tensor &delta_padded);
 	void copy_and_unpad_output(const Tensor &out);
 	/* The convolution parameters */
+	std::vector<std::vector<aly::int2>> out2in;
 	tiny_dnn::core::deconv_params params_;
 	std::shared_ptr<tiny_dnn::core::backend> backend_;
 	tiny_dnn::core::deconv_layer_worker_specific_storage deconv_layer_worker_storage_;

@@ -54,7 +54,6 @@ public:
                           w_stride,
                           h_stride,
                           backend_type){
-
 	}
 	virtual void getStencilInput(const aly::int3& pos,std::vector<aly::int3>& stencil) const override;
 	virtual void getStencilWeight(const aly::int3& pos,std::vector<aly::int3>& stencil) const override;

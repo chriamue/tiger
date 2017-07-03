@@ -59,7 +59,7 @@ void AveragePoolingLayer::getStencilWeight(const aly::int3& pos,
 bool AveragePoolingLayer::getStencilBias(const aly::int3& pos,
 		aly::int3& stencil) const {
 	if (out2bias_.size() > 0) {
-		stencil = in_(out2bias_(out_(pos)));
+		stencil = in_(out2bias_[out_(pos)]);
 		return true;
 	} else {
 		return false;

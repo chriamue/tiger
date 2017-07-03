@@ -18,6 +18,13 @@ std::vector<aly::dim3> AddElementsLayer::getInputDimensions() const {
 std::vector<aly::dim3> AddElementsLayer::getOutputDimensions() const {
 	return {aly::dim3(dim_, 1, 1)};
 }
+void AddElementsLayer::getStencilInput(const aly::int3& pos,
+		std::vector<aly::int3>& stencil) const {
+	stencil.resize(num_args_);
+	for (int i = 0; i < num_args_; i++) {
+		stencil[i] = aly::int3(pos.x, pos.y, i);
+	}
+}
 void AddElementsLayer::forwardPropagation(const std::vector<Tensor *> &in_data,
 		std::vector<Tensor *> &out_data) {
 	const Tensor &in1 = *in_data[0];
