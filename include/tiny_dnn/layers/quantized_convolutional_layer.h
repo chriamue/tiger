@@ -150,7 +150,7 @@ class quantized_convolutional_layer : public layer {
     serial_size_t window_size,
     serial_size_t in_channels,
     serial_size_t out_channels,
-    const connection_table &connection_table,
+    const ConnectionTable &connection_table,
     padding pad_type       = padding::valid,
     bool has_bias          = true,
     serial_size_t w_stride = 1,
@@ -196,7 +196,7 @@ class quantized_convolutional_layer : public layer {
     serial_size_t window_height,
     serial_size_t in_channels,
     serial_size_t out_channels,
-    const connection_table &connection_table,
+    const ConnectionTable &connection_table,
     padding pad_type       = padding::valid,
     bool has_bias          = true,
     serial_size_t w_stride = 1,
@@ -295,7 +295,7 @@ class quantized_convolutional_layer : public layer {
 
     for (serial_size_t r = 0; r < params_.in.depth; ++r) {
       for (serial_size_t c = 0; c < params_.out.depth; ++c) {
-        if (!params_.tbl.is_connected(c, r)) continue;
+        if (!params_.tbl.isConnected(c, r)) continue;
 
         const auto top  = r * pitch + border_width;
         const auto left = c * pitch + border_width;
@@ -329,7 +329,7 @@ class quantized_convolutional_layer : public layer {
                        bool has_bias,
                        serial_size_t w_stride,
                        serial_size_t h_stride,
-                       const connection_table &tbl = connection_table()) {
+                       const ConnectionTable &tbl = ConnectionTable()) {
     params_.in = in;
     params_.in_padded =
       shape3d(in_length(in.width, w_width, ptype),
@@ -347,11 +347,11 @@ class quantized_convolutional_layer : public layer {
 
   void init() {
     if (params_.pad_type == padding::same) {
-      cws_.prev_out_buf_.resize(1, vec_t(params_.in_padded.size(), float_t{0}));
-      cws_.prev_delta_padded_.resize(
+      cws_.prev_out_buf.resize(1, vec_t(params_.in_padded.size(), float_t{0}));
+      cws_.prev_delta_padded.resize(
         1, vec_t(params_.in_padded.size(), float_t{0}));
     } else {
-      cws_.prev_out_buf_.clear();
+      cws_.prev_out_buf.clear();
     }
   }
 
@@ -403,18 +403,18 @@ class quantized_convolutional_layer : public layer {
 
     serial_size_t sample_count = static_cast<serial_size_t>(in.size());
 
-    cws.prev_out_padded_.resize(sample_count);
+    cws.prev_out_padded.resize(sample_count);
 
     if (params_.pad_type == padding::same) {
-      cws.prev_out_buf_.resize(sample_count, cws.prev_out_buf_[0]);
-      cws.prev_delta_padded_.resize(sample_count, cws.prev_delta_padded_[0]);
+      cws.prev_out_buf.resize(sample_count, cws.prev_out_buf[0]);
+      cws.prev_delta_padded.resize(sample_count, cws.prev_delta_padded[0]);
     }
 
     for (serial_size_t sample = 0; sample < sample_count; ++sample) {
       if (params_.pad_type == padding::valid) {
-        cws.prev_out_padded_[sample] = &(in[sample]);
+        cws.prev_out_padded[sample] = &(in[sample]);
       } else {
-        vec_t *dst = &cws.prev_out_buf_[sample];
+        vec_t *dst = &cws.prev_out_buf[sample];
 
         // make padded version in order to avoid corner-case in
         // fprop/bprop
@@ -430,7 +430,7 @@ class quantized_convolutional_layer : public layer {
           }
         }
 
-        cws.prev_out_padded_[sample] = &(cws.prev_out_buf_[sample]);
+        cws.prev_out_padded[sample] = &(cws.prev_out_buf[sample]);
       }
     }
   }

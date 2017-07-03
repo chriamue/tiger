@@ -42,24 +42,24 @@ inline void tiny_average_pooling_kernel(bool parallelize,
 }
 void AveragePoolingLayer::getStencilInput(const aly::int3& pos,
 		std::vector<aly::int3>& stencil) const {
-	wo_connections outarray = out2wi[out_(pos)];
+	wo_connections outarray = out2wi[out_dim(pos)];
 	stencil.resize(outarray.size());
 	for (int i = 0; i < outarray.size(); i++) {
-		stencil[i] = in_(outarray[i].second);
+		stencil[i] = in_dim(outarray[i].second);
 	}
 }
 void AveragePoolingLayer::getStencilWeight(const aly::int3& pos,
 		std::vector<aly::int3>& stencil) const {
-	wo_connections outarray = out2wi[out_(pos)];
+	wo_connections outarray = out2wi[out_dim(pos)];
 	stencil.resize(outarray.size());
 	for (int i = 0; i < outarray.size(); i++) {
-		stencil[i] = in_(outarray[i].first);
+		stencil[i] = in_dim(outarray[i].first);
 	}
 }
 bool AveragePoolingLayer::getStencilBias(const aly::int3& pos,
 		aly::int3& stencil) const {
 	if (out2bias.size() > 0) {
-		stencil = in_(out2bias[out_(pos)]);
+		stencil = in_dim(out2bias[out_dim(pos)]);
 		return true;
 	} else {
 		return false;
@@ -114,16 +114,16 @@ inline void tiny_average_pooling_back_kernel(bool parallelize,
 	});
 }
 std::vector<aly::dim3> AveragePoolingLayer::getInputDimensions() const {
-	return {in_, w_, dim3(1, 1, out_.z)};
+	return {in_dim, w_dim, dim3(1, 1, out_dim.z)};
 }
 
 std::vector<aly::dim3> AveragePoolingLayer::getOutputDimensions() const {
-	return {out_};
+	return {out_dim};
 }
 
 void AveragePoolingLayer::forwardPropagation(
 		const std::vector<Tensor *> &in_data, std::vector<Tensor *> &out_data) {
-	tiny_average_pooling_kernel(parallelize, in_data, out_data, out_,
+	tiny_average_pooling_kernel(parallelize, in_data, out_data, out_dim,
 			Base::scale_factor, Base::out2wi);
 }
 
@@ -132,12 +132,12 @@ void AveragePoolingLayer::backwardPropagation(
 		const std::vector<Tensor *> &out_data, std::vector<Tensor *> &out_grad,
 		std::vector<Tensor *> &in_grad) {
 	tiny_average_pooling_back_kernel(parallelize, in_data, out_data, out_grad,
-			in_grad, in_, Base::scale_factor, Base::weight2io, Base::in2wo,
+			in_grad, in_dim, Base::scale_factor, Base::weight2io, Base::in2wo,
 			Base::bias2out);
 }
 
 std::pair<int, int> AveragePoolingLayer::pool_size() const {
-	return std::make_pair(pool_size_x_, pool_size_y_);
+	return std::make_pair(pool_size_x, pool_size_y);
 }
 int AveragePoolingLayer::pool_out_dim(int in_size, int pooling_size,
 		int stride) {
@@ -147,18 +147,18 @@ int AveragePoolingLayer::pool_out_dim(int in_size, int pooling_size,
 
 void AveragePoolingLayer::init_connection(int pooling_size_x,
 		int pooling_size_y) {
-	for (int c = 0; c < in_.z; ++c) {
-		for (int y = 0; y < in_.y - pooling_size_y + 1; y += stride_y_) {
-			for (int x = 0; x < in_.x - pooling_size_x + 1; x += stride_x_) {
+	for (int c = 0; c < in_dim.z; ++c) {
+		for (int y = 0; y < in_dim.y - pooling_size_y + 1; y += stride_y) {
+			for (int x = 0; x < in_dim.x - pooling_size_x + 1; x += stride_x) {
 				connect_kernel(pooling_size_x, pooling_size_y, x, y, c);
 			}
 		}
 	}
 
-	for (int c = 0; c < in_.z; ++c) {
-		for (int y = 0; y < out_.y; ++y) {
-			for (int x = 0; x < out_.x; ++x) {
-				this->connect_bias(c, out_(x, y, c));
+	for (int c = 0; c < in_dim.z; ++c) {
+		for (int y = 0; y < out_dim.y; ++y) {
+			for (int x = 0; x < out_dim.x; ++x) {
+				this->connect_bias(c, out_dim(x, y, c));
 			}
 		}
 	}
@@ -166,14 +166,14 @@ void AveragePoolingLayer::init_connection(int pooling_size_x,
 
 void AveragePoolingLayer::connect_kernel(int pooling_size_x, int pooling_size_y,
 		int x, int y, int inc) {
-	int dymax = std::min(pooling_size_y, (int) (in_.y - y));
-	int dxmax = std::min(pooling_size_x, (int) (in_.x - x));
-	int dstx = x / stride_x_;
-	int dsty = y / stride_y_;
-	int outidx = out_(dstx, dsty, inc);
+	int dymax = std::min(pooling_size_y, (int) (in_dim.y - y));
+	int dxmax = std::min(pooling_size_x, (int) (in_dim.x - x));
+	int dstx = x / stride_x;
+	int dsty = y / stride_y;
+	int outidx = out_dim(dstx, dsty, inc);
 	for (int dy = 0; dy < dymax; ++dy) {
 		for (int dx = 0; dx < dxmax; ++dx) {
-			this->connect_weight(in_(x + dx, y + dy, inc), outidx, inc);
+			this->connect_weight(in_dim(x + dx, y + dy, inc), outidx, inc);
 		}
 	}
 }
@@ -187,13 +187,13 @@ AveragePoolingLayer::AveragePoolingLayer(int in_width, int in_height,
 						* conv_out_length(in_height, pool_size_y, stride_y,
 								static_cast<padding>(pad_type)) * in_channels,
 				in_channels, in_channels,
-				float_t(1) / (pool_size_x * pool_size_y)), stride_x_(stride_x), stride_y_(
-				stride_y), pool_size_x_(pool_size_x), pool_size_y_(pool_size_y), pad_type_(
-				pad_type), in_(in_width, in_height, in_channels), out_(
+				float_t(1) / (pool_size_x * pool_size_y)), stride_x(stride_x), stride_y(
+				stride_y), pool_size_x(pool_size_x), pool_size_y(pool_size_y), pad_type(
+				pad_type), in_dim(in_width, in_height, in_channels), out_dim(
 				conv_out_length(in_width, pool_size_x, stride_x,
 						static_cast<padding>(pad_type)),
 				conv_out_length(in_height, pool_size_y, stride_y,
-						static_cast<padding>(pad_type)), in_channels), w_(
+						static_cast<padding>(pad_type)), in_channels), w_dim(
 				pool_size_x, pool_size_y, in_channels) {
 	if ((in_width % pool_size_x) || (in_height % pool_size_y)) {
 		pooling_size_mismatch(in_width, in_height, pool_size_x, pool_size_y);

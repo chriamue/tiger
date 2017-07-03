@@ -110,7 +110,7 @@ class avx_backend : public backend {
 
   void deconv2d(const std::vector<tensor_t *> &in_data,
                 std::vector<tensor_t *> &out_data) override {
-    (*deconv_layer_worker_storage_).prev_out_ = in_data[0];
+    (*deconv_layer_worker_storage_).prev_out = in_data[0];
     const vec_t &W                            = (*in_data[1])[0];
     const vec_t &bias                         = (*in_data[2])[0];
     tensor_t &out                             = *out_data[0];
@@ -122,7 +122,7 @@ class avx_backend : public backend {
                                  layer_->parallelize());
 
     copy_and_unpad_output(out);
-    out = *(*deconv_layer_worker_storage_).curr_out_unpadded_;
+    out = *(*deconv_layer_worker_storage_).curr_out_unpadded;
   }
 
   void deconv2d_q(const std::vector<tensor_t *> &in_data,
@@ -147,7 +147,7 @@ class avx_backend : public backend {
     if (params_d_->pad_type == padding::same)
       copy_and_pad_delta(cws.curr_delta_padded, *in_grad[0]);
 
-    const tensor_t &prev_out = *(cws.prev_out_);
+    const tensor_t &prev_out = *(cws.prev_out);
     const vec_t &W           = (*in_data[1])[0];
     tensor_t &dW             = *in_grad[1];
     tensor_t &db             = *in_grad[2];

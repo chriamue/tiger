@@ -140,7 +140,7 @@ inline void accumulate_dw(const core::conv_params &params,
       float *pdW               = &dW[widx];
       for (serial_size_t outc = 0; outc < out.depth;
            outc++, pdW += widx_delta) {
-        if (!tbl.is_connected(outc, inc)) {
+        if (!tbl.isConnected(outc, inc)) {
           continue;
         }
         __m256 delta = _mm256_broadcast_ss(&curr_delta[outc]);
@@ -177,7 +177,7 @@ inline void accumulate_dw(const core::conv_params &params,
       for (serial_size_t inc = 0; inc < in.depth; ++inc) {
         for (serial_size_t outc = 0; outc < out.depth; ++outc) {
           const float *delta = &curr_delta[out.get_index(0, 0, outc)];
-          if (!tbl.is_connected(outc, inc)) {
+          if (!tbl.isConnected(outc, inc)) {
             continue;
           }
           serial_size_t widx = weight.get_index(0, 0, in.depth * outc + inc);
@@ -205,7 +205,7 @@ inline void accumulate_dw(const core::conv_params &params,
     } else if (nblocks == 1 && remainder != 0) {
       for (serial_size_t inc = 0; inc < in.depth; ++inc) {
         for (serial_size_t outc = 0; outc < out.depth; ++outc) {
-          if (!tbl.is_connected(outc, inc)) {
+          if (!tbl.isConnected(outc, inc)) {
             continue;
           }
           const float *delta = &curr_delta[out.get_index(0, 0, outc)];
@@ -258,7 +258,7 @@ inline void accumulate_dw(const core::conv_params &params,
     } else if (nblocks > 1 && remainder != 0) {
       for (serial_size_t inc = 0; inc < in.depth; ++inc) {
         for (serial_size_t outc = 0; outc < out.depth; ++outc) {
-          if (!tbl.is_connected(outc, inc)) {
+          if (!tbl.isConnected(outc, inc)) {
             continue;
           }
           const float *delta = &curr_delta[out.get_index(0, 0, outc)];
@@ -334,7 +334,7 @@ inline void accumulate_dw(const core::conv_params &params,
       assert(remainder != 0);
       for (serial_size_t inc = 0; inc < in.depth; ++inc) {
         for (serial_size_t outc = 0; outc < out.depth; ++outc) {
-          if (!tbl.is_connected(outc, inc)) {
+          if (!tbl.isConnected(outc, inc)) {
             continue;
           }
           const float *delta = &curr_delta[out.get_index(0, 0, outc)];
@@ -377,7 +377,7 @@ inline void accumulate_dw(const core::conv_params &params,
       assert(remainder == 0);
       for (serial_size_t inc = 0; inc < in.depth; ++inc) {
         for (serial_size_t outc = 0; outc < out.depth; ++outc) {
-          if (!tbl.is_connected(outc, inc)) {
+          if (!tbl.isConnected(outc, inc)) {
             continue;
           }
           const float *delta = &curr_delta[out.get_index(0, 0, outc)];
@@ -421,7 +421,7 @@ inline void accumulate_dw(const core::conv_params &params,
       assert(remainder == 0);
       for (serial_size_t inc = 0; inc < in.depth; ++inc) {
         for (serial_size_t outc = 0; outc < out.depth; ++outc) {
-          if (!tbl.is_connected(outc, inc)) {
+          if (!tbl.isConnected(outc, inc)) {
             continue;
           }
           const float *delta = &curr_delta[out.get_index(0, 0, outc)];
@@ -518,7 +518,7 @@ void avx_conv2d_5x5_back_kernel_one(
       for (serial_size_t inc = 0; inc < in.depth;
            ++inc, pdelta_dst_org += in_padded_area) {
         for (serial_size_t outc = 0; outc < out.depth; ++outc) {
-          if (!tbl.is_connected(outc, inc)) {
+          if (!tbl.isConnected(outc, inc)) {
             continue;
           }
           const float *pw         = &W[25 * (in.depth * outc + inc)];
@@ -618,7 +618,7 @@ void avx_conv2d_5x5_back_kernel_one(
       for (serial_size_t inc = 0; inc < in.depth;
            ++inc, pdelta_dst_org += in_padded_area) {
         for (serial_size_t outc = 0; outc < out.depth; ++outc) {
-          if (!tbl.is_connected(outc, inc)) {
+          if (!tbl.isConnected(outc, inc)) {
             continue;
           }
           const float *pw         = &W[25 * (in.depth * outc + inc)];
@@ -713,7 +713,7 @@ void avx_conv2d_5x5_back_kernel_one(
       size_t widx  = 25 * inc;
       size_t wstep = 25 * in.depth;
       __m256 delta_src;
-      if (tbl.is_empty()) {
+      if (tbl.isEmpty()) {
         for (serial_size_t outc = 0; outc < out.depth; ++outc, widx += wstep) {
           delta_src       = _mm256_broadcast_ss(&curr_delta[outc]);
           const float *pw = (const float *)&W[widx];
@@ -728,7 +728,7 @@ void avx_conv2d_5x5_back_kernel_one(
         }
       } else {
         for (serial_size_t outc = 0; outc < out.depth; ++outc, widx += wstep) {
-          if (!tbl.is_connected(outc, inc)) {
+          if (!tbl.isConnected(outc, inc)) {
             continue;
           }
           delta_src       = _mm256_broadcast_ss(&curr_delta[outc]);
@@ -803,7 +803,7 @@ void avx_conv2d_5x5_back_kernel_one(
     for (serial_size_t inc = 0; inc < in.depth;
          ++inc, pdelta_dst_org += in_padded_area) {
       for (serial_size_t outc = 0; outc < out.depth; ++outc) {
-        if (!tbl.is_connected(outc, inc)) continue;
+        if (!tbl.isConnected(outc, inc)) continue;
 
         const float *pw         = &W[25 * (in.depth * outc + inc)];
         const float *pdelta_src = &curr_delta[out.get_index(0, 0, outc)];

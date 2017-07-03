@@ -42,14 +42,14 @@ public:
 	 **/
 	DeconvolutionLayer(int in_width, int in_height, int window_width,
 			int window_height, int in_channels, int out_channels,
-			const tiny_dnn::core::connection_table &connection_table,
+			const tiny_dnn::core::ConnectionTable &connection_table,
 			Padding pad_type = Padding::Valid, bool has_bias = true,
 			int w_stride = 1, int h_stride = 1, BackendType backend_type =
 					DefaultEngine());
 
 	DeconvolutionLayer(int in_width, int in_height, int window_size,
 			int in_channels, int out_channels,
-			const tiny_dnn::core::connection_table &connection_table,
+			const tiny_dnn::core::ConnectionTable &connection_table,
 			Padding pad_type = Padding::Valid, bool has_bias = true,
 			int w_stride = 1, int h_stride = 1, BackendType backend_type =
 					DefaultEngine()) :
@@ -92,7 +92,7 @@ private:
 	void deconv_set_params(const tiny_dnn::shape3d &in, int w_width,
 			int w_height, int outc, tiny_dnn::padding ptype, bool has_bias,
 			int w_stride, int h_stride,
-			const tiny_dnn::core::connection_table &tbl);
+			const tiny_dnn::core::ConnectionTable &tbl);
 	void init_workers(int sample_count);
 	int in_length(int in_length, int window_size,
 			tiny_dnn::padding pad_type) const;
@@ -108,9 +108,9 @@ private:
 	void copy_and_unpad_output(const Tensor &out);
 	/* The convolution parameters */
 	std::vector<std::vector<aly::int2>> out2in;
-	tiny_dnn::core::deconv_params params_;
-	std::shared_ptr<tiny_dnn::core::backend> backend_;
-	tiny_dnn::core::deconv_layer_worker_specific_storage deconv_layer_worker_storage_;
+	tiny_dnn::core::deconv_params params;
+	std::shared_ptr<tiny_dnn::core::backend> backend;
+	tiny_dnn::core::deconv_layer_worker_specific_storage deconv_layer_worker_storage;
 };
 typedef std::shared_ptr<DeconvolutionLayer> DeconvolutionLayerPtr;
 }

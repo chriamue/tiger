@@ -24,7 +24,7 @@ inline void tiny_deconv2d_back_kernel(const deconv_params &params,
   for_i(prev_out.size(), [&](int sample) {
     for (serial_size_t inc = 0; inc < params.in.depth; inc++) {
       for (serial_size_t outc = 0; outc < params.out.depth; outc++) {
-        if (!params.tbl.is_connected(outc, inc)) continue;
+        if (!params.tbl.isConnected(outc, inc)) continue;
 
         serial_size_t idx = 0;
         idx               = params.in.depth * outc + inc;
@@ -60,7 +60,7 @@ inline void tiny_deconv2d_back_kernel(const deconv_params &params,
     // accumulate dw
     for (serial_size_t inc = 0; inc < params.in.depth; inc++) {
       for (serial_size_t outc = 0; outc < params.out.depth; outc++) {
-        if (!params.tbl.is_connected(outc, inc)) continue;
+        if (!params.tbl.isConnected(outc, inc)) continue;
         for (serial_size_t wy = 0; wy < params.weight.height; wy++) {
           for (serial_size_t wx = 0; wx < params.weight.width; wx++) {
             float_t dst{0};

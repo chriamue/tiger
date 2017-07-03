@@ -57,7 +57,7 @@ void avx_conv2d_5x5_kernel(const core::conv_params &params,
       const float *pi = (const float *)&in[0];
       for (serial_size_t inc = 0; inc < params.in.depth;
            ++inc, pw += 25, pi += inarea) {
-        if (!tbl.is_connected(o, inc)) {
+        if (!tbl.isConnected(o, inc)) {
           continue;
         }
         __m256 w0   = _mm256_loadu_ps(pw + 0);
@@ -110,7 +110,7 @@ void avx_conv2d_5x5_kernel(const core::conv_params &params,
         }
       }
       for (serial_size_t inc = 0; inc < params.in.depth; ++inc) {
-        if (!tbl.is_connected(o, inc)) continue;
+        if (!tbl.isConnected(o, inc)) continue;
 
         const float *pw = (const float *)&W[25 * (params.in.depth * o + inc)];
         const float *pi = (const float *)&in[in_padded.get_index(0, 0, inc)];
@@ -315,7 +315,7 @@ void avx_conv2d_5x5_kernel(const core::conv_params &params,
       size_t inidx = 0;
       for (serial_size_t inc = 0; inc < params.in.depth;
            ++inc, pw += 25, inidx += in_padded_area) {
-        if (!tbl.is_connected(o, inc)) {
+        if (!tbl.isConnected(o, inc)) {
           continue;
         }
         __m256d w0       = _mm256_loadu_pd(pw + 0);
@@ -384,7 +384,7 @@ void avx_conv2d_5x5_kernel(const core::conv_params &params,
       }
 
       for (serial_size_t inc = 0; inc < params.in.depth; ++inc) {
-        if (!tbl.is_connected(o, inc)) continue;
+        if (!tbl.isConnected(o, inc)) continue;
 
         const double *pw =
           (const double *)&W[25 * (params.in.depth * o + inc)];

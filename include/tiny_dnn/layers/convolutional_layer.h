@@ -74,7 +74,7 @@ class convolutional_layer : public layer {
                           window_size,
                           in_channels,
                           out_channels,
-                          connection_table(),
+                          ConnectionTable(),
                           pad_type,
                           has_bias,
                           w_stride,
@@ -123,7 +123,7 @@ class convolutional_layer : public layer {
                           window_height,
                           in_channels,
                           out_channels,
-                          connection_table(),
+                          ConnectionTable(),
                           pad_type,
                           has_bias,
                           w_stride,
@@ -161,7 +161,7 @@ class convolutional_layer : public layer {
                       serial_size_t window_size,
                       serial_size_t in_channels,
                       serial_size_t out_channels,
-                      const connection_table &connection_table,
+                      const ConnectionTable &connection_table,
                       padding pad_type       = padding::valid,
                       bool has_bias          = true,
                       serial_size_t w_stride = 1,
@@ -213,7 +213,7 @@ class convolutional_layer : public layer {
                       serial_size_t window_height,
                       serial_size_t in_channels,
                       serial_size_t out_channels,
-                      const connection_table &connection_table,
+                      const ConnectionTable &connection_table,
                       padding pad_type       = padding::valid,
                       bool has_bias          = true,
                       serial_size_t w_stride = 1,
@@ -369,7 +369,7 @@ class convolutional_layer : public layer {
 
     for (serial_size_t r = 0; r < params_.in.depth; ++r) {
       for (serial_size_t c = 0; c < params_.out.depth; ++c) {
-        if (!params_.tbl.is_connected(c, r)) continue;
+        if (!params_.tbl.isConnected(c, r)) continue;
 
         const auto top  = r * pitch + border_width;
         const auto left = c * pitch + border_width;
@@ -408,7 +408,7 @@ class convolutional_layer : public layer {
                        bool has_bias,
                        serial_size_t w_stride,
                        serial_size_t h_stride,
-                       const connection_table &tbl = connection_table()) {
+                       const ConnectionTable &tbl = ConnectionTable()) {
     params_.in = in;
     params_.in_padded =
       shape3d(in_length(in.width, w_width, ptype),

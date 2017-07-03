@@ -147,7 +147,7 @@ class deconvolutional_layer : public layer {
                         serial_size_t window_size,
                         serial_size_t in_channels,
                         serial_size_t out_channels,
-                        const connection_table &connection_table,
+                        const ConnectionTable &connection_table,
                         padding pad_type       = padding::valid,
                         bool has_bias          = true,
                         serial_size_t w_stride = 1,
@@ -192,7 +192,7 @@ class deconvolutional_layer : public layer {
                         serial_size_t window_height,
                         serial_size_t in_channels,
                         serial_size_t out_channels,
-                        const connection_table &connection_table,
+                        const ConnectionTable &connection_table,
                         padding pad_type       = padding::valid,
                         bool has_bias          = true,
                         serial_size_t w_stride = 1,
@@ -284,7 +284,7 @@ class deconvolutional_layer : public layer {
 
     for (serial_size_t r = 0; r < params_.in.depth; ++r) {
       for (serial_size_t c = 0; c < params_.out.depth; ++c) {
-        if (!params_.tbl.is_connected(c, r)) continue;
+        if (!params_.tbl.isConnected(c, r)) continue;
 
         const auto top  = r * pitch + border_width;
         const auto left = c * pitch + border_width;
@@ -351,7 +351,7 @@ class deconvolutional_layer : public layer {
                          bool has_bias,
                          serial_size_t w_stride,
                          serial_size_t h_stride,
-                         const connection_table &tbl = connection_table()) {
+                         const ConnectionTable &tbl = ConnectionTable()) {
     params_.in = in;
     params_.out =
       shape3d(deconv_out_length(in.width, w_width, w_stride),
@@ -371,12 +371,12 @@ class deconvolutional_layer : public layer {
     deconv_layer_worker_specific_storage &dws = deconv_layer_worker_storage_;
 
     if (params_.pad_type == padding::same) {
-      dws.curr_out_buf_.resize(sample_count,
+      dws.curr_out_buf.resize(sample_count,
                                vec_t(params_.out_unpadded.size(), float_t{0}));
       dws.curr_delta_padded.resize(sample_count,
                                    vec_t(params_.out.size(), float_t{0}));
     } else {
-      dws.curr_out_buf_.clear();
+      dws.curr_out_buf.clear();
     }
   }
 
@@ -451,12 +451,12 @@ class deconvolutional_layer : public layer {
   void copy_and_unpad_output(const tensor_t &out) {
     deconv_layer_worker_specific_storage &dws = deconv_layer_worker_storage_;
 
-    dws.curr_out_buf_ =
+    dws.curr_out_buf =
       tensor_t(out.size(), vec_t(params_.out_unpadded.size(), 0));
-    tensor_t *dst_tensor = &dws.curr_out_buf_;
+    tensor_t *dst_tensor = &dws.curr_out_buf;
 
     if (params_.pad_type == padding::valid) {
-      dws.curr_out_unpadded_ = &out;
+      dws.curr_out_unpadded = &out;
     } else {
       // make unpadded version in order to restore scale in fprop/bprop
       for (serial_size_t sample = 0; sample < out.size(); sample++) {
@@ -479,7 +479,7 @@ class deconvolutional_layer : public layer {
         }
       }
 
-      dws.curr_out_unpadded_ = &dws.curr_out_buf_;
+      dws.curr_out_unpadded = &dws.curr_out_buf;
     }
   }
 

@@ -91,7 +91,7 @@ class tiny_backend : public backend {
     const vec_t &bias = (*in_data[2])[0];
     tensor_t &out     = *out_data[0];
     const std::vector<const vec_t *> &in =
-      (*conv_layer_worker_storage_).prev_out_padded_;  // input // NOLINT
+      (*conv_layer_worker_storage_).prev_out_padded;  // input // NOLINT
 
     fill_tensor(out, float_t{0});
 
@@ -114,7 +114,7 @@ class tiny_backend : public backend {
     tensor_t &out_r      = *out_data[1];
 
     const std::vector<const vec_t *> &in =
-      (*conv_layer_worker_storage_).prev_out_padded_;  // input // NOLINT
+      (*conv_layer_worker_storage_).prev_out_padded;  // input // NOLINT
 
     fill_tensor(out, float_t{0});
     for (serial_size_t i = 0; i < in.size(); i++) {
@@ -130,13 +130,13 @@ class tiny_backend : public backend {
                 std::vector<tensor_t *> &in_grad) override {
     conv_layer_worker_specific_storage &cws = (*conv_layer_worker_storage_);
 
-    std::vector<const vec_t *> &prev_out = cws.prev_out_padded_;
+    std::vector<const vec_t *> &prev_out = cws.prev_out_padded;
     const vec_t &W                       = (*in_data[1])[0];
     tensor_t &dW                         = *in_grad[1];
     tensor_t &db                         = *in_grad[2];
     tensor_t &curr_delta                 = *out_grad[0];
     tensor_t *prev_delta = (params_c_->pad_type == padding::same)
-                             ? &cws.prev_delta_padded_
+                             ? &cws.prev_delta_padded
                              : in_grad[0];
 
     assert(W.size() == params_c_->weight.size());
@@ -154,13 +154,13 @@ class tiny_backend : public backend {
     }
 
     if (params_c_->pad_type == padding::same) {
-      copy_and_unpad_delta(cws.prev_delta_padded_, *in_grad[0]);
+      copy_and_unpad_delta(cws.prev_delta_padded, *in_grad[0]);
     }
   }
 
   void deconv2d(const std::vector<tensor_t *> &in_data,
                 std::vector<tensor_t *> &out_data) override {
-    (*deconv_layer_worker_storage_).prev_out_ = in_data[0];
+    (*deconv_layer_worker_storage_).prev_out = in_data[0];
     const vec_t &W                            = (*in_data[1])[0];
     const vec_t &bias                         = (*in_data[2])[0];
     tensor_t &out                             = *out_data[0];
@@ -174,13 +174,13 @@ class tiny_backend : public backend {
                                   layer_->parallelize());
 
     copy_and_unpad_output(out);
-    out = *(*deconv_layer_worker_storage_).curr_out_unpadded_;
+    out = *(*deconv_layer_worker_storage_).curr_out_unpadded;
   }
 
   // quantized deconvolution
   void deconv2d_q(const std::vector<tensor_t *> &in_data,
                   std::vector<tensor_t *> &out_data) override {
-    (*deconv_layer_worker_storage_).prev_out_ = in_data[0];
+    (*deconv_layer_worker_storage_).prev_out = in_data[0];
     const tensor_t &in                        = *in_data[0];  // input
     const vec_t &W                            = (*in_data[1])[0];
     const vec_t &bias                         = (*in_data[2])[0];
@@ -196,13 +196,13 @@ class tiny_backend : public backend {
     }
 
     copy_and_unpad_output(out);
-    out = *(*deconv_layer_worker_storage_).curr_out_unpadded_;
+    out = *(*deconv_layer_worker_storage_).curr_out_unpadded;
   }
 
   // efficient quantization without abundant quantization/dequantization
   void deconv2d_eq(const std::vector<tensor_t *> &in_data,
                    std::vector<tensor_t *> &out_data) override {
-    (*deconv_layer_worker_storage_).prev_out_ = in_data[0];
+    (*deconv_layer_worker_storage_).prev_out = in_data[0];
     const tensor_t &in                        = *in_data[0];  // input
     const vec_t &W                            = (*in_data[1])[0];
     const vec_t &bias                         = (*in_data[2])[0];
@@ -223,7 +223,7 @@ class tiny_backend : public backend {
     }
 
     copy_and_unpad_output(out);
-    out = *(*deconv_layer_worker_storage_).curr_out_unpadded_;
+    out = *(*deconv_layer_worker_storage_).curr_out_unpadded;
   }
 
   void deconv2d(const std::vector<tensor_t *> &in_data,
@@ -234,7 +234,7 @@ class tiny_backend : public backend {
     if (params_d_->pad_type == padding::same)
       copy_and_pad_delta(cws.curr_delta_padded, *in_grad[0]);
 
-    const tensor_t &prev_out = *(cws.prev_out_);
+    const tensor_t &prev_out = *(cws.prev_out);
     const vec_t &W           = (*in_data[1])[0];
     tensor_t &dW             = *in_grad[1];
     tensor_t &db             = *in_grad[2];
@@ -263,7 +263,7 @@ class tiny_backend : public backend {
     if (params_d_->pad_type == padding::same)
       copy_and_pad_delta(cws.curr_delta_padded, *in_grad[0]);
 
-    const tensor_t &prev_out = *(cws.prev_out_);
+    const tensor_t &prev_out = *(cws.prev_out);
     const vec_t &W           = (*in_data[1])[0];
     tensor_t &dW             = *in_grad[1];
     tensor_t &db             = *in_grad[2];

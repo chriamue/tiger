@@ -527,7 +527,7 @@ void TigerApp::initialize() {
 	AveragePoolingLayerPtr p1 = MakeShared<AveragePoolingLayer>(28, 28, 6, 2);
 	TanhLayerPtr p1_tanh = MakeShared<TanhLayer>(14, 14, 6);
 	DeconvolutionLayerPtr d1 = MakeShared<DeconvolutionLayer>(14, 14, 5, 6, 16,
-			connection_table(MNIST_TABLE, 6, 16));
+			ConnectionTable(MNIST_TABLE, 6, 16));
 	TanhLayerPtr d1_tanh = MakeShared<TanhLayer>(18, 18, 16);
 	AveragePoolingLayerPtr p2 = MakeShared<AveragePoolingLayer>(18, 18, 16, 2);
 	TanhLayerPtr p2_tanh = MakeShared<TanhLayer>(9, 9, 16);

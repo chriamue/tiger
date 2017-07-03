@@ -18,7 +18,7 @@ class ConvolutionLayer: public NeuralLayer {
 public:
 	ConvolutionLayer(int in_width, int in_height, int window_width,
 			int window_height, int in_channels, int out_channels,
-			const tiny_dnn::core::connection_table& connection_table,
+			const tiny_dnn::core::ConnectionTable& connection_table,
 			Padding pad_type = Padding::Valid, bool has_bias = true,
 			int w_stride = 1, int h_stride = 1, BackendType backend_type =
 					DefaultEngine());
@@ -31,7 +31,7 @@ public:
                           window_size,
                           in_channels,
                           out_channels,
-                          tiny_dnn::core::connection_table(),
+                          tiny_dnn::core::ConnectionTable(),
                           pad_type,
                           has_bias,
                           w_stride,
@@ -48,7 +48,7 @@ public:
                           window_height,
                           in_channels,
                           out_channels,
-                          tiny_dnn::core::connection_table(),
+                          tiny_dnn::core::ConnectionTable(),
                           pad_type,
                           has_bias,
                           w_stride,
@@ -71,31 +71,31 @@ public:
 	virtual int getFanOutSize() const override;
 private:
 	/* The convolution parameters */
-	tiny_dnn::core::conv_params params_;
+	tiny_dnn::core::conv_params params;
 
 	/* Padding operation */
-	tiny_dnn::core::Conv2dPadding padding_op_;
+	tiny_dnn::core::Conv2dPadding padding_op;
 
 	/* forward op context */
-	tiny_dnn::core::OpKernelContext fwd_ctx_;
+	tiny_dnn::core::OpKernelContext fwd_ctx;
 	/* backward op context */
-	tiny_dnn::core::OpKernelContext bwd_ctx_;
+	tiny_dnn::core::OpKernelContext bwd_ctx;
 
 	/* Forward and backward ops */
-	std::shared_ptr<tiny_dnn::core::OpKernel> kernel_fwd_;
-	std::shared_ptr<tiny_dnn::core::OpKernel> kernel_back_;
-	std::vector<Tensor *> fwd_in_data_;
-	std::vector<Tensor *> bwd_in_data_;
-	std::vector<Tensor *> bwd_in_grad_;
+	std::shared_ptr<tiny_dnn::core::OpKernel> kernel_fwd;
+	std::shared_ptr<tiny_dnn::core::OpKernel> kernel_back;
+	std::vector<Tensor *> fwd_in_data;
+	std::vector<Tensor *> bwd_in_data;
+	std::vector<Tensor *> bwd_in_grad;
 	/* Buffer to store padded data */
 	struct conv_layer_worker_specific_storage {
-		Tensor prev_out_padded_;
-		Tensor prev_delta_padded_;
+		Tensor prev_out_padded;
+		Tensor prev_delta_padded;
 	} cws_;
 	Tensor* in_data_padded(const std::vector<Tensor*> &in);
 	void conv_set_params(const tiny_dnn::shape3d &in, int w_width, int w_height, int outc,
 			tiny_dnn::padding ptype, bool has_bias, int w_stride, int h_stride,
-			const connection_table &tbl = connection_table());
+			const ConnectionTable &tbl = ConnectionTable());
 	int in_length(int in_length, int window_size,
 			tiny_dnn::padding pad_type) const;
 	static int conv_out_dim(int in_width, int in_height, int window_size,

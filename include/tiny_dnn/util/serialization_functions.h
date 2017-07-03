@@ -106,7 +106,7 @@ struct LoadAndConstruct<tiny_dnn::convolutional_layer> {
     bool has_bias;
     tiny_dnn::shape3d in;
     tiny_dnn::padding pad_type;
-    tiny_dnn::core::connection_table tbl;
+    tiny_dnn::core::ConnectionTable tbl;
 
     ar(cereal::make_nvp("in_size", in),
        cereal::make_nvp("window_width", w_width),
@@ -133,7 +133,7 @@ struct LoadAndConstruct<tiny_dnn::deconvolutional_layer> {
     bool has_bias;
     tiny_dnn::shape3d in;
     tiny_dnn::padding pad_type;
-    tiny_dnn::core::connection_table tbl;
+    tiny_dnn::core::ConnectionTable tbl;
 
     ar(cereal::make_nvp("in_size", in),
        cereal::make_nvp("window_width", w_width),
@@ -299,7 +299,7 @@ struct LoadAndConstruct<tiny_dnn::quantized_convolutional_layer> {
     bool has_bias;
     tiny_dnn::shape3d in;
     tiny_dnn::padding pad_type;
-    tiny_dnn::core::connection_table tbl;
+    tiny_dnn::core::ConnectionTable tbl;
 
     ar(cereal::make_nvp("in_size", in),
        cereal::make_nvp("window_width", w_width),
@@ -326,7 +326,7 @@ struct LoadAndConstruct<tiny_dnn::quantized_deconvolutional_layer> {
     bool has_bias;
     tiny_dnn::shape3d in;
     tiny_dnn::padding pad_type;
-    tiny_dnn::core::connection_table tbl;
+    tiny_dnn::core::ConnectionTable tbl;
 
     ar(cereal::make_nvp("in_size", in),
        cereal::make_nvp("window_width", w_width),
@@ -1063,12 +1063,12 @@ void serialize(Archive &ar, tiny_dnn::index3d<T> &idx) {
 namespace core {
 
 template <class Archive>
-void serialize(Archive &ar, tiny_dnn::core::connection_table &tbl) {
-  ar(cereal::make_nvp("rows", tbl.rows_), cereal::make_nvp("cols", tbl.cols_));
-  if (tbl.is_empty()) {
+void serialize(Archive &ar, tiny_dnn::core::ConnectionTable &tbl) {
+  ar(cereal::make_nvp("rows", tbl.rows), cereal::make_nvp("cols", tbl.cols));
+  if (tbl.isEmpty()) {
     ar(cereal::make_nvp("connection", std::string("all")));
   } else {
-    ar(cereal::make_nvp("connection", tbl.connected_));
+    ar(cereal::make_nvp("connection", tbl.connected));
   }
 }
 

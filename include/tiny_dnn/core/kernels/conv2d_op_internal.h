@@ -34,7 +34,7 @@ inline void conv2d_op_internal(const tensor_t &in_data,
            for (serial_size_t o = 0; o < od; o++) {
              float_t *pa = &a[params.out.get_index(0, 0, o)];
              for (serial_size_t inc = 0; inc < id; inc++) {
-               if (!params.tbl.is_connected(o, inc)) continue;
+               if (!params.tbl.isConnected(o, inc)) continue;
                serial_size_t idx;
                idx                = params.weight.get_index(0, 0, id * o + inc);
                const float_t *pw  = &W[idx];
@@ -88,7 +88,7 @@ void conv2d_op_internal(const tensor_t &prev_out,
     // propagate delta to previous layer
     for (serial_size_t inc = 0; inc < params.in.depth; inc++) {
       for (serial_size_t outc = 0; outc < params.out.depth; outc++) {
-        if (!params.tbl.is_connected(outc, inc)) continue;
+        if (!params.tbl.isConnected(outc, inc)) continue;
 
         serial_size_t idx = 0;
         idx               = params.in.depth * outc + inc;
@@ -129,7 +129,7 @@ void conv2d_op_internal(const tensor_t &prev_out,
     // accumulate dw
     for (serial_size_t inc = 0; inc < params.in.depth; inc++) {
       for (serial_size_t outc = 0; outc < params.out.depth; outc++) {
-        if (!params.tbl.is_connected(outc, inc)) continue;
+        if (!params.tbl.isConnected(outc, inc)) continue;
 
         for (serial_size_t wy = 0; wy < params.weight.height; wy++) {
           for (serial_size_t wx = 0; wx < params.weight.width; wx++) {

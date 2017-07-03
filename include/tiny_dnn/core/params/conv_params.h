@@ -13,54 +13,48 @@ namespace tiny_dnn {
 namespace core {
 
 struct conv_layer_worker_specific_storage {
-  std::vector<const vec_t *> prev_out_padded_;
-  std::vector<vec_t> prev_out_buf_;
-  std::vector<vec_t> prev_delta_padded_;
+  std::vector<const vec_t *> prev_out_padded;
+  std::vector<vec_t> prev_out_buf;
+  std::vector<vec_t> prev_delta_padded;
 };
 
-struct connection_table {
-  connection_table() : rows_(0), cols_(0) {}
-  connection_table(const bool *ar, serial_size_t rows, serial_size_t cols)
-    : connected_(rows * cols), rows_(rows), cols_(cols) {
-    std::copy(ar, ar + rows * cols, connected_.begin());
+struct ConnectionTable {
+  ConnectionTable() : rows(0), cols(0) {}
+  ConnectionTable(const bool *ar, serial_size_t rows, serial_size_t cols)
+    : connected(rows * cols), rows(rows), cols(cols) {
+    std::copy(ar, ar + rows * cols, connected.begin());
   }
-  connection_table(serial_size_t ngroups,
+  ConnectionTable(serial_size_t ngroups,
                    serial_size_t rows,
                    serial_size_t cols)
-    : connected_(rows * cols, false), rows_(rows), cols_(cols) {
+    : connected(rows * cols, false), rows(rows), cols(cols) {
     if (rows % ngroups || cols % ngroups) {
       throw nn_error("invalid group size");
     }
-
     serial_size_t row_group = rows / ngroups;
     serial_size_t col_group = cols / ngroups;
-
     serial_size_t idx = 0;
-
     for (serial_size_t g = 0; g < ngroups; g++) {
       for (serial_size_t r = 0; r < row_group; r++) {
         for (serial_size_t c = 0; c < col_group; c++) {
-          idx             = (r + g * row_group) * cols_ + c + g * col_group;
-          connected_[idx] = true;
+          idx             = (r + g * row_group) * cols + c + g * col_group;
+          connected[idx] = true;
         }
       }
     }
   }
-
-  bool is_connected(serial_size_t x, serial_size_t y) const {
-    return is_empty() ? true : connected_[y * cols_ + x];
+  bool isConnected(serial_size_t x, serial_size_t y) const {
+    return isEmpty() ? true : connected[y * cols + x];
   }
-
-  bool is_empty() const { return rows_ == 0 && cols_ == 0; }
-
-  std::deque<bool> connected_;
-  serial_size_t rows_;
-  serial_size_t cols_;
+  bool isEmpty() const { return rows == 0 && cols == 0; }
+  std::deque<bool> connected;
+  serial_size_t rows;
+  serial_size_t cols;
 };
 
 class conv_params : public Params {
  public:
-  connection_table tbl;
+  ConnectionTable tbl;
   index3d<serial_size_t> in;
   index3d<serial_size_t> in_padded;
   index3d<serial_size_t> out;

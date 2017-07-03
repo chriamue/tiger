@@ -457,12 +457,12 @@ class graph : public nodes {
                         serial_size_t tail,
                         serial_size_t head_index,
                         serial_size_t tail_index) {
-      if (!is_connected(head, tail, head_index, tail_index)) {
+      if (!isConnected(head, tail, head_index, tail_index)) {
         connections.emplace_back(head, tail, head_index, tail_index);
       }
     }
 
-    bool is_connected(serial_size_t head,
+    bool isConnected(serial_size_t head,
                       serial_size_t tail,
                       serial_size_t head_index,
                       serial_size_t tail_index) const {

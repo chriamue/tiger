@@ -54,14 +54,14 @@ public:
 			std::vector<Tensor*> &out_grad, std::vector<Tensor*> &in_grad)
 					override;
 private:
-	int stride_x_;
-	int stride_y_;
-	int pool_size_x_;
-	int pool_size_y_;
-	Padding pad_type_;
-	aly::dim3 in_;
-	aly::dim3 out_;
-	aly::dim3 w_;
+	int stride_x;
+	int stride_y;
+	int pool_size_x;
+	int pool_size_y;
+	Padding pad_type;
+	aly::dim3 in_dim;
+	aly::dim3 out_dim;
+	aly::dim3 w_dim;
 	std::pair<int, int> pool_size() const;
 	static int pool_out_dim(int in_size, int pooling_size, int stride);
 	void init_connection(int pooling_size_x, int pooling_size_y);
