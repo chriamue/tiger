@@ -22,9 +22,9 @@ inline void avx_fully_connected_forward_kernel(
   std::vector<std::vector<float, Allocator>> &out_data,
   const fully_params &params,
   const bool layer_parallelize) {
-  if (params.has_bias_) {
-    size_t nblocks  = params.out_size_ / 8;
-    size_t nremains = params.out_size_ & 7;
+  if (params.has_bias) {
+    size_t nblocks  = params.out_size / 8;
+    size_t nremains = params.out_size & 7;
     if (nremains) {
       int32_t mask_src[] = {
         -1, -1, -1, -1, -1, -1, -1, -1, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -42,9 +42,9 @@ inline void avx_fully_connected_forward_kernel(
           auto b = _mm256_maskload_ps(&bias[8 * nblocks], imask);
           _mm256_maskstore_ps(&out[8 * nblocks], imask, b);
         }
-        for (serial_size_t c = 0; c < params.in_size_; c++) {
+        for (serial_size_t c = 0; c < params.in_size; c++) {
           auto in_val     = _mm256_set1_ps(in[c]);
-          const float *pW = &W[c * params.out_size_];
+          const float *pW = &W[c * params.out_size];
           for (size_t i = 0; i < nblocks / 2; ++i) {
             __m256 sum0 = _mm256_loadu_ps(&out[16 * i]);
             __m256 sum1 = _mm256_loadu_ps(&out[16 * i + 8]);
@@ -75,9 +75,9 @@ inline void avx_fully_connected_forward_kernel(
           __m256 b = _mm256_loadu_ps(&bias[8 * i]);
           _mm256_storeu_ps(&out[8 * i], b);
         }
-        for (serial_size_t c = 0; c < params.in_size_; c++) {
+        for (serial_size_t c = 0; c < params.in_size; c++) {
           auto in_val     = _mm256_set1_ps(in[c]);
-          const float *pW = &W[c * params.out_size_];
+          const float *pW = &W[c * params.out_size];
           for (size_t i = 0; i < nblocks; ++i) {
             __m256 sum = _mm256_loadu_ps(&out[8 * i]);
             __m256 w   = _mm256_loadu_ps(pW + 8 * i);
@@ -91,10 +91,10 @@ inline void avx_fully_connected_forward_kernel(
     for_i(layer_parallelize, in_data.size(), [&](int sample) {
       const auto &in = in_data[sample];
       auto &out      = out_data[sample];
-      for (serial_size_t i = 0; i < params.out_size_; i++) {
+      for (serial_size_t i = 0; i < params.out_size; i++) {
         float sum = 0.0f;
-        for (serial_size_t c = 0; c < params.in_size_; c++) {
-          sum += W[c * params.out_size_ + i] * in[c];
+        for (serial_size_t c = 0; c < params.in_size; c++) {
+          sum += W[c * params.out_size + i] * in[c];
         }
         out[i] = sum;
       }
@@ -125,27 +125,27 @@ inline void avx_fully_connected_back_kernel(
   std::vector<std::vector<float, Allocator>> &prev_delta,
   const fully_params &params,
   const bool layer_parallelize) {
-  if (params.has_bias_) {
+  if (params.has_bias) {
     for (serial_size_t sample = 0; sample < prev_out.size(); sample++) {
       auto &prev_delta2 = prev_delta[sample];
       auto &curr_delta2 = curr_delta[sample];
       auto &prev_out2   = prev_out[sample];
       auto &dW2         = dW[sample];
       auto &db2         = db[sample];
-      for (serial_size_t c = 0; c < params.in_size_; c++) {
+      for (serial_size_t c = 0; c < params.in_size; c++) {
         // propagate delta to previous layer
-        // prev_delta[c] += current_delta[r] * W_[c * out_size_ + r]
+        // prev_delta[c] += current_delta[r] * W_[c * out_size + r]
         prev_delta2[c] += vectorize::dot(
-          &curr_delta2[0], &W[c * params.out_size_], params.out_size_);
+          &curr_delta2[0], &W[c * params.out_size], params.out_size);
       }
-      for_(layer_parallelize, 0, size_t(params.out_size_),
+      for_(layer_parallelize, 0, size_t(params.out_size),
            [&](const blocked_range &r) {
              // accumulate weight-step using delta
              // dW[c * out_size + i] += current_delta[i] * prev_out[c]
              size_t len = r.end() - r.begin();
-             for (serial_size_t c = 0; c < params.in_size_; c++) {
+             for (serial_size_t c = 0; c < params.in_size; c++) {
                vectorize::muladd(&curr_delta2[r.begin()], prev_out2[c], len,
-                                 &dW2[c * params.out_size_ + r.begin()]);
+                                 &dW2[c * params.out_size + r.begin()]);
              }
              // vec_t& db = *in_grad[2];
              vectorize::reduce(&curr_delta2[r.begin()], len, &db2[r.begin()]);
@@ -157,20 +157,20 @@ inline void avx_fully_connected_back_kernel(
       auto &curr_delta2 = curr_delta[sample];
       auto &prev_out2   = prev_out[sample];
       auto &dW2         = dW[sample];
-      for (serial_size_t c = 0; c < params.in_size_; c++) {
+      for (serial_size_t c = 0; c < params.in_size; c++) {
         // propagate delta to previous layer
-        // prev_delta[c] += current_delta[r] * W_[c * out_size_ + r]
+        // prev_delta[c] += current_delta[r] * W_[c * out_size + r]
         prev_delta2[c] += vectorize::dot(
-          &curr_delta2[0], &W[c * params.out_size_], params.out_size_);
+          &curr_delta2[0], &W[c * params.out_size], params.out_size);
       }
-      for_(layer_parallelize, 0, size_t(params.out_size_),
+      for_(layer_parallelize, 0, size_t(params.out_size),
            [&](const blocked_range &r) {
              // accumulate weight-step using delta
              // dW[c * out_size + i] += current_delta[i] * prev_out[c]
              size_t len = r.end() - r.begin();
-             for (serial_size_t c = 0; c < params.in_size_; c++) {
+             for (serial_size_t c = 0; c < params.in_size; c++) {
                vectorize::muladd(&curr_delta2[r.begin()], prev_out2[c], len,
-                                 &dW2[c * params.out_size_ + r.begin()]);
+                                 &dW2[c * params.out_size + r.begin()]);
              }
            });
     }

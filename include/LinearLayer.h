@@ -47,7 +47,7 @@ public:
 	}
 protected:
 	int dim_;
-	float scale_, bias_;
+	float scale, bias;
 };
 typedef std::shared_ptr<LinearLayer> LineraLayerPtr;
 }

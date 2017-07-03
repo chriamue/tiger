@@ -35,7 +35,7 @@ public:
 		return false;
 	}
 private:
-	aly::dim3 shape_;
+	aly::dim3 shape;
 };
 typedef std::shared_ptr<InputLayer> InputLayerPtr;
 }

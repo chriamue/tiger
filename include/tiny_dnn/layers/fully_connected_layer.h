@@ -42,23 +42,23 @@ class fully_connected_layer : public layer {
     init_backend(std::move(other.engine()));
   }
 
-  serial_size_t fan_in_size() const override { return params_.in_size_; }
+  serial_size_t fan_in_size() const override { return params_.in_size; }
 
-  serial_size_t fan_out_size() const override { return params_.out_size_; }
+  serial_size_t fan_out_size() const override { return params_.out_size; }
 
   std::vector<index3d<serial_size_t>> in_shape() const override {
-    if (params_.has_bias_) {
-      return {index3d<serial_size_t>(params_.in_size_, 1, 1),
-              index3d<serial_size_t>(params_.in_size_, params_.out_size_, 1),
-              index3d<serial_size_t>(params_.out_size_, 1, 1)};
+    if (params_.has_bias) {
+      return {index3d<serial_size_t>(params_.in_size, 1, 1),
+              index3d<serial_size_t>(params_.in_size, params_.out_size, 1),
+              index3d<serial_size_t>(params_.out_size, 1, 1)};
     } else {
-      return {index3d<serial_size_t>(params_.in_size_, 1, 1),
-              index3d<serial_size_t>(params_.in_size_, params_.out_size_, 1)};
+      return {index3d<serial_size_t>(params_.in_size, 1, 1),
+              index3d<serial_size_t>(params_.in_size, params_.out_size, 1)};
     }
   }
 
   std::vector<index3d<serial_size_t>> out_shape() const override {
-    return {index3d<serial_size_t>(params_.out_size_, 1, 1)};
+    return {index3d<serial_size_t>(params_.out_size, 1, 1)};
   }
 
   void forward_propagation(const std::vector<tensor_t *> &in_data,
@@ -93,9 +93,9 @@ class fully_connected_layer : public layer {
   void set_params(const serial_size_t in_size,
                   const serial_size_t out_size,
                   bool has_bias) {
-    params_.in_size_  = in_size;
-    params_.out_size_ = out_size;
-    params_.has_bias_ = has_bias;
+    params_.in_size  = in_size;
+    params_.out_size = out_size;
+    params_.has_bias = has_bias;
   }
 
   void init_backend(backend_t backend_type) {

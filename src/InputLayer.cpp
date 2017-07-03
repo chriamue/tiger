@@ -8,18 +8,18 @@
 #include "InputLayer.h"
 namespace tgr {
 InputLayer::InputLayer(const aly::dim3& shape) :
-		NeuralLayer("Input", { ChannelType::data }, { ChannelType::data }), shape_(
+		NeuralLayer("Input", { ChannelType::data }, { ChannelType::data }), shape(
 				shape) {
 }
 InputLayer::InputLayer(int in_dim) :
-		NeuralLayer("Input", { ChannelType::data }, { ChannelType::data }), shape_(
+		NeuralLayer("Input", { ChannelType::data }, { ChannelType::data }), shape(
 				aly::dim3(in_dim, 1, 1)) {
 }
 std::vector<aly::dim3> InputLayer::getInputDimensions() const {
-	return {shape_};
+	return {shape};
 }
 std::vector<aly::dim3> InputLayer::getOutputDimensions() const {
-	return {shape_};
+	return {shape};
 }
 void InputLayer::forwardPropagation(const std::vector<Tensor *> &in_data,
 		std::vector<Tensor *> &out_data) {

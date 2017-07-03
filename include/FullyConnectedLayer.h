@@ -28,26 +28,26 @@ public:
 	FullyConnectedLayer(FullyConnectedLayer &&other);
 
 	virtual int getFanInSize() const override {
-		return params_.in_size_;
+		return params.in_size;
 	}
 
 	virtual int getFanOutSize() const override {
-		return params_.out_size_;
+		return params.out_size;
 	}
 
 	virtual std::vector<aly::dim3> getInputDimensions() const override {
-		if (params_.has_bias_) {
-			return {aly::dim3(params_.in_size_, 1, 1),
-				aly::dim3(params_.in_size_, params_.out_size_, 1),
-				aly::dim3(params_.out_size_, 1, 1)};
+		if (params.has_bias) {
+			return {aly::dim3(params.in_size, 1, 1),
+				aly::dim3(params.in_size, params.out_size, 1),
+				aly::dim3(params.out_size, 1, 1)};
 		} else {
-			return {aly::dim3(params_.in_size_, 1, 1),
-				aly::dim3(params_.in_size_, params_.out_size_, 1)};
+			return {aly::dim3(params.in_size, 1, 1),
+				aly::dim3(params.in_size, params.out_size, 1)};
 		}
 	}
 
 	virtual std::vector<aly::dim3> getOutputDimensions() const override {
-		return {aly::dim3(params_.out_size_, 1, 1)};
+		return {aly::dim3(params.out_size, 1, 1)};
 	}
 
 	virtual void forwardPropagation(const std::vector<Tensor *> &in_data,
@@ -66,17 +66,17 @@ protected:
 
 private:
 	/* The layer parameters */
-	tiny_dnn::core::fully_params params_;
+	tiny_dnn::core::fully_params params;
 
 	/* forward op context */
-	tiny_dnn::core::OpKernelContext fwd_ctx_;
+	tiny_dnn::core::OpKernelContext fwd_ctx;
 
 	/* backward op context */
-	tiny_dnn::core::OpKernelContext bwd_ctx_;
+	tiny_dnn::core::OpKernelContext bwd_ctx;
 
 	/* Forward and backward ops */
-	std::shared_ptr<tiny_dnn::core::OpKernel> kernel_fwd_;
-	std::shared_ptr<tiny_dnn::core::OpKernel> kernel_back_;
+	std::shared_ptr<tiny_dnn::core::OpKernel> kernel_fwd;
+	std::shared_ptr<tiny_dnn::core::OpKernel> kernel_back;
 };
 typedef std::shared_ptr<FullyConnectedLayer> FullyConnectedLayerPtr;
 }

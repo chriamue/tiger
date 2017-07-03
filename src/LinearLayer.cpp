@@ -9,7 +9,7 @@
 namespace tgr {
 LinearLayer::LinearLayer(int dim, float scale, float bias) :
 		NeuralLayer("Linear Transform", { ChannelType::data }, {
-				ChannelType::data }), dim_(dim), scale_(scale), bias_(bias) {
+				ChannelType::data }), dim_(dim), scale(scale), bias(bias) {
 }
 
 std::vector<aly::dim3> LinearLayer::getInputDimensions() const {
@@ -31,7 +31,7 @@ void LinearLayer::forwardPropagation(const std::vector<Tensor *> &in_data,
 		for (int sample = 0,
 				sample_count = static_cast<int>(in.size());
 				sample < sample_count; ++sample)
-		out[sample][i] = scale_ * in[sample][i] + bias_;
+		out[sample][i] = scale * in[sample][i] + bias;
 	});
 }
 void LinearLayer::backwardPropagation(const std::vector<Tensor *> &in_data,
@@ -45,7 +45,7 @@ void LinearLayer::backwardPropagation(const std::vector<Tensor *> &in_data,
 	for (int sample = 0; sample < static_cast<int>(prev_delta.size());
 			++sample) {
 		tiny_dnn::for_i(dim_, [&](size_t i) {
-			prev_delta[sample][i] = curr_delta[sample][i] * scale_;
+			prev_delta[sample][i] = curr_delta[sample][i] * scale;
 		});
 	}
 }

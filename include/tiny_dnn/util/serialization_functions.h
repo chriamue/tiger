@@ -732,9 +732,9 @@ struct serialization_buddy {
                                tiny_dnn::fully_connected_layer &layer) {
     layer.serialize_prolog(ar);
     auto &params_ = layer.params_;
-    ar(cereal::make_nvp("in_size", params_.in_size_),
-       cereal::make_nvp("out_size", params_.out_size_),
-       cereal::make_nvp("has_bias", params_.has_bias_));
+    ar(cereal::make_nvp("in_size", params_.in_size),
+       cereal::make_nvp("out_size", params_.out_size),
+       cereal::make_nvp("has_bias", params_.has_bias));
   }
 
   template <class Archive>
@@ -836,9 +836,9 @@ struct serialization_buddy {
     Archive &ar, tiny_dnn::quantized_fully_connected_layer &layer) {
     layer.serialize_prolog(ar);
     auto &params_ = layer.params_;
-    ar(cereal::make_nvp("in_size", params_.in_size_),
-       cereal::make_nvp("out_size", params_.out_size_),
-       cereal::make_nvp("has_bias", params_.has_bias_));
+    ar(cereal::make_nvp("in_size", params_.in_size),
+       cereal::make_nvp("out_size", params_.out_size),
+       cereal::make_nvp("has_bias", params_.has_bias));
   }
 
   template <class Archive>
