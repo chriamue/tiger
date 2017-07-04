@@ -128,22 +128,8 @@ public:
 		return getInputDimensions().size();
 	}
 	float getAspect();
-	SignalPtr getInput(size_t i) {
-		if (inputs[i].get() == nullptr) {
-			inputs[i] = SignalPtr(
-					new NeuralSignal(nullptr, getInputDimensions(i),
-							inputTypes[i]));
-		}
-		return inputs[i];
-	}
-	SignalPtr getOutput(size_t i) {
-		if (outputs[i].get() == nullptr) {
-			outputs[i] = SignalPtr(
-					new NeuralSignal(this, getOutputDimensions(i),
-							outputTypes[i]));
-		}
-		return outputs[i];
-	}
+	SignalPtr getInput(size_t i);
+	SignalPtr getOutput(size_t i);
 	SignalPtr getInput(size_t i) const {
 		return inputs[i];
 	}

@@ -29,14 +29,11 @@ using namespace tiny_dnn::activation;
 // clang-format on
 #undef O
 #undef X
-
 void deconv_lanet(network<graph> &nn,
                   std::vector<label_t> train_labels,
                   std::vector<label_t> test_labels,
                   std::vector<vec_t> train_images,
                   std::vector<vec_t> test_images) {
-
-
   // declare nodes
   input_layer i1(shape3d(32, 32, 1));
   convolutional_layer c1(32, 32, 5, 1, 6);

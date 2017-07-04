@@ -103,6 +103,17 @@ NeuralLayer::NeuralLayer(const std::string& name,
 	visited = false;
 	parallelize = false;
 	sys = nullptr;
+	weightInitFunc=[this](Storage& data, int fanIn, int fanOut)  {
+		float weight_base = std::sqrt(6.0f / (fanIn + fanOut));
+		for(float& val:data){
+			val=RandomUniform(-weight_base,weight_base);
+		}
+	};
+	biasInitFunc=[this](Storage& data, int fanIn, int fanOut)  {
+		for(float& val:data){
+			val=0.0f;
+		}
+	};
 	backendType = BackendType::internal;
 	graph = GraphDataPtr(new GraphData(name));
 }
@@ -294,7 +305,7 @@ std::vector<NeuralLayerPtr> NeuralLayer::getOutputLayers() const {
 std::vector<NeuralLayer*> NeuralLayer::getInputLayers() const {
 	std::vector<NeuralLayer*> vecs;
 	for (SignalPtr e : inputs) {
-		if (e.get() != nullptr) {
+		if (e.get() != nullptr&&e->input!=nullptr) {
 			vecs.push_back(e->input);
 		}
 	}
@@ -335,6 +346,21 @@ void NeuralLayer::setInputData(
 			dst_data[j] = *storage[j];
 		}
 	}
+}
+SignalPtr NeuralLayer::getInput(size_t i) {
+	if (inputs[i].get() == nullptr) {
+		inputs[i] = SignalPtr(
+				new NeuralSignal(nullptr, getInputDimensions(i),
+						inputTypes[i]));
+	}
+	return inputs[i];
+}
+SignalPtr NeuralLayer::getOutput(size_t i) {
+	if (outputs[i].get() == nullptr) {
+		outputs[i] = SignalPtr(
+				new NeuralSignal(this, getOutputDimensions(i),outputTypes[i]));
+	}
+	return outputs[i];
 }
 std::vector<const Storage*> NeuralLayer::getInputWeights() const {
 	std::vector<const Storage*> v;
@@ -461,14 +487,12 @@ void NeuralLayer::initializeWeights() {
 		// fill vectors of weight type
 		case ChannelType::weight:
 			if (weightInitFunc)
-				weightInitFunc(getInputWeights(i), getFanInSize(),
-						getFanOutSize());
+				weightInitFunc(getInputWeights(i), getFanInSize(),getFanOutSize());
 			break;
 			// fill vector of bias type
 		case ChannelType::bias:
 			if (biasInitFunc)
-				biasInitFunc(getInputWeights(i), getFanInSize(),
-						getFanOutSize());
+				biasInitFunc(getInputWeights(i), getFanInSize(),getFanOutSize());
 			break;
 		default:
 			break;
@@ -487,7 +511,6 @@ void NeuralLayer::setup(bool reset_weight) {
 			|| getOutputDimensions().size() != outputChannels) {
 		throw std::runtime_error("Connection mismatch at setup layer");
 	}
-
 	// An 'edge' is created in the computational graph from the current
 	// layer/node to each output node and allocates the needed memory.
 	// The number of output nodes is determined by the layer interface.
@@ -497,12 +520,10 @@ void NeuralLayer::setup(bool reset_weight) {
 	// memory allocation.
 	for (size_t i = 0; i < outputChannels; i++) {
 		if (outputs[i].get() == nullptr) {
-			outputs[i] = SignalPtr(
-					new NeuralSignal(this, getOutputDimensions(i),
-							outputTypes[i]));
+			std::cout<<"Setup "<<getName()<<" "<<getOutputDimensions(i)<<std::endl;
+			outputs[i] = SignalPtr(new NeuralSignal(this, getOutputDimensions(i),outputTypes[i]));
 		}
 	}
-
 	// reset the weights if necessary, or in case that the data is
 	// still not initialized.
 	if (reset_weight || !initialized) {
@@ -556,7 +577,7 @@ void NeuralLayer::getNeuron(const aly::int3& pos, Neuron& neuron) {
 	neuron.clear();
 	for (int i = 0; i < inputChannels; i++) {
 		if (inputTypes[i] == ChannelType::data) {
-			SignalPtr data = inputs[i];
+			SignalPtr data = getInput(i);
 			if (data.get() != nullptr) {
 				getStencilInput(pos, stencil);
 				for (int3 st : stencil) {
@@ -564,7 +585,7 @@ void NeuralLayer::getNeuron(const aly::int3& pos, Neuron& neuron) {
 				}
 			}
 		} else if (inputTypes[i] == ChannelType::weight) {
-			SignalPtr data = inputs[i];
+			SignalPtr data = getInput(i);
 			if (data.get() != nullptr) {
 				getStencilWeight(pos, stencil);
 				for (int3 st : stencil) {
@@ -572,7 +593,7 @@ void NeuralLayer::getNeuron(const aly::int3& pos, Neuron& neuron) {
 				}
 			}
 		} else if (inputTypes[i] == ChannelType::bias) {
-			SignalPtr data = inputs[i];
+			SignalPtr data = getInput(i);
 			if (data.get() != nullptr) {
 				int3 st;
 				if (getStencilBias(pos, st)) {
@@ -583,7 +604,7 @@ void NeuralLayer::getNeuron(const aly::int3& pos, Neuron& neuron) {
 	}
 	for (int i = 0; i < outputChannels; i++) {
 		if (outputTypes[i] == ChannelType::data) {
-			SignalPtr data = outputs[i];
+			SignalPtr data = getOutput(i);
 			if (data.get() != nullptr) {
 				neuron.output = data->getValuePtr(pos);
 			}

@@ -175,7 +175,6 @@ void NeuralSystem::build(const std::vector<NeuralLayerPtr> &input,const std::vec
 	}
 	inputLayers = input;
 	outputLayers = output;
-
 	setup(false);
 }
 

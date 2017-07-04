@@ -21,6 +21,8 @@
 #ifndef NEURALSIGNAL_H_
 #define NEURALSIGNAL_H_
 #include <AlloyMath.h>
+#include <AlloyImage.h>
+#include <AlloyVector.h>
 #include <AlloyOptimizationMath.h>
 #include <memory>
 #include <map>
@@ -162,13 +164,21 @@ public:
 	float* getChangePtr(const aly::int3& pos);
 	inline float getValue(const aly::int3& pos);
 	inline float getChange(const aly::int3& pos);
-	NeuralSignal(NeuralLayer* input, aly::int3 dimensions, ChannelType type);
+	NeuralSignal(NeuralLayer* input, aly::dim3 dimensions, ChannelType type);
 	inline bool hasInput() const {
 		return (input != nullptr);
 	}
 	inline bool hasOutput() const {
 		return (outputs.size() != 0);
 	}
+	void setValue(const aly::Image1f& data);
+	void setValue(const aly::Vector1f& data);
+	void setValue(const std::vector<float>& data);
+
+	void getValue(aly::Image1f& data);
+	void getValue(aly::Vector1f& data);
+	void getValue(std::vector<float>& data);
+
 	void clearGradients();
 	void mergeGradients(Storage& dst);
 	void addOutput(const std::shared_ptr<NeuralLayer>& output);

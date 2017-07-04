@@ -52,11 +52,11 @@ float NeuralSignal::getValue(const aly::int3& pos) {
 float NeuralSignal::getChange(const aly::int3& pos) {
 	return change[0][dimensions(pos)];
 }
-NeuralSignal::NeuralSignal(NeuralLayer* input, aly::int3 dimensions,
+NeuralSignal::NeuralSignal(NeuralLayer* input, aly::dim3 dimensions,
 		ChannelType type) :
 		type(type), id(-1), dimensions(dimensions), value(
-				{ Storage(dimensions.size(),0.0f) }), change(
-				{ Storage(dimensions.size(),0.0f) }), input(input) {
+				{ Storage(dimensions.volume(), 0.0f) }), change(
+				{ Storage(dimensions.volume(), 0.0f) }), input(input) {
 }
 void NeuralSignal::clearGradients() {
 	for (Storage& store : change) {
@@ -76,6 +76,30 @@ void NeuralSignal::mergeGradients(Storage& dst) {
 		}
 	}
 }
+void NeuralSignal::setValue(const aly::Image1f& data) {
+	setValue(data.data);
+}
+void NeuralSignal::setValue(const aly::Vector1f& data) {
+	setValue(data.data);
+}
+void NeuralSignal::setValue(const std::vector<float>& data) {
+	value[0].assign(data.begin(), data.end());
+}
+
+void NeuralSignal::getValue(aly::Image1f& data) {
+	data.resize(dimensions.x, dimensions.y);
+	data.data.assign(value[0].begin(),
+			value[0].begin() + (dimensions.x * (size_t) dimensions.y));
+}
+void NeuralSignal::getValue(aly::Vector1f& data) {
+	data.resize(dimensions.volume());
+	data.data.assign(value[0].begin(), value[0].end());
+}
+void NeuralSignal::getValue(std::vector<float>& data) {
+	data.resize(dimensions.volume());
+	data.assign(value[0].begin(), value[0].end());
+}
+
 void NeuralSignal::addOutput(const NeuralLayerPtr& output) {
 	outputs.push_back(output);
 }
