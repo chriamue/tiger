@@ -38,7 +38,15 @@ int DeconvolutionLayer::getFanOutSize() const {
 void DeconvolutionLayer::forwardPropagation(
 		const std::vector<Tensor *> &in_data, std::vector<Tensor *> &out_data) {
 	// launch deconvolutional kernel
-	backend->deconv2d(in_data, out_data);
+	deconv_layer_worker_storage.prev_out = in_data[0];
+	const Storage &W = (*in_data[1])[0];
+	const Storage &bias = (*in_data[2])[0];
+	Tensor &out = *out_data[0];
+	const Tensor &in = *in_data[0];  // input
+	fill_tensor(out, float_t { 0 });
+	tiny_dnn::core::kernels::tiny_deconv2d_kernel(params, in, W, bias, out,parallelize);
+	copy_and_unpad_output(out);
+	out = *(deconv_layer_worker_storage.curr_out_unpadded);
 }
 
 /**
@@ -58,7 +66,23 @@ void DeconvolutionLayer::backwardPropagation(
 		const std::vector<Tensor *> &in_data,
 		const std::vector<Tensor *> &out_data, std::vector<Tensor *> &out_grad,
 		std::vector<Tensor *> &in_grad) {
-	backend->deconv2d(in_data, out_data, out_grad, in_grad);
+	deconv_layer_worker_specific_storage &cws = deconv_layer_worker_storage;
+	if (params.pad_type == padding::same)
+		copy_and_pad_delta(cws.curr_delta_padded, *in_grad[0]);
+
+	const Tensor &prev_out = *(cws.prev_out);
+	const Storage &W = (*in_data[1])[0];
+	Tensor &dW = *in_grad[1];
+	Tensor &db = *in_grad[2];
+	Tensor &curr_delta =
+			(params.pad_type == padding::same) ?
+					cws.curr_delta_padded : *out_grad[0];
+	Tensor *prev_delta = in_grad[0];
+	assert(W.size() == params.weight.size());
+	assert(dW[0].size() == params.weight.size());
+	assert(curr_delta[0].size() == getOutputDimensions()[0].size());
+	fill_tensor(*prev_delta, float_t { 0 });
+	tiny_dnn::core::kernels::avx_deconv2d_back_kernel(params, prev_out, W, dW, db,curr_delta, prev_delta);
 }
 std::vector<aly::dim3> DeconvolutionLayer::getInputDimensions() const {
 	if (params.has_bias) {
@@ -72,8 +96,8 @@ std::vector<aly::dim3> DeconvolutionLayer::getOutputDimensions() const {
 	return {Convert(params.out_unpadded)};
 }
 void DeconvolutionLayer::init_backend(const backend_t backend_type) {
+	/*
 	std::shared_ptr<core::backend> backend = nullptr;
-
 	// allocate new backend
 	if (backend_type == backend_t::internal) {
 		backend = std::make_shared<core::tiny_backend>(&params,
@@ -101,6 +125,7 @@ void DeconvolutionLayer::init_backend(const backend_t backend_type) {
 	} else {
 		throw nn_error("Could not allocate the backend.");
 	}
+	*/
 }
 void DeconvolutionLayer::deconv_set_params(const shape3d &in, int w_width,
 		int w_height, int outc, padding ptype, bool has_bias, int w_stride,

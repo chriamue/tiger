@@ -172,10 +172,16 @@ public:
 		return (outputs.size() != 0);
 	}
 	void setValue(const aly::Image1f& data);
+	void setValue(const aly::Image3f& data);
+	void setValue(const aly::Image4f& data);
+
 	void setValue(const aly::Vector1f& data);
 	void setValue(const std::vector<float>& data);
 
 	void getValue(aly::Image1f& data);
+	void getValue(aly::Image3f& data);
+	void getValue(aly::Image4f& data);
+
 	void getValue(aly::Vector1f& data);
 	void getValue(std::vector<float>& data);
 

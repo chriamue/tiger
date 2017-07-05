@@ -77,10 +77,26 @@ void NeuralSignal::mergeGradients(Storage& dst) {
 	}
 }
 void NeuralSignal::setValue(const aly::Image1f& data) {
-	setValue(data.data);
+	value[0].assign(data.data.begin(), data.data.end());
+}
+void NeuralSignal::setValue(const aly::Image4f& data) {
+	size_t a=dimensions.area();
+	for(size_t idx=0;idx<data.size();idx++){
+		for(int c=0;c<data.channels;c++){
+			value[0][idx+a*c]=data[idx][c];
+		}
+	}
+}
+void NeuralSignal::setValue(const aly::Image3f& data) {
+	size_t a=dimensions.area();
+	for(size_t idx=0;idx<data.size();idx++){
+		for(int c=0;c<data.channels;c++){
+			value[0][idx+a*c]=data[idx][c];
+		}
+	}
 }
 void NeuralSignal::setValue(const aly::Vector1f& data) {
-	setValue(data.data);
+	value[0].assign(data.data.begin(), data.data.end());
 }
 void NeuralSignal::setValue(const std::vector<float>& data) {
 	value[0].assign(data.begin(), data.end());
@@ -88,8 +104,25 @@ void NeuralSignal::setValue(const std::vector<float>& data) {
 
 void NeuralSignal::getValue(aly::Image1f& data) {
 	data.resize(dimensions.x, dimensions.y);
-	data.data.assign(value[0].begin(),
-			value[0].begin() + (dimensions.x * (size_t) dimensions.y));
+	data.data.assign(value[0].begin(),value[0].end());
+}
+void NeuralSignal::getValue(aly::Image3f& data) {
+	data.resize(dimensions.x, dimensions.y);
+	size_t a=dimensions.area();
+	for(size_t idx=0;idx<data.size();idx++){
+		for(int c=0;c<data.channels;c++){
+			data[idx][c]=value[0][idx+a*c];
+		}
+	}
+}
+void NeuralSignal::getValue(aly::Image4f& data) {
+	data.resize(dimensions.x, dimensions.y);
+	size_t a=dimensions.area();
+	for(size_t idx=0;idx<data.size();idx++){
+		for(int c=0;c<data.channels;c++){
+			data[idx][c]=value[0][idx+a*c];
+		}
+	}
 }
 void NeuralSignal::getValue(aly::Vector1f& data) {
 	data.resize(dimensions.volume());

@@ -96,6 +96,7 @@ private:
 	void conv_set_params(const tiny_dnn::shape3d &in, int w_width, int w_height, int outc,
 			tiny_dnn::padding ptype, bool has_bias, int w_stride, int h_stride,
 			const ConnectionTable &tbl = ConnectionTable());
+
 	int in_length(int in_length, int window_size,
 			tiny_dnn::padding pad_type) const;
 	static int conv_out_dim(int in_width, int in_height, int window_size,

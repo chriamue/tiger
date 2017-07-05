@@ -177,6 +177,14 @@ public:
 	void setOutputGradients(
 			const std::vector<std::vector<const Storage*>>& grad);
 	void setInputData(const std::vector<std::vector<const Storage*>>& data);
+	void setInputData(const aly::Image1f& data);
+	void setInputData(const aly::Image3f& data);
+	void setInputData(const aly::Image4f& data);
+
+	void setOutputData(const aly::Image1f& data);
+	void setOutputData(const aly::Image3f& data);
+	void setOutputData(const aly::Image4f& data);
+
 	void getOutput(std::vector<Tensor*>& out) const;
 	void getOutput(std::vector<const Tensor*>& out) const;
 	std::vector<std::shared_ptr<NeuralLayer>> getOutputLayers() const;

@@ -218,6 +218,7 @@ void NeuralLayer::forward() {
 	}
 	// call the forward computation kernel/routine
 	forwardPropagation(fowardInData, fowardInGradient);
+	setRegionDirty(true);
 }
 
 void NeuralLayer::backward() {
@@ -330,13 +331,60 @@ void NeuralLayer::setOutputGradients(
 	}
 }
 
-void NeuralLayer::setInputData(
-		const std::vector<std::vector<const Storage*>>& data) {
+void NeuralLayer::setOutputData(const aly::Image1f& data) {
+	for (size_t i = 0; i < outputChannels; i++) {
+		if (outputTypes[i] == ChannelType::data){
+			getOutput(i)->setValue(data);
+			break;
+		}
+	}
+}
+void NeuralLayer::setOutputData(const aly::Image3f& data) {
+	for (size_t i = 0; i < outputChannels; i++) {
+		if (outputTypes[i] == ChannelType::data){
+			getOutput(i)->setValue(data);
+			break;
+		}
+	}
+}
+void NeuralLayer::setOutputData(const aly::Image4f& data) {
+	for (size_t i = 0; i < outputChannels; i++) {
+		if (outputTypes[i] == ChannelType::data){
+			getOutput(i)->setValue(data);
+			break;
+		}
+	}
+}
+
+void NeuralLayer::setInputData(const aly::Image1f& data) {
+	for (size_t i = 0; i < inputChannels; i++) {
+		if (inputTypes[i] == ChannelType::data){
+			getInput(i)->setValue(data);
+			break;
+		}
+	}
+}
+void NeuralLayer::setInputData(const aly::Image3f& data) {
+	for (size_t i = 0; i < inputChannels; i++) {
+		if (inputTypes[i] == ChannelType::data){
+			getInput(i)->setValue(data);
+			break;
+		}
+	}
+}
+void NeuralLayer::setInputData(const aly::Image4f& data) {
+	for (size_t i = 0; i < inputChannels; i++) {
+		if (inputTypes[i] == ChannelType::data){
+			getInput(i)->setValue(data);
+			break;
+		}
+	}
+}
+void NeuralLayer::setInputData(const std::vector<std::vector<const Storage*>>& data) {
 	size_t n = 0;
 	size_t cnt = data.size();
 	for (size_t i = 0; i < inputChannels; i++) {
-		if (inputTypes[i] != ChannelType::data)
-			continue;
+		if (inputTypes[i] != ChannelType::data)continue;
 		Tensor &dst_data = getInput(i)->value;
 		assert(n < cnt);
 		const std::vector<const Storage*>& storage = data[n++];

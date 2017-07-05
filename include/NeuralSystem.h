@@ -131,9 +131,9 @@ public:
 	std::vector<NeuralLayerPtr>& getOutputLayers() {
 		return outputLayers;
 	}
-	NeuralSystem(const std::string& name,
-			const std::shared_ptr<aly::NeuralFlowPane>& pane);
+	NeuralSystem(const std::string& name, const std::shared_ptr<aly::NeuralFlowPane>& pane);
 	std::vector<Tensor> forward(const std::vector<Tensor> &in_data);
+	void evaluate();
 	void setup(bool reset_weight);
 	void clearGradients();
 	void backward(const std::vector<Tensor> &out_grad);

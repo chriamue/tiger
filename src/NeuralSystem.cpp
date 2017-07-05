@@ -119,21 +119,22 @@ std::vector<Tensor> NeuralSystem::forward(const std::vector<Tensor> &in_data) {
 	if (input_data_channel_count != inputLayers.size()) {
 		throw std::runtime_error("input size mismatch");
 	}
-
 	std::vector<std::vector<const Storage *>> reordered_data;
 	reorder_for_layerwise_processing(in_data, reordered_data);
 	assert(reordered_data.size() == input_data_channel_count);
-	for (size_t channel_index = 0; channel_index < input_data_channel_count;
-			channel_index++) {
+	for (size_t channel_index = 0; channel_index < input_data_channel_count;channel_index++) {
 		inputLayers[channel_index]->setInputData({reordered_data[channel_index]});
 	}
-
 	for (auto l : layers) {
 		l->forward();
 	}
 	return mergeOutputs();
 }
-
+void NeuralSystem::evaluate() {
+	for (auto l : layers) {
+		l->forward();
+	}
+}
 void NeuralSystem::build(const std::vector<NeuralLayerPtr> &input,const std::vector<NeuralLayerPtr> &output) {
 	std::vector<NeuralLayerPtr> sorted;
 	std::vector<NeuralLayerPtr> input_nodes(input.begin(), input.end());

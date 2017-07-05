@@ -109,7 +109,7 @@ private:
 	/* The convolution parameters */
 	std::vector<std::vector<aly::int2>> out2in;
 	tiny_dnn::core::deconv_params params;
-	std::shared_ptr<tiny_dnn::core::backend> backend;
+	//std::shared_ptr<tiny_dnn::core::backend> backend;
 	tiny_dnn::core::deconv_layer_worker_specific_storage deconv_layer_worker_storage;
 };
 typedef std::shared_ptr<DeconvolutionLayer> DeconvolutionLayerPtr;

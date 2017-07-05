@@ -46,8 +46,9 @@ void TigerApp::setSampleIndex(int idx) {
 	sampleIndex.setValue(idx);
 	tweenRegion->setValue(idx);
 	valueRegion->setNumberValue(sampleIndex);
-	//sys->getInput()->set(trainInputData[idx]);
-	//sys->evaluate();
+	sys->getInputLayers().front()->setInputData(trainInputData[idx]);
+	sys->evaluate();
+
 }
 void TigerApp::setNeuralTime(int idx) {
 	auto elem = worker->getCache()->get(idx);
@@ -410,7 +411,8 @@ void TigerApp::setSelectedLayer(tgr::NeuralLayer* layer) {
 bool TigerApp::onEventHandler(AlloyContext* context, const aly::InputEvent& e) {
 	if (e.type == InputType::Key && e.isDown()) {
 		if (e.key == GLFW_KEY_LEFT) {
-			int t = std::max(timelineSlider->getTimeValue().toInteger() - 1,timelineSlider->getLowerValue().toInteger());
+			int t = std::max(timelineSlider->getTimeValue().toInteger() - 1,
+					timelineSlider->getLowerValue().toInteger());
 			timelineSlider->setTimeValue(t);
 			setNeuralTime(t);
 		} else if (e.key == GLFW_KEY_RIGHT) {
@@ -518,7 +520,10 @@ bool TigerApp::onEventHandler(AlloyContext* context, const aly::InputEvent& e) {
  }
  */
 void TigerApp::initialize() {
-
+	parse_mnist_images(trainFile, trainInputData, 0.0f, 1.0f, 2, 2);
+	parse_mnist_labels(trainLabelFile, trainOutputData);
+	trainInputData.erase(trainInputData.begin() + 100, trainInputData.end());
+	trainOutputData.erase(trainOutputData.begin() + 100, trainOutputData.end());
 	sys.reset(new NeuralSystem("LaNet5", flowRegion));
 	InputLayerPtr i1 = MakeShared<InputLayer>(dim3(32, 32, 1));
 	ConvolutionLayerPtr c1 = MakeShared<ConvolutionLayer>(32, 32, 5, 1, 6);
@@ -534,15 +539,12 @@ void TigerApp::initialize() {
 	TanhLayerPtr c2_tanh = MakeShared<TanhLayer>(1, 1, 120);
 	FullyConnectedLayerPtr fc1 = MakeShared<FullyConnectedLayer>(120, 10);
 	TanhLayerPtr fc1_tanh = MakeShared<TanhLayer>(10);
-	i1 << c1 << c1_tanh << p1 << p1_tanh << d1 << d1_tanh << p2 << p2_tanh << c2
-			<< c2_tanh << fc1 << fc1_tanh;
+	i1 << c1 << c1_tanh << p1 << p1_tanh << d1 << d1_tanh << p2 << p2_tanh << c2 << c2_tanh << fc1 << fc1_tanh;
 	sys->build(i1, fc1_tanh);
-
 	/*
 	 {
 	 using namespace tiny_dnn;
 	 using namespace tiny_dnn::core;
-
 	 network<graph> nn;
 	 // declare nodes
 	 input_layer i1(shape3d(32, 32, 1));
@@ -559,7 +561,6 @@ void TigerApp::initialize() {
 	 tanh_layer c2_tanh(1, 1, 120);
 	 fully_connected_layer fc1(120, 10);
 	 tanh_layer fc1_tanh(10);
-
 	 // connecting activation layers behind other layers
 	 c1 << c1_tanh;
 	 p1 << p1_tanh;
@@ -574,18 +575,21 @@ void TigerApp::initialize() {
 	 }
 	 */
 	worker.reset(new NeuralRuntime(sys));
-	worker->inputSampler = [this](const NeuralLayerPtr& input, int idx) {
-		//aly::Image1f& inputData = trainInputData[idx];
-		//input->set(inputData);
-		};
+	worker->inputSampler = [this,i1](const NeuralLayerPtr& input, int idx) {
+		aly::Image1f& inputData = trainInputData[idx];
+		i1->setInputData(inputData);
+	};
 	worker->outputSampler = [this](std::vector<float>& outputData, int idx) {
-		//int out = trainOutputData[idx];
-		//outputData.resize(10);
-		//for (int i = 0; i <(int)outputData.size(); i++) {
-		//outputData[i] = (out == i) ? 1.0f : 0.0f;
-		//}
-		};
+		int out = trainOutputData[idx];
+		outputData.resize(10);
+		for (int i = 0; i <(int)outputData.size(); i++) {
+			outputData[i] = (out == i) ? 1.0f : 0.0f;
+		}
+	};
 	sys->initialize(expandTree);
+	setSampleRange(0, (int)trainInputData.size() - 1);
+	setSampleIndex(1);
+	worker->setSelectedSamples(0, 5);
 }
 void TigerApp::draw(AlloyContext* context) {
 	if (running) {
