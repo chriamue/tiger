@@ -190,6 +190,46 @@ public:
 	void addOutput(const std::shared_ptr<NeuralLayer>& output);
 	NeuralSignal& operator=(const NeuralSignal& other);
 };
+
+inline void foreach(std::function<void(size_t i)>& f, size_t size, bool parallelize=true) {
+	if(parallelize){
+#pragma omp parallel for
+		for (size_t i = 0; i < size; ++i) {
+			f(i);
+		}
+	} else {
+		for (size_t i = 0; i < size; ++i) {
+			f(i);
+		}
+	}
+}
+
+inline void foreach(std::function<void(int i)>& f, int size, bool parallelize=true) {
+	if(parallelize){
+#pragma omp parallel for
+		for (size_t i = 0; i < size; ++i) {
+			f(i);
+		}
+	} else {
+		for (size_t i = 0; i < size; ++i) {
+			f(i);
+		}
+	}
+}
+
+inline void foreach(std::function<void(int i)>& f, size_t size, bool parallelize=true) {
+	if(parallelize){
+#pragma omp parallel for
+		for (size_t i = 0; i < size; ++i) {
+			f(i);
+		}
+	} else {
+		for (size_t i = 0; i < size; ++i) {
+			f(i);
+		}
+	}
+}
+
 typedef std::shared_ptr<NeuralSignal> SignalPtr;
 }
 #endif

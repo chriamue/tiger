@@ -135,6 +135,116 @@ void NeuralSystem::evaluate() {
 		l->forward();
 	}
 }
+void normalize_tensor(const std::vector<tensor_t> &inputs,
+                      std::vector<tensor_t> &normalized) {
+  normalized = inputs;
+}
+
+void normalize_tensor(const std::vector<vec_t> &inputs,
+                      std::vector<tensor_t> &normalized) {
+  normalized.reserve(inputs.size());
+  for (size_t i = 0; i < inputs.size(); i++)
+    normalized.emplace_back(tensor_t{inputs[i]});
+}
+
+void normalize_tensor(const std::vector<label_t> &inputs,
+                      std::vector<tensor_t> &normalized) {
+  std::vector<vec_t> vec;
+  normalized.reserve(inputs.size());
+  net_.label2vec(inputs, vec);
+  normalize_tensor(vec, normalized);
+}
+
+std::string name_;
+NetType net_;
+bool stop_training_;
+std::vector<tensor_t> in_batch_;
+std::vector<tensor_t> t_batch_;
+};
+void set_netphase(net_phase phase) {
+  for (auto n : net_) {
+    n->set_context(phase);
+  }
+}
+std::vector<vec_t> test(const std::vector<vec_t> &in) {
+  std::vector<vec_t> test_result(in.size());
+  set_netphase(net_phase::test);
+  for (size_t i = 0; i < in.size(); i++) {
+    test_result[i] = predict(in[i]);
+  }
+  return test_result;
+}
+template <typename E, typename T>
+ float_t get_loss(const std::vector<T> &in, const std::vector<tensor_t> &t) {
+   float_t sum_loss = float_t(0);
+   std::vector<tensor_t> in_tensor;
+   normalize_tensor(in, in_tensor);
+
+   for (size_t i = 0; i < in.size(); i++) {
+     const tensor_t predicted = predict(in_tensor[i]);
+     for (size_t j = 0; j < predicted.size(); j++) {
+       sum_loss += E::f(predicted[j], t[i][j]);
+     }
+   }
+   return sum_loss;
+ }
+
+ /**
+  * checking gradients calculated by bprop
+  * detail information:
+  * http://ufldl.stanford.edu/wiki/index.php/Gradient_checking_and_advanced_optimization
+  **/
+ template <typename E>
+ bool gradient_check(const std::vector<tensor_t> &in,
+                     const std::vector<std::vector<label_t>> &t,
+                     float_t eps,
+                     grad_check_mode mode) {
+   assert(in.size() == t.size());
+
+   std::vector<tensor_t> v(t.size());
+   const serial_size_t sample_count = static_cast<serial_size_t>(t.size());
+   for (serial_size_t sample = 0; sample < sample_count; ++sample) {
+     net_.label2vec(t[sample], v[sample]);
+   }
+
+   for (auto current : net_) {  // ignore first input layer
+     if (current->weights().size() < 2) {
+       continue;
+     }
+     vec_t &w     = *current->weights()[0];
+     vec_t &b     = *current->weights()[1];
+     tensor_t &dw = (*current->weights_grads()[0]);
+     tensor_t &db = (*current->weights_grads()[1]);
+
+     if (w.empty()) continue;
+
+     switch (mode) {
+       case GRAD_CHECK_ALL:
+         for (size_t i = 0; i < w.size(); i++)
+           if (!calc_delta<E>(in, v, w, dw, i, eps)) {
+             return false;
+           }
+         for (size_t i = 0; i < b.size(); i++)
+           if (!calc_delta<E>(in, v, b, db, i, eps)) {
+             return false;
+           }
+         break;
+       case GRAD_CHECK_RANDOM:
+         for (size_t i = 0; i < 10; i++)
+           if (!calc_delta<E>(in, v, w, dw, uniform_idx(w), eps)) {
+             return false;
+           }
+         for (size_t i = 0; i < 10; i++)
+           if (!calc_delta<E>(in, v, b, db, uniform_idx(b), eps)) {
+             return false;
+           }
+         break;
+       default: throw nn_error("unknown grad-check type");
+     }
+   }
+   return true;
+ }
+
 void NeuralSystem::build(const std::vector<NeuralLayerPtr> &input,const std::vector<NeuralLayerPtr> &output) {
 	std::vector<NeuralLayerPtr> sorted;
 	std::vector<NeuralLayerPtr> input_nodes(input.begin(), input.end());
