@@ -61,7 +61,12 @@ inline std::ostream &operator<<(std::ostream &os, ChannelType type) {
 enum class Padding {
 	Valid = tiny_dnn::padding::valid, Same = tiny_dnn::padding::same
 };
-
+enum class NetPhase {
+	Test=tiny_dnn::net_phase::test, Train=tiny_dnn::net_phase::train
+};
+enum class GradientCheck{
+	All=0, Random=1
+};
 inline std::vector<ChannelType> ChannelOrder(bool has_bias) {
 	if (has_bias) {
 		return {ChannelType::data, ChannelType::weight, ChannelType::bias};

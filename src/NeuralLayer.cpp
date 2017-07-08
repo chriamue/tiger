@@ -428,20 +428,57 @@ std::vector<const Storage*> NeuralLayer::getOutputWeights() const {
 	}
 	return v;
 }
-std::vector<const Storage*> NeuralLayer::getInputGradient() const {
-	std::vector<const Storage*> v;
+std::vector<const Tensor*> NeuralLayer::getInputGradient() const {
+	std::vector<const Tensor*> v;
 	for (size_t i = 0; i < inputChannels; i++) {
 		if (isTrainableWeight(inputTypes[i])) {
-			v.push_back(getInput(i)->change.data());
+			v.push_back(&(getInput(i)->change));
 		}
 	}
 	return v;
 }
-std::vector<const Storage*> NeuralLayer::getOutputGradient() const {
-	std::vector<const Storage*> v;
+std::vector<const Tensor*> NeuralLayer::getOutputGradient() const {
+	std::vector<const Tensor*> v;
 	for (size_t i = 0; i < outputChannels; i++) {
 		if (isTrainableWeight(outputTypes[i])) {
-			v.push_back(getOutput(i)->change.data());
+			v.push_back(&(getOutput(i)->change));
+		}
+	}
+	return v;
+}
+
+std::vector< Storage*> NeuralLayer::getInputWeights()  {
+	std::vector< Storage*> v;
+	for (size_t i = 0; i < inputChannels; i++) {
+		if (isTrainableWeight(inputTypes[i])) {
+			v.push_back(getInput(i)->value.data());
+		}
+	}
+	return v;
+}
+std::vector< Storage*> NeuralLayer::getOutputWeights()  {
+	std::vector< Storage*> v;
+	for (size_t i = 0; i < outputChannels; i++) {
+		if (isTrainableWeight(outputTypes[i])) {
+			v.push_back(getOutput(i)->value.data());
+		}
+	}
+	return v;
+}
+std::vector< Tensor*> NeuralLayer::getInputGradient()  {
+	std::vector< Tensor*> v;
+	for (size_t i = 0; i < inputChannels; i++) {
+		if (isTrainableWeight(inputTypes[i])) {
+			v.push_back(&getInput(i)->change);
+		}
+	}
+	return v;
+}
+std::vector< Tensor*> NeuralLayer::getOutputGradient()  {
+	std::vector< Tensor*> v;
+	for (size_t i = 0; i < outputChannels; i++) {
+		if (isTrainableWeight(outputTypes[i])) {
+			v.push_back(&getOutput(i)->change);
 		}
 	}
 	return v;
@@ -457,6 +494,23 @@ float NeuralLayer::getAspect() {
 			+ (dims.z - 1) * NeuralLayerRegion::GlyphSpacing)
 			/ (float) (dims.y * NeuralLayerRegion::GlyphSize);
 }
+size_t NeuralLayer::getInputDataSize() const {
+ 	size_t n = 0;
+	for (size_t i = 0; i < inputChannels; i++) {
+		if (inputTypes[i] != ChannelType::data)continue;
+		n+= getInputDimensions(i).volume();
+	}
+	return n;
+}
+size_t NeuralLayer::getOutputDataSize() const {
+ 	size_t n = 0;
+	for (size_t i = 0; i < outputChannels; i++) {
+		if (outputTypes[i] != ChannelType::data)continue;
+		n+= getOutputDimensions(i).volume();
+	}
+	return n;
+}
+
 void NeuralLayer::updateWeights(
 		const std::function<void(Storage& dW, Storage& W, bool parallel)>& optimizer,
 		int batch_size) {

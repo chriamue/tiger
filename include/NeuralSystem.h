@@ -38,7 +38,7 @@
 #include "PartialConnectedLayer.h"
 #include "TanhLayer.h"
 #include "ConvolutionLayer.h"
-
+#include "NeuralLossFunction.h"
 #include <map>
 namespace aly {
 class NeuralFlowPane;
@@ -60,6 +60,13 @@ protected:
 	std::string name;
 	void reorder_for_layerwise_processing(const std::vector<Tensor> &input,
 			std::vector<std::vector<const Storage *>> &output);
+	void bprop(const NeuralLossFunction& loss, const std::vector<Storage> &out,
+			const std::vector<Storage> &t, const std::vector<Storage> &t_cost);
+	void bprop(const NeuralLossFunction& loss, const std::vector<Tensor> &out,
+			const std::vector<Tensor> &t, const std::vector<Tensor> &t_cost);
+	Storage fprop(const Storage &in);
+	std::vector<Storage> fprop(const std::vector<Storage> &in);
+	std::vector<Tensor> fprop(const std::vector<Tensor> &in);
 public:
 	typedef std::vector<NeuralLayerPtr>::iterator iterator;
 	typedef std::vector<NeuralLayerPtr>::const_iterator const_iterator;
@@ -84,6 +91,10 @@ public:
 	const NeuralLayerPtr operator[](size_t index) const {
 		return layers[index];
 	}
+	float getTargetValueMin() const;
+	float getTargetValueMax() const;
+	size_t getInputDataSize() const;
+	size_t getOutputDataSize() const;
 	std::vector<Tensor> mergeOutputs();
 	void setKnowledge(const NeuralKnowledge& k);
 	double accumulate(const NeuralLayerPtr& layer, const aly::Image1f& output);
@@ -99,8 +110,32 @@ public:
 		return knowledge;
 	}
 	void initialize();
+	void setPhase(NetPhase phase);
+	void normalize(const std::vector<Tensor> &inputs,
+			std::vector<Tensor> &normalized);
+	void normalize(const std::vector<Storage> &inputs,
+			std::vector<Tensor> &normalized);
+	void normalize(const std::vector<int> &inputs,
+			std::vector<Tensor> &normalized);
+	float getLoss(const NeuralLossFunction& loss, const std::vector<Tensor> &in,
+			const std::vector<Tensor> &t);
+	float getLoss(const NeuralLossFunction& loss, const std::vector<Storage> &in,
+			const std::vector<Storage> &t);
+	float getLoss(const NeuralLossFunction& loss, const std::vector<Storage> &in,
+			const std::vector<Tensor> &t);
+	float getLoss(const NeuralLossFunction& loss, const std::vector<int> &in,
+			const std::vector<Tensor> &t);
+	bool gradientCheck(const NeuralLossFunction& func, const std::vector<Tensor> &in,
+			const std::vector<std::vector<int>> &t, float eps,
+			GradientCheck mode);
+	void label2vec(const int *t, int num, std::vector<Storage> &vec) const;
+	void label2vec(const std::vector<int> &labels,
+			std::vector<Storage> &vec) const;
 	Storage predict(const Storage &in);
 	Tensor predict(const Tensor &in);
+	bool calculateDelta(const NeuralLossFunction& loss, const std::vector<Tensor> &in,
+			const std::vector<Tensor> &v, Storage &w, Tensor &dw,
+			int check_index, double eps);
 	std::vector<Tensor> predict(const std::vector<Tensor>& in);
 	std::shared_ptr<aly::NeuralFlowPane> getFlow() const {
 		return flowPane;
@@ -131,7 +166,9 @@ public:
 	std::vector<NeuralLayerPtr>& getOutputLayers() {
 		return outputLayers;
 	}
-	NeuralSystem(const std::string& name, const std::shared_ptr<aly::NeuralFlowPane>& pane);
+	std::vector<Storage> test(const std::vector<Storage> &in);
+	NeuralSystem(const std::string& name,
+			const std::shared_ptr<aly::NeuralFlowPane>& pane);
 	std::vector<Tensor> forward(const std::vector<Tensor> &in_data);
 	void evaluate();
 	void setup(bool reset_weight);

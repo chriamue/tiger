@@ -114,6 +114,7 @@ public:
 	tiny_dnn::Device* device() const {
 		return device_ptr_;
 	}
+	virtual void setContext(const NetPhase& ctx) { }
 	void clearGradients();
 	inline aly::dim3 getOutputDimensions(size_t idx) const {
 		return getOutputDimensions()[idx];
@@ -121,12 +122,15 @@ public:
 	inline aly::dim3 getInputDimensions(size_t idx) const {
 		return getInputDimensions()[idx];
 	}
+	size_t getOutputDataSize() const;
+	size_t getInputDataSize() const;
 	size_t getOutputDimensionSize() const {
 		return getOutputDimensions().size();
 	}
 	size_t getInputDimensionSize() const {
 		return getInputDimensions().size();
 	}
+	aly::float2 getOutputRange() const {return aly::float2(0.0f,1.0f);}
 	float getAspect();
 	SignalPtr getInput(size_t i);
 	SignalPtr getOutput(size_t i);
@@ -159,8 +163,13 @@ public:
 	}
 	std::vector<const Storage*> getInputWeights() const;
 	std::vector<const Storage*> getOutputWeights() const;
-	std::vector<const Storage*> getInputGradient() const;
-	std::vector<const Storage*> getOutputGradient() const;
+	std::vector<const Tensor*> getInputGradient() const;
+	std::vector<const Tensor*> getOutputGradient() const;
+
+	std::vector<Storage*> getInputWeights();
+	std::vector<Storage*> getOutputWeights();
+	std::vector<Tensor*> getInputGradient();
+	std::vector<Tensor*> getOutputGradient();
 	virtual void forwardPropagation(const std::vector<Tensor*>&in_data,
 			std::vector<Tensor*> &out_data) = 0;
 	virtual void backwardPropagation(const std::vector<Tensor*> &in_data,
