@@ -60,6 +60,10 @@ protected:
 	std::string name;
 	void reorder_for_layerwise_processing(const std::vector<Tensor> &input,
 			std::vector<std::vector<const Storage *>> &output);
+
+public:
+	typedef std::vector<NeuralLayerPtr>::iterator iterator;
+	typedef std::vector<NeuralLayerPtr>::const_iterator const_iterator;
 	void bprop(const NeuralLossFunction& loss, const std::vector<Storage> &out,
 			const std::vector<Storage> &t, const std::vector<Storage> &t_cost);
 	void bprop(const NeuralLossFunction& loss, const std::vector<Tensor> &out,
@@ -67,9 +71,6 @@ protected:
 	Storage fprop(const Storage &in);
 	std::vector<Storage> fprop(const std::vector<Storage> &in);
 	std::vector<Tensor> fprop(const std::vector<Tensor> &in);
-public:
-	typedef std::vector<NeuralLayerPtr>::iterator iterator;
-	typedef std::vector<NeuralLayerPtr>::const_iterator const_iterator;
 	size_t size() const {
 		return layers.size();
 	}
@@ -109,6 +110,7 @@ public:
 	const NeuralKnowledge& getKnowledge() const {
 		return knowledge;
 	}
+	void updateWeights(NeuralOptimizer& optimizer,int batch_size);
 	void initialize();
 	void setPhase(NetPhase phase);
 	void normalize(const std::vector<Tensor> &inputs,

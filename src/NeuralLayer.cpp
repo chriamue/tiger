@@ -512,7 +512,7 @@ size_t NeuralLayer::getOutputDataSize() const {
 }
 
 void NeuralLayer::updateWeights(
-		const std::function<void(Storage& dW, Storage& W, bool parallel)>& optimizer,
+		NeuralOptimizer& optimizer,
 		int batch_size) {
 	float_t rcp_batch_size = float_t(1) / float_t(batch_size);
 	auto &diff = weightDifference;
@@ -526,7 +526,7 @@ void NeuralLayer::updateWeights(
 			// parallelize only when target size is big enough to mitigate
 			// thread spawning overhead.
 			bool parallelize = (target.size() >= 512);
-			optimizer(diff, target, parallelize);
+			optimizer.update(diff, target, parallelize);
 		}
 	}
 	clearGradients();

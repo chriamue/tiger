@@ -29,6 +29,7 @@
 #include "NeuralLayerRegion.h"
 #include "NeuralKnowledge.h"
 #include "Neuron.h"
+#include "NeuralOptimizer.h"
 #include <vector>
 #include <set>
 namespace tiny_dnn {
@@ -178,7 +179,7 @@ public:
 	virtual void setSampleCount(size_t sample_count);
 
 	void updateWeights(
-			const std::function<void(Storage& dW, Storage& W, bool parallel)>& optimizer,
+			NeuralOptimizer& optimizer,
 			int batch_size);
 	bool hasSameWeights(const NeuralLayer &rhs, float_t eps) const;
 	void initializeWeights();

@@ -211,13 +211,14 @@ float NeuralSystem::getLoss(const NeuralLossFunction& loss,
 	}
 	return sum_loss;
 }
-float NeuralSystem::getLoss(const NeuralLossFunction& loss,const std::vector<Storage> &in, const std::vector<Storage> &t) {
-  float sum_loss = float(0);
-  for (size_t i = 0; i < in.size(); i++) {
-    const Storage predicted = predict(in[i]);
-    sum_loss +=	loss.f(predicted, t[i]);
-  }
-  return sum_loss;
+float NeuralSystem::getLoss(const NeuralLossFunction& loss,
+		const std::vector<Storage> &in, const std::vector<Storage> &t) {
+	float sum_loss = float(0);
+	for (size_t i = 0; i < in.size(); i++) {
+		const Storage predicted = predict(in[i]);
+		sum_loss += loss.f(predicted, t[i]);
+	}
+	return sum_loss;
 }
 
 float NeuralSystem::getLoss(const NeuralLossFunction& loss,
@@ -270,8 +271,7 @@ std::vector<Tensor> NeuralSystem::fprop(const std::vector<Tensor> &in) {
 bool NeuralSystem::calculateDelta(const NeuralLossFunction& loss,
 		const std::vector<Tensor> &in, const std::vector<Tensor> &v, Storage &w,
 		Tensor &dw, int check_index, double eps) {
-	static const float delta = std::sqrt(
-			std::numeric_limits<float>::epsilon());
+	static const float delta = std::sqrt(std::numeric_limits<float>::epsilon());
 
 	assert(in.size() == v.size());
 
@@ -427,6 +427,11 @@ void NeuralSystem::build(const std::vector<NeuralLayerPtr> &input,
 	inputLayers = input;
 	outputLayers = output;
 	setup(false);
+}
+void NeuralSystem::updateWeights(NeuralOptimizer& opt, int batch_size) {
+	for (auto l : layers) {
+		l->updateWeights(opt, batch_size);
+	}
 }
 
 void NeuralSystem::initialize() {
