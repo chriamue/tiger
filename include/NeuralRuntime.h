@@ -27,12 +27,14 @@
 #include <AlloyWorker.h>
 #include "NeuralSystem.h"
 #include "NeuralCache.h"
+#include "NeuralLossFunction.h"
+#include "NeuralOptimizer.h"
 namespace tgr {
 class NeuralRuntime;
 class NeuralListener {
 public:
-	virtual void NeuralEvent(NeuralRuntime* simulation,
-			int mSimulationIteration, double time) = 0;
+	virtual void NeuralEvent(NeuralRuntime* simulation, int simulationIteration,
+			double time) = 0;
 	virtual ~NeuralListener();
 };
 class NeuralRuntime: public aly::RecurrentTask {
@@ -40,6 +42,7 @@ protected:
 	bool paused;
 	bool isInitialized;
 	double lastResidual;
+	int threads;
 	aly::Number iterationsPerEpoch;
 	aly::Number iterationsPerStep;
 	aly::Number learningRateInitial;
@@ -52,7 +55,7 @@ protected:
 	aly::Number lowerSample;
 	aly::Number upperSample;
 	int optimizationMethod;
-
+	int lossFunction;
 	std::vector<int> sampleIndexes;
 	std::vector<float> outputData;
 	int iteration;
@@ -61,36 +64,48 @@ protected:
 	std::shared_ptr<tgr::NeuralCache> cache;
 
 	bool stop_training_;
-	std::vector<Tensor> in_batch_;
-	std::vector<Tensor> t_batch_;
+	std::vector<Tensor> in_batch;
+	std::vector<Tensor> t_batch;
+	std::vector<Tensor> inputs;
+	std::vector<Tensor> desiredOutputs;
+	std::vector<Tensor> t_costs;
+	NeuralOptimizer optimizer;
+	NeuralLossFunction loss;
 	const Tensor* get_target_cost_sample_pointer(
 			const std::vector<Tensor> &t_cost, size_t i);
-public:
-	std::function<void(int iteration, bool lastIteration)> onUpdate;
-	std::function<void(const NeuralLayerPtr& input, int idx)> inputSampler;
-	std::function<void(std::vector<float>& outputData, int idx)> outputSampler;
-	typedef std::chrono::high_resolution_clock Clock;
-	bool step();
-	bool init();
-	void cleanup();
-	std::shared_ptr<tgr::NeuralCache> getCache() const {
-		return cache;
-	}
 	void trainOnce(NeuralOptimizer &optimizer, const NeuralLossFunction& loss,
 			const Tensor *in, const Tensor *t, int size, const int nbThreads,
 			const Tensor *t_cost);
 	void trainOneBatch(NeuralOptimizer &optimizer,
 			const NeuralLossFunction& loss, const Tensor *in, const Tensor *t,
 			int batch_size, const int num_tasks, const Tensor *t_cost);
-	bool fit(NeuralOptimizer& optimizer,
-			const NeuralLossFunction& loss, const std::vector<Tensor> &inputs,
-			const std::vector<Tensor> &desired_outputs, size_t batch_size,
-			int epoch,
-			const std::function<void()>& on_batch_enumerate = nullptr,
-			const std::function<void()>& on_epoch_enumerate = nullptr,
-			const bool reset_weights = false, const int n_threads =
-					CNN_TASK_SIZE, const std::vector<Tensor> &t_cost =
-					std::vector<Tensor>());
+
+public:
+	std::function<void(int iteration, bool lastIteration)> onUpdate;
+	std::function<void()> onBatchEnumerate;
+	std::function<void()> onEpochEnumerate;
+	typedef std::chrono::high_resolution_clock Clock;
+	bool step();
+	bool init(bool reset_weights = false);
+	void setBatchSize(int b) {
+		batchSize.setValue(b);
+	}
+	void setData(const std::vector<Tensor>& input,
+			std::vector<Tensor>& desiredOutputs,
+			const std::vector<Tensor> &t_cost = std::vector<Tensor>());
+	void setData(const std::vector<Storage> &inputs,
+			const std::vector<int> &class_labels,
+			const std::vector<Storage>& t_cost = std::vector<Storage>());
+	void setLossFunction(const NeuralLossFunction& loss) {
+		this->loss = loss;
+	}
+	void setOptimizer(const NeuralOptimizer& opt) {
+		this->optimizer = opt;
+	}
+	void cleanup();
+	std::shared_ptr<tgr::NeuralCache> getCache() const {
+		return cache;
+	}
 	void setSampleRange(int mn, int mx);
 	void setSelectedSamples(int mn, int mx);
 	void setup(const aly::ParameterPanePtr& pane);

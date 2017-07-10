@@ -76,7 +76,6 @@ void deconv_lanet(network<graph> &nn,
     std::cout << t.elapsed() << "s elapsed." << std::endl;
     tiny_dnn::result res = nn.test(test_images, test_labels);
     std::cout << res.num_success << "/" << res.num_total << std::endl;
-
     disp.restart((unsigned long)train_images.size());
     t.restart();
   };

@@ -25,11 +25,11 @@
 #include <AlloyExpandTree.h>
 #include <AlloyWidget.h>
 #include <AlloyGraphPane.h>
-#include <NeuralSignal.h>
+#include "NeuralSignal.h"
+#include "NeuralOptimizer.h"
 #include "NeuralLayerRegion.h"
 #include "NeuralKnowledge.h"
 #include "Neuron.h"
-#include "NeuralOptimizer.h"
 #include <vector>
 #include <set>
 namespace tiny_dnn {
@@ -177,7 +177,6 @@ public:
 			const std::vector<Tensor*> &out_data,
 			std::vector<Tensor*> &out_grad, std::vector<Tensor*> &in_grad) = 0;
 	virtual void setSampleCount(size_t sample_count);
-
 	void updateWeights(
 			NeuralOptimizer& optimizer,
 			int batch_size);
@@ -187,10 +186,13 @@ public:
 	void setOutputGradients(
 			const std::vector<std::vector<const Storage*>>& grad);
 	void setInputData(const std::vector<std::vector<const Storage*>>& data);
+
+	void setInputData(const Tensor& data);
 	void setInputData(const aly::Image1f& data);
 	void setInputData(const aly::Image3f& data);
 	void setInputData(const aly::Image4f& data);
 
+	void setOutputData(const Tensor& data);
 	void setOutputData(const aly::Image1f& data);
 	void setOutputData(const aly::Image3f& data);
 	void setOutputData(const aly::Image4f& data);

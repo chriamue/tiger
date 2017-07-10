@@ -4,7 +4,6 @@
  *  Created on: Jul 6, 2017
  *      Author: blake
  */
-
 #include "tiny_dnn/tiny_dnn.h"
 #include "NeuralOptimizer.h"
 namespace tgr {
@@ -18,7 +17,6 @@ void AdagradOptimizer::update(const Storage &dW, Storage &W, bool parallelize) {
 		W[i] -= alpha * dW[i] / (std::sqrt(g[i]) + eps);
 	});
 }
-
 /**
  * RMSprop
  *
@@ -86,6 +84,10 @@ void GradientDescentOptimizer::update(const Storage &dW, Storage &W,
  **/
 MomentumOptimizer::MomentumOptimizer() :
 		alpha(float_t(0.01)), lambda(float_t { 0 }), mu(float_t(0.9)) {
+}
+void MomentumOptimizer::reset() {
+	for (auto &e : E_)
+		e.clear();
 }
 void MomentumOptimizer::update(const Storage &dW, Storage &W,
 		bool parallelize) {

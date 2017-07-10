@@ -58,7 +58,7 @@ protected:
 	std::vector<NeuralLayerPtr> outputLayers;
 	NeuralKnowledge knowledge;
 	std::string name;
-	void reorder_for_layerwise_processing(const std::vector<Tensor> &input,
+	void reorderForLayerwiseProcessing(const std::vector<Tensor> &input,
 			std::vector<std::vector<const Storage *>> &output);
 
 public:
@@ -169,8 +169,7 @@ public:
 		return outputLayers;
 	}
 	std::vector<Storage> test(const std::vector<Storage> &in);
-	NeuralSystem(const std::string& name,
-			const std::shared_ptr<aly::NeuralFlowPane>& pane);
+	NeuralSystem(const std::string& name,const std::shared_ptr<aly::NeuralFlowPane>& pane);
 	std::vector<Tensor> forward(const std::vector<Tensor> &in_data);
 	void evaluate();
 	void setup(bool reset_weight);

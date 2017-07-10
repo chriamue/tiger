@@ -23,7 +23,7 @@
 #include <fstream>
 #include <ostream>
 #include <random>
-
+#include <omp.h>
 using namespace aly;
 namespace tgr {
 NeuralListener::~NeuralListener() {
@@ -52,50 +52,36 @@ void NeuralRuntime::trainOnce(NeuralOptimizer &optimizer,
  * the gradient of the loss function with respect to the network parameters
  * (weights),
  * then calls the optimizer algorithm to update the weights
- *
  * @param batch_size the number of data points to use in this batch
  */
 void NeuralRuntime::trainOneBatch(NeuralOptimizer &optimizer,
 		const NeuralLossFunction& loss, const Tensor *in, const Tensor *t,
 		int batch_size, const int num_tasks, const Tensor *t_cost) {
 	CNN_UNREFERENCED_PARAMETER(num_tasks);
-	std::copy(&in[0], &in[0] + batch_size, &in_batch_[0]);
-	std::copy(&t[0], &t[0] + batch_size, &t_batch_[0]);
+	std::copy(&in[0], &in[0] + batch_size, &in_batch[0]);
+	std::copy(&t[0], &t[0] + batch_size, &t_batch[0]);
 	std::vector<Tensor> t_cost_batch =
 			t_cost ?
 					std::vector<Tensor>(&t_cost[0], &t_cost[0] + batch_size) :
 					std::vector<Tensor>();
-	sys->bprop(loss, sys->fprop(in_batch_), t_batch_, t_cost_batch);
+	//Perform forward cand backward pass on in_batch
+	sys->bprop(loss, sys->fprop(in_batch), t_batch, t_cost_batch);
 	sys->updateWeights(optimizer, batch_size);
 }
-
-bool NeuralRuntime::fit(NeuralOptimizer& optimizer,
-		const NeuralLossFunction& loss, const std::vector<Tensor> &inputs,
-		const std::vector<Tensor> &desired_outputs, size_t batch_size,
-		int epoch,const  std::function<void()>& on_batch_enumerate,
-		const std::function<void()>& on_epoch_enumerate, const bool reset_weights,
-		const int n_threads, const std::vector<Tensor> &t_cost) {
-	sys->setPhase(NetPhase::Train);
-	sys->setup(reset_weights);
-	for (auto n : sys->getLayers()) {
-		n->setParallelize(true);
-	}
-	optimizer.reset();
-	stop_training_ = false;
-	in_batch_.resize(batch_size);
-	t_batch_.resize(batch_size);
-	for (int iter = 0; iter < epoch && !stop_training_; iter++) {
-		for (size_t i = 0; i < inputs.size() && !stop_training_; i +=
-				batch_size) {
-			trainOnce(optimizer, loss, &inputs[i], &desired_outputs[i],
-					static_cast<int>(std::min(batch_size, inputs.size() - i)),
-					n_threads, get_target_cost_sample_pointer(t_cost, i));
-			on_batch_enumerate();
-		}
-		on_epoch_enumerate();
-	}
-	sys->setPhase(NetPhase::Test);
-	return true;
+void NeuralRuntime::setData(const std::vector<Tensor>& inputs,
+		std::vector<Tensor>& desiredOutputs,
+		const std::vector<Tensor> &t_cost) {
+	this->inputs = inputs;
+	this->desiredOutputs = desiredOutputs;
+	this->t_costs = t_costs;
+}
+void NeuralRuntime::setData(const std::vector<Storage> &inputs,
+		const std::vector<int> &class_labels,
+		const std::vector<Storage>& t_cost) {
+	sys->normalize(inputs, this->inputs);
+	sys->normalize(class_labels, this->desiredOutputs);
+	if (!t_cost.empty())
+		sys->normalize(t_cost, this->t_costs);
 }
 const Tensor* NeuralRuntime::get_target_cost_sample_pointer(
 		const std::vector<Tensor> &t_cost, size_t i) {
@@ -106,37 +92,99 @@ const Tensor* NeuralRuntime::get_target_cost_sample_pointer(
 		return nullptr;
 	}
 }
-bool NeuralRuntime::init() {
+bool NeuralRuntime::init(bool reset_weights) {
 	lastResidual = 1E30f;
+	if (optimizationMethod >= 0) {
+		switch (optimizationMethod) {
+		case 0:
+		{
+			GradientDescentOptimizer g = GradientDescentOptimizer();
+			g.alpha = learningRateDelta.toFloat();
+			g.lambda = weightDecay.toFloat();
+			optimizer = g;
+		}
+			break;
+		case 1:
+		{
+			MomentumOptimizer m=MomentumOptimizer();
+			m.mu = momentum.toFloat();
+			m.alpha = learningRateDelta.toFloat();
+			m.lambda = weightDecay.toFloat();
+			optimizer =m;
+		}
+			break;
+		case 2:
+		{
+			AdamOptimizer ad = AdamOptimizer();
+			ad.alpha = learningRateDelta.toFloat();
+			optimizer = ad;
+		}
+			break;
+		case 3:
+		{
+			AdagradOptimizer ag = AdagradOptimizer();
+			ag.alpha = learningRateDelta.toFloat();
+			optimizer = ag;
+		}
+			break;
+		case 4:
+		{
+			RMSpropOptimizer ro = RMSpropOptimizer();
+			ro.alpha = learningRateDelta.toFloat();
+			optimizer = ro;
+		}
+			break;
+		default:
+			break;
+		}
+	}
+
+	if (lossFunction >= 0) {
+		switch (lossFunction) {
+		case 0:
+			loss = MSELossFunction();
+			break;
+		case 1:
+			loss = AbsoluteLossFunction();
+			break;
+		case 2:
+			loss = AbsoluteEpsLossFunction();
+			break;
+		case 3:
+			loss = CrossEntropyLossFunction();
+			break;
+		case 4:
+			loss = CrossEntropyMultiClassLossFunction();
+			break;
+		default:
+			break;
+		}
+	}
+
 	for (NeuralLayerPtr layer : sys->getLayers()) {
 		layer->getGraph()->points.clear();
 	}
-	/*
-	 switch (optimizationMethod) {
-	 case 0:
-	 sys->setOptimizer(opt = std::shared_ptr<NeuralOptimization>(new GradientDescentOptimizer(learningRateInitial.toFloat(), weightDecay.toFloat())));
-	 break;
-	 case 1:
-	 sys->setOptimizer(opt = std::shared_ptr<NeuralOptimization>(new MomentumOptimizer(learningRateInitial.toFloat(),weightDecay.toFloat(),momentum.toFloat())));
-	 break;
-	 }
-	 sampleIndexes.clear();
-	 for (int n = lowerSample.toInteger(); n <= upperSample.toInteger(); n++) {
-	 sampleIndexes.push_back(n);
-	 }
-	 sys->initializeWeights(0.0f,1.0f);
-	 sys->updateKnowledge();
-	 */
-	cache->clear();
+	sys->setPhase(NetPhase::Train);
+	sys->setup(reset_weights);
+	for (auto n : sys->getLayers()) {
+		n->setParallelize(true);
+	}
+	optimizer.reset();
+	running = true;
+	int batch_size = batchSize.toInteger();
+	in_batch.resize(batch_size);
+	t_batch.resize(batch_size);
 	iteration = 0;
-	NeuralKnowledge& k = sys->getKnowledge();
-	k.setFile(MakeString() << GetDesktopDirectory() << ALY_PATH_SEPARATOR<< "tiger" <<std::setw(5)<<std::setfill('0')<< iteration << ".bin");
-	k.setName("tiger");
-	cache->set(iteration, k);
+	//cache->clear();
+	//NeuralKnowledge& k = sys->getKnowledge();
+	//k.setFile(MakeString() << GetDesktopDirectory() << ALY_PATH_SEPARATOR<< "tiger" <<std::setw(5)<<std::setfill('0')<< iteration << ".bin");
+	//k.setName("tiger");
+	//cache->set(iteration, k);
 
 	return true;
 }
 void NeuralRuntime::cleanup() {
+	sys->setPhase(NetPhase::Test);
 }
 void NeuralRuntime::setSampleRange(int mn, int mx) {
 	minSample.setValue(mn);
@@ -149,8 +197,14 @@ void NeuralRuntime::setSelectedSamples(int mn, int mx) {
 }
 void NeuralRuntime::setup(const aly::ParameterPanePtr& controls) {
 	controls->addGroup("Training", true);
+	optimizationMethod = 1;
+	lossFunction = 0;
 	controls->addSelectionField("Optimizer", optimizationMethod,
-			std::vector<std::string> { "Gradient Descent", "Momentum" }, 6.0f);
+			std::vector<std::string> { "Gradient Descent", "Momentum", "Adam",
+					"Adagrad", "RMSprop" }, 6.0f);
+	controls->addSelectionField("Error Metric", lossFunction,
+			std::vector<std::string> { "MSE", "Absolute", "Absolute Epsilon",
+					"Cross Entropy", "Cross Class Entropy" }, 6.0f);
 	controls->addNumberField("Epochs", iterationsPerEpoch);
 	controls->addRangeField("Samples", lowerSample, upperSample, minSample,
 			maxSample);
@@ -169,45 +223,19 @@ bool NeuralRuntime::step() {
 	int iter = iteration;
 	bool ret = true;
 	double res = 0;
-	//sys->reset();
-	int B = std::min(batchSize.toInteger(), (int) sampleIndexes.size());
-	/*
-	 if (iteration == 0) {
-	 opt->setLearningRate(opt->getLearningRate() / B);
-	 }
-	 if (iter%iterationsPerStep.toInteger() == 0) {
-	 std::shuffle(sampleIndexes.begin(), sampleIndexes.end(), rd);
-	 }
-	 for(int b=0;b<B;b++){
-	 int idx = sampleIndexes[(b+iter*B)%sampleIndexes.size()];
-	 if (inputSampler)inputSampler(sys->getInput(), idx);
-	 sys->evaluate();
-	 if (outputSampler) {
-	 outputSampler(outputData, idx);
-	 double err= sys->accumulate(outputData);
-	 res += err;
-	 //std::cout << "Evaluate ["<<idx<<"] Error=" << err <<" "<< std::endl;
-	 }
-	 sys->backpropagate();
-	 }
-	 std::cout << iter<<") Residual Error=" << res << " " << std::endl;
-	 double delta = std::abs(lastResidual - res);
-	 if (delta < 1E-5f) {
-	 opt->setLearningRate(opt->getLearningRate()*learningRateDelta.toFloat());
-	 std::cout << "Learning Rate=" << opt->getLearningRate()*B << std::endl;
-	 }
-	 lastResidual = res;
-	 sys->optimize();
-	 for (NeuralLayerPtr layer : sys->getLayers()) {
-	 layer->getGraph()->points.push_back(float2(float(iter),float(layer->getResidual())));
-	 }
-	 if (delta<1E-7f||iteration>=(int)getMaxIteration()) {
-	 ret = false;
-	 }
-	 if (onUpdate) {
-	 onUpdate(iter, !ret);
-	 }
-	 */
+	int batch_size = batchSize.toInteger();
+	for (size_t i = 0; i < inputs.size() && running; i += batch_size) {
+		trainOnce(optimizer, loss, &inputs[i], &desiredOutputs[i],
+				static_cast<int>(std::min(batch_size, (int) (inputs.size() - i))),
+				threads, get_target_cost_sample_pointer(t_costs, i));
+		if (onBatchEnumerate)
+			onBatchEnumerate();
+	}
+	if (onEpochEnumerate)
+		onEpochEnumerate();
+	if (onUpdate) {
+		onUpdate(iter, !ret);
+	}
 	iteration++;
 	sys->updateKnowledge();
 	NeuralKnowledge& k = sys->getKnowledge();
@@ -219,7 +247,7 @@ bool NeuralRuntime::step() {
 NeuralRuntime::NeuralRuntime(const std::shared_ptr<tgr::NeuralSystem>& system) :
 		RecurrentTask([this](uint64_t iteration) {return step();}, 5), paused(
 				false), sys(system) {
-	optimizationMethod = 1;
+	optimizationMethod = -1;
 	iterationsPerEpoch = Integer(200);
 	iterationsPerStep = Integer(10);
 	batchSize = Integer(32);
@@ -231,6 +259,7 @@ NeuralRuntime::NeuralRuntime(const std::shared_ptr<tgr::NeuralSystem>& system) :
 	weightDecay = Float(0.0f);
 	momentum = Float(0.9f);
 	learningRateDelta = Float(0.9f);
+	threads = omp_get_max_threads();
 	cache.reset(new NeuralCache());
 }
 }

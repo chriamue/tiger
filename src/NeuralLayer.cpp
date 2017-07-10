@@ -330,7 +330,14 @@ void NeuralLayer::setOutputGradients(
 		}
 	}
 }
-
+void NeuralLayer::setOutputData(const Tensor& data) {
+	for (size_t i = 0; i < outputChannels; i++) {
+		if (outputTypes[i] == ChannelType::data){
+			getOutput(i)->value=data;
+			break;
+		}
+	}
+}
 void NeuralLayer::setOutputData(const aly::Image1f& data) {
 	for (size_t i = 0; i < outputChannels; i++) {
 		if (outputTypes[i] == ChannelType::data){
@@ -376,6 +383,14 @@ void NeuralLayer::setInputData(const aly::Image4f& data) {
 	for (size_t i = 0; i < inputChannels; i++) {
 		if (inputTypes[i] == ChannelType::data){
 			getInput(i)->setValue(data);
+			break;
+		}
+	}
+}
+void NeuralLayer::setInputData(const Tensor& data) {
+	for (size_t i = 0; i < inputChannels; i++) {
+		if (inputTypes[i] == ChannelType::data){
+			getInput(i)->value=data;
 			break;
 		}
 	}

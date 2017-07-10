@@ -4,11 +4,10 @@
  *  Created on: Jul 6, 2017
  *      Author: blake
  */
-
 #ifndef INCLUDE_NEURALOPTIMIZER_H_
 #define INCLUDE_NEURALOPTIMIZER_H_
-
-#include "NeuralLayer.h"
+#include "NeuralSignal.h"
+#include <unordered_map>
 namespace tgr {
 /**
  * base class of optimizer
@@ -19,15 +18,16 @@ namespace tgr {
 class NeuralOptimizer {
 public:
 	struct Interface {
-		virtual void update(const Storage &dW, Storage &W,
-				bool parallelize) = 0;
+		virtual void update(const Storage &dW, Storage &W,bool parallelize) = 0;
 		virtual void reset() = 0;
 	};
 private:
 	template<class T> struct Impl: public Interface {
 		T value;
-		virtual void update(const Storage &dW, Storage &W, bool parallelize)
-				override {
+		Impl(const T& value) :
+				value(value) {
+		}
+		virtual void update(const Storage &dW, Storage &W, bool parallelize) override {
 			value.update(dW, W, parallelize);
 		}
 		virtual void reset() override {
@@ -36,12 +36,29 @@ private:
 	};
 	std::shared_ptr<Interface> impl;
 public:
-	NeuralOptimizer() = default;
-	NeuralOptimizer(const NeuralOptimizer &) = default;
-	NeuralOptimizer(NeuralOptimizer &&) = default;
-	NeuralOptimizer &operator=(const NeuralOptimizer &) = default;
-	NeuralOptimizer &operator=(NeuralOptimizer &&) = default;
-	virtual ~NeuralOptimizer() = default;
+	//NeuralOptimizer() = default;
+	//NeuralOptimizer(const NeuralOptimizer &) = default;
+	//NeuralOptimizer(NeuralOptimizer &&) = default;
+	//NeuralOptimizer &operator=(const NeuralOptimizer &) = default;
+	//NeuralOptimizer &operator=(NeuralOptimizer &&) = default;
+	NeuralOptimizer() {}
+	NeuralOptimizer(const NeuralOptimizer& r) :impl(r.impl) {}
+	template<class T> NeuralOptimizer(const T & value) : impl(new Impl<T> { value })
+	{
+	}
+	template<class T> NeuralOptimizer(T* value) :
+			impl(value) {
+	}
+	NeuralOptimizer & operator =(const NeuralOptimizer & r) {
+		impl = r.impl;
+		return *this;
+	}
+	template<class T> NeuralOptimizer & operator =(const T & value) {
+		return *this = NeuralOptimizer(value);
+	}
+	virtual inline ~NeuralOptimizer() {
+
+	}
 	virtual void update(const Storage &dW, Storage &W, bool parallelize) {
 		impl->update(dW, W, parallelize);
 	}
@@ -57,11 +74,11 @@ public:
  * Adaptive subgradient methods for online learning and stochastic optimization
  * The Journal of Machine Learning Research, pages 2121-2159, 2011.
  **/
-struct AdagradOptimizer: public NeuralOptimizer::Interface {
+struct AdagradOptimizer {
 	AdagradOptimizer();
-	void update(const Storage &dW, Storage &W, bool parallelize) override;
+	void update(const Storage &dW, Storage &W, bool parallelize);
 	float_t alpha;  // learning rate
-	void reset() override {
+	void reset() {
 		for (auto &e : E_)
 			e.clear();
 	}
@@ -84,10 +101,10 @@ protected:
  * T Tieleman, and G E Hinton,
  * Lecture 6.5 - rmsprop, COURSERA: Neural Networks for Machine Learning (2012)
  **/
-struct RMSpropOptimizer: public NeuralOptimizer::Interface {
+struct RMSpropOptimizer {
 	RMSpropOptimizer();
-	void update(const Storage &dW, Storage &W, bool parallelize) override;
-	void reset() override {
+	void update(const Storage &dW, Storage &W, bool parallelize);
+	void reset() {
 		for (auto &e : E_)
 			e.clear();
 	}
@@ -132,7 +149,6 @@ private:
 protected:
 	template<int Index>
 	Storage &get(const Storage &key) {
-		static_assert(Index < N, "index out of range");
 		if (E_[Index][&key].empty())
 			E_[Index][&key].resize(key.size(), float_t());
 		return E_[Index][&key];
@@ -147,10 +163,8 @@ protected:
  **/
 struct GradientDescentOptimizer: public NeuralOptimizer::Interface {
 	GradientDescentOptimizer();
-	virtual void update(const Storage &dW, Storage &W, bool parallelize)
-			override;
-	virtual void reset() override {
-	}
+	virtual void update(const Storage &dW, Storage &W, bool parallelize) override;
+	virtual void reset() override {}
 	float_t alpha;   // learning rate
 	float_t lambda;  // weight decay
 };
@@ -165,12 +179,9 @@ struct GradientDescentOptimizer: public NeuralOptimizer::Interface {
 struct MomentumOptimizer: public NeuralOptimizer::Interface {
 public:
 	MomentumOptimizer();
-	virtual void update(const Storage &dW, Storage &W, bool parallelize)
-			override;
-	virtual void reset() override {
-		for (auto &e : E_)
-			e.clear();
-	}
+	virtual ~MomentumOptimizer(){}
+	virtual void update(const Storage &dW, Storage &W, bool parallelize) override;
+	virtual void reset() override;
 	float_t alpha;   // learning rate
 	float_t lambda;  // weight decay
 	float_t mu;      // momentum
@@ -185,6 +196,7 @@ protected:
 	}
 	std::unordered_map<const Storage *, Storage> E_[N];
 };
+
 }
 
 #endif /* INCLUDE_NEURALOPTIMIZER_H_ */

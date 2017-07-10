@@ -8,10 +8,11 @@
 #include "NeuralLossFunction.h"
 namespace tgr {
 Storage NeuralLossFunction::gradientLossFunction(const Storage &y,
-		const Storage &t) const{
+		const Storage &t) const {
 	assert(y.size() == t.size());
 	return this->df(y, t);
 }
+
 Storage NeuralLossFunction::gradient(const Storage& y, const Storage& t) const {
 	assert(y.size() == t.size());
 	return df(y, t);
@@ -63,6 +64,7 @@ float MSELossFunction::f(const Storage &y, const Storage &t) const {
 
 	return d / static_cast<float>(y.size());
 }
+
 Storage MSELossFunction::df(const Storage &y, const Storage &t) const {
 	assert(y.size() == t.size());
 	Storage d(t.size());
@@ -143,6 +145,26 @@ Storage CrossEntropyLossFunction::df(const Storage &y, const Storage &t) const {
 
 	for (int i = 0; i < y.size(); ++i)
 		d[i] = (y[i] - t[i]) / (y[i] * (float(1) - y[i]));
+
+	return d;
+}
+float CrossEntropyMultiClassLossFunction::f(const Storage &y,
+		const Storage &t) const {
+	assert(y.size() == t.size());
+	float d { 0.0 };
+
+	for (int i = 0; i < y.size(); ++i)
+		d += -t[i] * std::log(y[i]);
+
+	return d;
+}
+Storage CrossEntropyMultiClassLossFunction::df(const Storage &y,
+		const Storage &t) const {
+	assert(y.size() == t.size());
+	Storage d(t.size());
+
+	for (int i = 0; i < y.size(); ++i)
+		d[i] = -t[i] / y[i];
 
 	return d;
 }

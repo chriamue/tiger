@@ -40,7 +40,7 @@ Storage NeuralSystem::predict(const Storage &in) {
 	return forward(a)[0][0];
 }
 Tensor NeuralSystem::predict(const Tensor &in) {
-	return forward( { in })[0];
+	return forward({in})[0];
 }
 std::vector<Tensor> NeuralSystem::predict(const std::vector<Tensor>& in) {
 	return forward(in);
@@ -59,17 +59,15 @@ void NeuralSystem::clearGradients() {
 // transform indexing so that it's more suitable for per-layer operations
 // input:  [sample][channel][feature]
 // output: [channel][sample][feature]
-void NeuralSystem::reorder_for_layerwise_processing(
+void NeuralSystem::reorderForLayerwiseProcessing(
 		const std::vector<Tensor> &input,
 		std::vector<std::vector<const Storage *>> &output) {
 	size_t sample_count = input.size();
 	size_t channel_count = input[0].size();
-
 	output.resize(channel_count);
 	for (size_t i = 0; i < channel_count; ++i) {
 		output[i].resize(sample_count);
 	}
-
 	for (size_t sample = 0; sample < sample_count; ++sample) {
 		assert(input[sample].size() == channel_count);
 		for (size_t channel = 0; channel < channel_count; ++channel) {
@@ -77,13 +75,14 @@ void NeuralSystem::reorder_for_layerwise_processing(
 		}
 	}
 }
+
 void NeuralSystem::backward(const std::vector<Tensor> &out_grad) {
 	size_t output_channel_count = out_grad[0].size();
 	if (output_channel_count != outputLayers.size()) {
 		throw std::runtime_error("input size mismatch");
 	}
 	std::vector<std::vector<const Storage *>> reordered_grad;
-	reorder_for_layerwise_processing(out_grad, reordered_grad);
+	reorderForLayerwiseProcessing(out_grad, reordered_grad);
 	assert(reordered_grad.size() == output_channel_count);
 	for (size_t i = 0; i < output_channel_count; i++) {
 		outputLayers[i]->setOutputGradients( { reordered_grad[i] });
@@ -113,19 +112,16 @@ std::vector<Tensor> NeuralSystem::mergeOutputs() {
 	}
 	return merged;
 }
-
 std::vector<Tensor> NeuralSystem::forward(const std::vector<Tensor> &in_data) {
 	size_t input_data_channel_count = in_data[0].size();
 	if (input_data_channel_count != inputLayers.size()) {
 		throw std::runtime_error("input size mismatch");
 	}
 	std::vector<std::vector<const Storage *>> reordered_data;
-	reorder_for_layerwise_processing(in_data, reordered_data);
+	reorderForLayerwiseProcessing(in_data, reordered_data);
 	assert(reordered_data.size() == input_data_channel_count);
-	for (size_t channel_index = 0; channel_index < input_data_channel_count;
-			channel_index++) {
-		inputLayers[channel_index]->setInputData( {
-				reordered_data[channel_index] });
+	for (size_t channel_index = 0; channel_index < input_data_channel_count; channel_index++) {
+		inputLayers[channel_index]->setInputData({reordered_data[channel_index]});
 	}
 	for (auto l : layers) {
 		l->forward();
@@ -164,12 +160,10 @@ float NeuralSystem::getTargetValueMin() const {
 float NeuralSystem::getTargetValueMax() const {
 	return layers.back()->getOutputRange().y;
 }
-
 void NeuralSystem::normalize(const std::vector<Tensor> &inputs,
 		std::vector<Tensor> &normalized) {
 	normalized = inputs;
 }
-
 void NeuralSystem::normalize(const std::vector<Storage> &inputs,
 		std::vector<Tensor> &normalized) {
 	normalized.reserve(inputs.size());
