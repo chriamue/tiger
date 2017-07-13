@@ -44,17 +44,18 @@ namespace aly {
 		aly::ImageGlyphPtr cacheGlyph;
 		bool cacheDirty;
 		aly::GLFrameBuffer renderBuffer;
-		int width;
-		int height;
-		int channels;
 		tgr::NeuronVolume neurons;
 		void drawCache(AlloyContext* context);
 	public:
-		static const float CellSpacing;
-		static const float CellSize;
+		static const float GlyphSpacing;
+		static const float GlyphSize;
 		pixel2 cursorPosition;
 		pixel2 cursorOffset;
 		float scale;
+		int width;
+		int height;
+		int channels;
+
 		tgr::NeuralLayer* getLayer() const {
 			return layer;
 		}

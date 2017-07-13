@@ -30,18 +30,18 @@ class MaxPoolingLayer: public NeuralLayer {
 	virtual void setSampleCount(size_t sample_count) override;
 private:
 	/* The Max Poling operation params */
-	tiny_dnn::core::maxpool_params params_;
+	tiny_dnn::core::maxpool_params params;
 	std::pair<int, int> pool_size() const;
 
 	/* forward op context */
-	tiny_dnn::core::OpKernelContext fwd_ctx_;
+	tiny_dnn::core::OpKernelContext fwd_ctx;
 
 	/* backward op context */
-	tiny_dnn::core::OpKernelContext bwd_ctx_;
+	tiny_dnn::core::OpKernelContext bwd_ctx;
 
 	/* Forward and backward ops */
-	std::shared_ptr<tiny_dnn::core::OpKernel> kernel_fwd_;
-	std::shared_ptr<tiny_dnn::core::OpKernel> kernel_back_;
+	std::shared_ptr<tiny_dnn::core::OpKernel> kernel_fwd;
+	std::shared_ptr<tiny_dnn::core::OpKernel> kernel_back;
 	void set_maxpool_params(const tiny_dnn::shape3d &in,
 			const tiny_dnn::shape3d &out, int pooling_size_x,
 			int pooling_size_y, int stride_x, int stride_y,

@@ -36,37 +36,49 @@ public:
 			std::vector<Tensor *> &out_data) override;
 	void setContext(tiny_dnn::net_phase ctx);
 	virtual void post() override;
-	void update_immidiately(bool update);
-	void set_stddev(const Storage &stddev);
-	void set_mean(const Storage &mean);
-	void set_variance(const Storage &variance);
+	void updateImmidiately(bool update);
+	void setStddev(const Storage &stddev);
+	void setMean(const Storage &mean);
+	void setVariance(const Storage &variance);
 	float getEpsilon() const;
 	float getMomentum() const;
+	virtual void getStencilInput(const aly::int3& pos,
+			std::vector<aly::int3>& stencil) const override {
+		stencil = std::vector<aly::int3> { pos };
+	}
+	virtual void getStencilWeight(const aly::int3& pos,
+			std::vector<aly::int3>& stencil) const override {
+		stencil.clear();
+	}
+	virtual bool getStencilBias(const aly::int3& pos, aly::int3& stencil) const
+			override {
+		return false;
+	}
 private:
 	void calc_stddev(const Storage &variance);
 
 	void init();
 
-	int in_channels_;
-	int in_spatial_size_;
+	int in_channels;
+	int in_spatial_size;
 
-	tiny_dnn::net_phase phase_;
-	float momentum_;
-	float eps_;
+	tiny_dnn::net_phase phase;
+	float momentum;
+	float eps;
 
 	// mean/variance for this mini-batch
-	Storage mean_current_;
-	Storage variance_current_;
+	Storage mean_current;
+	Storage variance_current;
 
-	Storage tmp_mean_;
+	Storage tmp_mean;
 
 	// moving average of mean/variance
-	Storage mean_;
-	Storage variance_;
-	Storage stddev_;
+	Storage meanStorage;
+	Storage varianceStorage;
+	Storage stddevStorage;
 
 	// for test
-	bool update_immidiately_;
+	bool update_immidiately;
 };
 typedef std::shared_ptr<BatchNormalizationLayer> BatchNormalizationLayerPtr;
 

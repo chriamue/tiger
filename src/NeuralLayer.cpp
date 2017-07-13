@@ -103,6 +103,17 @@ NeuralLayer::NeuralLayer(const std::string& name,
 	visited = false;
 	parallelize = false;
 	sys = nullptr;
+	weightInitFunc=[this](Storage& data, int fanIn, int fanOut)  {
+		float weight_base = std::sqrt(6.0f / (fanIn + fanOut));
+		for(float& val:data){
+			val=RandomUniform(-weight_base,weight_base);
+		}
+	};
+	biasInitFunc=[this](Storage& data, int fanIn, int fanOut)  {
+		for(float& val:data){
+			val=0.0f;
+		}
+	};
 	backendType = BackendType::internal;
 	graph = GraphDataPtr(new GraphData(name));
 }
@@ -128,8 +139,14 @@ bool NeuralLayer::isVisible() const {
 aly::NeuralLayerRegionPtr NeuralLayer::getRegion() {
 	if (layerRegion.get() == nullptr) {
 		aly::dim3 outDims = getOutputSize();
-		float2 dims = float2(240.0f * outDims.z, 240.0f * outDims.y / outDims.x)
-				+ NeuralLayerRegion::getPadding();
+
+		float2 dims = float2(240.0f * outDims.z,
+				240.0f * outDims.y / outDims.x);
+		if (dims.x > 2048.0f) {
+			dims /= 2048.0f;
+		}
+		dims += NeuralLayerRegion::getPadding();
+
 		layerRegion = NeuralLayerRegionPtr(
 				new NeuralLayerRegion(name, this,
 						CoordPerPX(0.5f, 0.5f, -dims.x * 0.5f, -dims.y * 0.5f),
@@ -201,6 +218,7 @@ void NeuralLayer::forward() {
 	}
 	// call the forward computation kernel/routine
 	forwardPropagation(fowardInData, fowardInGradient);
+	setRegionDirty(true);
 }
 
 void NeuralLayer::backward() {
@@ -288,7 +306,7 @@ std::vector<NeuralLayerPtr> NeuralLayer::getOutputLayers() const {
 std::vector<NeuralLayer*> NeuralLayer::getInputLayers() const {
 	std::vector<NeuralLayer*> vecs;
 	for (SignalPtr e : inputs) {
-		if (e.get() != nullptr) {
+		if (e.get() != nullptr&&e->input!=nullptr) {
 			vecs.push_back(e->input);
 		}
 	}
@@ -312,14 +330,76 @@ void NeuralLayer::setOutputGradients(
 		}
 	}
 }
+void NeuralLayer::setOutputData(const Tensor& data) {
+	for (size_t i = 0; i < outputChannels; i++) {
+		if (outputTypes[i] == ChannelType::data){
+			getOutput(i)->value=data;
+			break;
+		}
+	}
+}
+void NeuralLayer::setOutputData(const aly::Image1f& data) {
+	for (size_t i = 0; i < outputChannels; i++) {
+		if (outputTypes[i] == ChannelType::data){
+			getOutput(i)->setValue(data);
+			break;
+		}
+	}
+}
+void NeuralLayer::setOutputData(const aly::Image3f& data) {
+	for (size_t i = 0; i < outputChannels; i++) {
+		if (outputTypes[i] == ChannelType::data){
+			getOutput(i)->setValue(data);
+			break;
+		}
+	}
+}
+void NeuralLayer::setOutputData(const aly::Image4f& data) {
+	for (size_t i = 0; i < outputChannels; i++) {
+		if (outputTypes[i] == ChannelType::data){
+			getOutput(i)->setValue(data);
+			break;
+		}
+	}
+}
 
-void NeuralLayer::setInputData(
-		const std::vector<std::vector<const Storage*>>& data) {
+void NeuralLayer::setInputData(const aly::Image1f& data) {
+	for (size_t i = 0; i < inputChannels; i++) {
+		if (inputTypes[i] == ChannelType::data){
+			getInput(i)->setValue(data);
+			break;
+		}
+	}
+}
+void NeuralLayer::setInputData(const aly::Image3f& data) {
+	for (size_t i = 0; i < inputChannels; i++) {
+		if (inputTypes[i] == ChannelType::data){
+			getInput(i)->setValue(data);
+			break;
+		}
+	}
+}
+void NeuralLayer::setInputData(const aly::Image4f& data) {
+	for (size_t i = 0; i < inputChannels; i++) {
+		if (inputTypes[i] == ChannelType::data){
+			getInput(i)->setValue(data);
+			break;
+		}
+	}
+}
+void NeuralLayer::setInputData(const Tensor& data) {
+	for (size_t i = 0; i < inputChannels; i++) {
+		if (inputTypes[i] == ChannelType::data){
+			getInput(i)->value=data;
+			break;
+		}
+	}
+}
+void NeuralLayer::setInputData(const std::vector<std::vector<const Storage*>>& data) {
 	size_t n = 0;
 	size_t cnt = data.size();
 	for (size_t i = 0; i < inputChannels; i++) {
-		if (inputTypes[i] != ChannelType::data)
-			continue;
+		if (inputTypes[i] != ChannelType::data)continue;
 		Tensor &dst_data = getInput(i)->value;
 		assert(n < cnt);
 		const std::vector<const Storage*>& storage = data[n++];
@@ -329,6 +409,21 @@ void NeuralLayer::setInputData(
 			dst_data[j] = *storage[j];
 		}
 	}
+}
+SignalPtr NeuralLayer::getInput(size_t i) {
+	if (inputs[i].get() == nullptr) {
+		inputs[i] = SignalPtr(
+				new NeuralSignal(nullptr, getInputDimensions(i),
+						inputTypes[i]));
+	}
+	return inputs[i];
+}
+SignalPtr NeuralLayer::getOutput(size_t i) {
+	if (outputs[i].get() == nullptr) {
+		outputs[i] = SignalPtr(
+				new NeuralSignal(this, getOutputDimensions(i),outputTypes[i]));
+	}
+	return outputs[i];
 }
 std::vector<const Storage*> NeuralLayer::getInputWeights() const {
 	std::vector<const Storage*> v;
@@ -348,20 +443,57 @@ std::vector<const Storage*> NeuralLayer::getOutputWeights() const {
 	}
 	return v;
 }
-std::vector<const Storage*> NeuralLayer::getInputGradient() const {
-	std::vector<const Storage*> v;
+std::vector<const Tensor*> NeuralLayer::getInputGradient() const {
+	std::vector<const Tensor*> v;
 	for (size_t i = 0; i < inputChannels; i++) {
 		if (isTrainableWeight(inputTypes[i])) {
-			v.push_back(getInput(i)->change.data());
+			v.push_back(&(getInput(i)->change));
 		}
 	}
 	return v;
 }
-std::vector<const Storage*> NeuralLayer::getOutputGradient() const {
-	std::vector<const Storage*> v;
+std::vector<const Tensor*> NeuralLayer::getOutputGradient() const {
+	std::vector<const Tensor*> v;
 	for (size_t i = 0; i < outputChannels; i++) {
 		if (isTrainableWeight(outputTypes[i])) {
-			v.push_back(getOutput(i)->change.data());
+			v.push_back(&(getOutput(i)->change));
+		}
+	}
+	return v;
+}
+
+std::vector< Storage*> NeuralLayer::getInputWeights()  {
+	std::vector< Storage*> v;
+	for (size_t i = 0; i < inputChannels; i++) {
+		if (isTrainableWeight(inputTypes[i])) {
+			v.push_back(getInput(i)->value.data());
+		}
+	}
+	return v;
+}
+std::vector< Storage*> NeuralLayer::getOutputWeights()  {
+	std::vector< Storage*> v;
+	for (size_t i = 0; i < outputChannels; i++) {
+		if (isTrainableWeight(outputTypes[i])) {
+			v.push_back(getOutput(i)->value.data());
+		}
+	}
+	return v;
+}
+std::vector< Tensor*> NeuralLayer::getInputGradient()  {
+	std::vector< Tensor*> v;
+	for (size_t i = 0; i < inputChannels; i++) {
+		if (isTrainableWeight(inputTypes[i])) {
+			v.push_back(&getInput(i)->change);
+		}
+	}
+	return v;
+}
+std::vector< Tensor*> NeuralLayer::getOutputGradient()  {
+	std::vector< Tensor*> v;
+	for (size_t i = 0; i < outputChannels; i++) {
+		if (isTrainableWeight(outputTypes[i])) {
+			v.push_back(&getOutput(i)->change);
 		}
 	}
 	return v;
@@ -373,10 +505,29 @@ void NeuralLayer::clearGradients() {
 }
 float NeuralLayer::getAspect() {
 	aly::dim3 dims = getOutputSize();
-	return dims.x * dims.z / (float) dims.y;
+	return (dims.x * dims.z * NeuralLayerRegion::GlyphSize
+			+ (dims.z - 1) * NeuralLayerRegion::GlyphSpacing)
+			/ (float) (dims.y * NeuralLayerRegion::GlyphSize);
 }
+size_t NeuralLayer::getInputDataSize() const {
+ 	size_t n = 0;
+	for (size_t i = 0; i < inputChannels; i++) {
+		if (inputTypes[i] != ChannelType::data)continue;
+		n+= getInputDimensions(i).volume();
+	}
+	return n;
+}
+size_t NeuralLayer::getOutputDataSize() const {
+ 	size_t n = 0;
+	for (size_t i = 0; i < outputChannels; i++) {
+		if (outputTypes[i] != ChannelType::data)continue;
+		n+= getOutputDimensions(i).volume();
+	}
+	return n;
+}
+
 void NeuralLayer::updateWeights(
-		const std::function<void(Storage& dW, Storage& W, bool parallel)>& optimizer,
+		NeuralOptimizer& optimizer,
 		int batch_size) {
 	float_t rcp_batch_size = float_t(1) / float_t(batch_size);
 	auto &diff = weightDifference;
@@ -390,7 +541,7 @@ void NeuralLayer::updateWeights(
 			// parallelize only when target size is big enough to mitigate
 			// thread spawning overhead.
 			bool parallelize = (target.size() >= 512);
-			optimizer(diff, target, parallelize);
+			optimizer.update(diff, target, parallelize);
 		}
 	}
 	clearGradients();
@@ -453,14 +604,12 @@ void NeuralLayer::initializeWeights() {
 		// fill vectors of weight type
 		case ChannelType::weight:
 			if (weightInitFunc)
-				weightInitFunc(getInputWeights(i), getFanInSize(),
-						getFanOutSize());
+				weightInitFunc(getInputWeights(i), getFanInSize(),getFanOutSize());
 			break;
 			// fill vector of bias type
 		case ChannelType::bias:
 			if (biasInitFunc)
-				biasInitFunc(getInputWeights(i), getFanInSize(),
-						getFanOutSize());
+				biasInitFunc(getInputWeights(i), getFanInSize(),getFanOutSize());
 			break;
 		default:
 			break;
@@ -479,7 +628,6 @@ void NeuralLayer::setup(bool reset_weight) {
 			|| getOutputDimensions().size() != outputChannels) {
 		throw std::runtime_error("Connection mismatch at setup layer");
 	}
-
 	// An 'edge' is created in the computational graph from the current
 	// layer/node to each output node and allocates the needed memory.
 	// The number of output nodes is determined by the layer interface.
@@ -489,12 +637,10 @@ void NeuralLayer::setup(bool reset_weight) {
 	// memory allocation.
 	for (size_t i = 0; i < outputChannels; i++) {
 		if (outputs[i].get() == nullptr) {
-			outputs[i] = SignalPtr(
-					new NeuralSignal(this, getOutputDimensions(i),
-							outputTypes[i]));
+			std::cout<<"Setup "<<getName()<<" "<<getOutputDimensions(i)<<std::endl;
+			outputs[i] = SignalPtr(new NeuralSignal(this, getOutputDimensions(i),outputTypes[i]));
 		}
 	}
-
 	// reset the weights if necessary, or in case that the data is
 	// still not initialized.
 	if (reset_weight || !initialized) {
@@ -507,18 +653,25 @@ void NeuralLayer::expand() {
 	box2px bounds = layerRegion->getBounds();
 	int N = int(getOutputLayers().size());
 	float layoutWidth = 0.0f;
+	int C = 1;
 	float width = 120.0f;
-	float offset = 0.5f * width;
-	layoutWidth = (10.0f + width) * N - 10.0f;
+	const float MAX_WIDTH = 2048.0f;
 	for (auto child : getOutputLayers()) {
-		float height = child->getRegion()->setSize(width);
+		int c = child->getOutputSize().z;
+		C = std::max(c, C);
+		layoutWidth += (10.0f + std::min(width * c, MAX_WIDTH));
+	}
+	layoutWidth -= 10.0f;
+	for (auto child : getOutputLayers()) {
+		int c = child->getOutputSize().z;
+		float offset = aly::round(0.5f * std::min(width * c, MAX_WIDTH));
+		float height = child->getRegion()->setSize(
+				std::min(width * c, MAX_WIDTH));
 		float2 pos = pixel2(
-				bounds.position.x + bounds.dimensions.x * 0.5f
-						- layoutWidth * 0.5f + offset,
-				bounds.position.y + bounds.dimensions.y + 0.5f * height
-						+ 10.0f);
+				aly::round(bounds.position.x + bounds.dimensions.x * 0.5f- layoutWidth * 0.5f + offset),
+				aly::round(bounds.position.y + bounds.dimensions.y + 0.5f * height + 10.0f));
 		flowPane->add(child.get(), pos);
-		offset += width + 10.0f;
+		offset += width * c + 10.0f;
 	}
 	flowPane->update();
 }
@@ -541,7 +694,7 @@ void NeuralLayer::getNeuron(const aly::int3& pos, Neuron& neuron) {
 	neuron.clear();
 	for (int i = 0; i < inputChannels; i++) {
 		if (inputTypes[i] == ChannelType::data) {
-			SignalPtr data = inputs[i];
+			SignalPtr data = getInput(i);
 			if (data.get() != nullptr) {
 				getStencilInput(pos, stencil);
 				for (int3 st : stencil) {
@@ -549,7 +702,7 @@ void NeuralLayer::getNeuron(const aly::int3& pos, Neuron& neuron) {
 				}
 			}
 		} else if (inputTypes[i] == ChannelType::weight) {
-			SignalPtr data = inputs[i];
+			SignalPtr data = getInput(i);
 			if (data.get() != nullptr) {
 				getStencilWeight(pos, stencil);
 				for (int3 st : stencil) {
@@ -557,7 +710,7 @@ void NeuralLayer::getNeuron(const aly::int3& pos, Neuron& neuron) {
 				}
 			}
 		} else if (inputTypes[i] == ChannelType::bias) {
-			SignalPtr data = inputs[i];
+			SignalPtr data = getInput(i);
 			if (data.get() != nullptr) {
 				int3 st;
 				if (getStencilBias(pos, st)) {
@@ -568,7 +721,7 @@ void NeuralLayer::getNeuron(const aly::int3& pos, Neuron& neuron) {
 	}
 	for (int i = 0; i < outputChannels; i++) {
 		if (outputTypes[i] == ChannelType::data) {
-			SignalPtr data = outputs[i];
+			SignalPtr data = getOutput(i);
 			if (data.get() != nullptr) {
 				neuron.output = data->getValuePtr(pos);
 			}

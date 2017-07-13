@@ -19,8 +19,8 @@ inline void global_avepool_op_internal(
     const vec_t &in = in_data[sample];
     vec_t &out      = out_data[sample];
 
-    const size_t pool_area = params.in.width_ * params.in.height_;
-    for (size_t i = 0; i < params.in.depth_; i++) {
+    const size_t pool_area = params.in.width * params.in.height;
+    for (size_t i = 0; i < params.in.depth; i++) {
       for (size_t j = 0; j < pool_area; j++) {
         out[i] += in[i * pool_area + j];
       }
@@ -38,8 +38,8 @@ inline void global_avepool_grad_op_internal(
     vec_t &prev       = prev_delta[sample];
     const vec_t &curr = curr_delta[sample];
 
-    const size_t pool_area = params.in.width_ * params.in.height_;
-    for (size_t i = 0; i < params.in.depth_; i++) {
+    const size_t pool_area = params.in.width * params.in.height;
+    for (size_t i = 0; i < params.in.depth; i++) {
       const float_t pi = curr[i] / pool_area;
       for (size_t j = 0; j < pool_area; j++) {
         prev[i * pool_area + j] = pi;

@@ -53,8 +53,8 @@ protected:
 	std::string trainLabelFile;
 	std::string evalLabelFile;
 	aly::HorizontalSliderPtr tweenRegion;
-	std::vector<aly::Image1f> trainInputData;
-	std::vector<uint8_t> trainOutputData;
+	std::vector<tgr::Tensor> trainInputData;
+	std::vector<int> trainOutputData;
 	tgr::NeuralRuntimePtr worker;
 	aly::GraphPanePtr graphRegion;
 	std::shared_ptr<tgr::NeuralCache> cache;

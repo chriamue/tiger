@@ -312,14 +312,14 @@ namespace aly{
 			float2 dims = layerRegion->dimensions.toPixels(float2(context->screenDimensions()), context->dpmm, context->pixelRatio);
 			layerRegion->position = CoordPX(aly::round(cursor - offset - 0.5f*dims));
 			Composite::add(layerRegion);
-			for(auto child:layer->getOutputLayers()){
-				if (child->hasRegion()) {
+			for(NeuralLayerPtr child:layer->getOutputLayers()){
+				if (child.get()!=nullptr&&child->hasRegion()) {
 					NeuralConnectionPtr con = NeuralConnectionPtr(new NeuralConnection(layerRegion, child->getRegion()));
 					connections.insert(con);
 				}
 			}
-			for (auto dep : layer->getInputLayers()) {
-				if (dep->hasRegion()) {
+			for (NeuralLayer* dep : layer->getInputLayers()) {
+				if (dep!=nullptr&&dep->hasRegion()) {
 					NeuralConnectionPtr con = NeuralConnectionPtr(new NeuralConnection(dep->getRegion(), layerRegion));
 					connections.insert(con);
 				}

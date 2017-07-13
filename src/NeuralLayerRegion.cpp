@@ -26,8 +26,8 @@
 using namespace tgr;
 namespace aly {
 const float NeuralLayerRegion::fontSize = 24.0f;
-const float NeuralLayerRegion::CellSpacing = 10.0f;
-const float NeuralLayerRegion::CellSize = 32.0f;
+const float NeuralLayerRegion::GlyphSpacing = 4.0f;
+const float NeuralLayerRegion::GlyphSize = 32.0f;
 box2px NeuralLayerRegion::getObstacleBounds() const {
 	box2px box = getBounds(false);
 	box.position.y += 26.0f;
@@ -37,40 +37,40 @@ box2px NeuralLayerRegion::getObstacleBounds() const {
 void NeuralLayerRegion::drawCache(AlloyContext* context) {
 	if (!cacheDirty)
 		return;
-
-	box2px bounds = box2px(pixel2(0, 0),
-			pixel2(float(cacheImage.width), float(cacheImage.height)));
+	box2px bounds = box2px(pixel2(0, 0),pixel2(float(cacheImage.width), float(cacheImage.height)));
 	NVGcontext* nvg = context->nvgContext;
 	renderBuffer.begin(RGBAf(0.0f));
 	nvgBeginFrame(nvg, cacheImage.width, cacheImage.height, 1.0f);
-	float scale = bounds.dimensions.x / width;
 	nvgBeginPath(nvg);
-	nvgRect(nvg, bounds.position.x, bounds.position.y, bounds.dimensions.x,
-			bounds.dimensions.y);
+	nvgRect(nvg, bounds.position.x, bounds.position.y, bounds.dimensions.x,bounds.dimensions.y);
 	nvgFillColor(nvg, context->theme.DARKER);
 	nvgFill(nvg);
 	//float rOuter = 0.5f*scale;
-	float rInner = 0.25f * scale;
-	float lineWidth = scale * 0.01f;
+	float rInner = 0.25f * GlyphSize;
+	float lineWidth = GlyphSize * 0.01f;
 	for (int c = 0; c < channels; c++) {
+		if(c>0){
+			nvgBeginPath(nvg);
+			nvgRect(nvg, bounds.position.x+(GlyphSize*width+GlyphSpacing)*c-GlyphSpacing, bounds.position.y, GlyphSpacing,bounds.dimensions.y);
+			nvgFillColor(nvg, context->theme.LIGHTER);
+			nvgFill(nvg);
+		}
 		for (int j = 0; j < height; j++) {
 			for (int i = 0; i < width; i++) {
-				float2 center = float2(bounds.position.x + (i + 0.5f) * scale,
-						bounds.position.y + (j + 0.5f) * scale);
+				float2 center = float2(
+						bounds.position.x + (i + c * width + 0.5f) * GlyphSize+c*GlyphSpacing,
+						bounds.position.y + (j + 0.5f) * GlyphSize);
 				nvgFillColor(nvg, Color(92, 92, 92));
 				nvgBeginPath(nvg);
-				nvgCircle(nvg, center.x, center.y, scale * 0.5f);
+				nvgCircle(nvg, center.x, center.y, GlyphSize * 0.5f);
 				nvgFill(nvg);
 				const Neuron& n = neurons(i, j, c);
 				nvgStrokeColor(nvg, Color(220, 220, 220));
 				nvgStrokeWidth(nvg, lineWidth);
 				if (n.output != nullptr) {
-					nvgFillColor(nvg,
-							Color(
-									ColorMapToRGB((*n.output) / n.input.size(),
-											ColorMap::RedToBlue)));
+					nvgFillColor(nvg,Color(ColorMapToRGB((*n.output),ColorMap::RedToBlue)));
 				} else {
-					nvgFillColor(nvg, Color(16, 16,16));
+					nvgFillColor(nvg, Color(16, 16, 16));
 				}
 				nvgBeginPath(nvg);
 				nvgCircle(nvg, center.x, center.y, rInner);
@@ -79,7 +79,6 @@ void NeuralLayerRegion::drawCache(AlloyContext* context) {
 			}
 		}
 	}
-
 	nvgEndFrame(nvg);
 	renderBuffer.end();
 	ImageRGBAf img = renderBuffer.getTexture().read();
@@ -101,9 +100,7 @@ NeuralLayerRegion::NeuralLayerRegion(const std::string& name,
 	channels = d.z;
 	selectionRadius = 2;
 	cacheDirty = true;
-	cacheImage.resize(
-			width * channels * CellSize + channels * (CellSpacing - 1),
-			height * CellSize);
+	cacheImage.resize(width * channels * GlyphSize + (channels-1) * GlyphSpacing, height * GlyphSize);
 	cacheImage.set(RGBA(0, 0, 0, 0));
 	renderBuffer.initialize(cacheImage.width, cacheImage.height);
 	cacheGlyph = ImageGlyphPtr(
@@ -156,12 +153,12 @@ NeuralLayerRegion::NeuralLayerRegion(const std::string& name,
 				}
 				return true;
 			};
-
 	Composite::add(expandButton);
 	for (int j = 0; j < height; j++) {
 		for (int i = 0; i < width; i++) {
 			for (int c = 0; c < channels; c++) {
-				layer->getNeuron(int3(i, j, c), neurons(i, j, c));
+				Neuron& n = neurons(i, j, c);
+				layer->getNeuron(int3(i, j, c), n);
 			}
 		}
 	}
@@ -207,8 +204,9 @@ void NeuralLayerRegion::draw(AlloyContext* context) {
 				5.0f);
 		nvgFill(nvg);
 	}
-	float scale = bounds.dimensions.x / width;
-//pixel2 origin = bounds.position;
+	float scale = GlyphSize*bounds.dimensions.x / (float)cacheImage.width;
+	float pscale = GlyphSpacing*bounds.dimensions.x / (float)cacheImage.width;
+	//pixel2 origin = bounds.position;
 	pixel2 padding = getPadding();
 	bounds.position += float2(0.0f, fontSize + 8.0f);
 	bounds.dimensions -= padding;
@@ -216,18 +214,21 @@ void NeuralLayerRegion::draw(AlloyContext* context) {
 	pixel2 pos = pixel2(-1, -1);
 	int3 selected = int3(-1, -1, -1);
 	if (bounds.contains(cursorPosition)) {
-		pos = (cursorPosition - bounds.position) / bounds.dimensions;
-		int xx = (int) std::floor(width * channels * pos.x);
-		selected = int3(xx / channels, (int) std::floor(height * pos.y),
-				xx % channels);
-
+		pos = float2(cacheImage.dimensions())*(cursorPosition - bounds.position)/bounds.dimensions;
+		const int bwidth=(GlyphSize*width+GlyphSpacing);
+		for(int c=0;c<channels;c++){
+			if(pos.x>=bwidth*c&&pos.x<bwidth*(c+1)-GlyphSpacing){
+				float2 ij=(pos-float2(bwidth*c,0.0f))/GlyphSize;
+				selected = int3(ij.x,ij.y,c);
+				break;
+			}
+		}
 	}
 	if (cacheDirty) {
 		context->addDeferredTask([this]() {
 			drawCache(AlloyApplicationContext().get());
 		});
 	}
-
 	cacheGlyph->draw(bounds, COLOR_NONE, COLOR_NONE, context);
 	float rOuter = 0.5f * scale;
 	float rInner = 0.25f * scale;
@@ -238,6 +239,7 @@ void NeuralLayerRegion::draw(AlloyContext* context) {
 			neurons(pos).active = false;
 		}
 		activeList.clear();
+		/*
 		if (selected.x != -1) {
 			std::vector<int3> out;
 			layer->getStencilInput(selected, out);
@@ -246,6 +248,7 @@ void NeuralLayerRegion::draw(AlloyContext* context) {
 				activeList.push_back(pos);
 			}
 		}
+		*/
 		lastSelected = selected;
 		if (selected.x != -1 && layer->getFlow() != nullptr) {
 			layer->getFlow()->setSelected(layer);
@@ -254,12 +257,12 @@ void NeuralLayerRegion::draw(AlloyContext* context) {
 	for (int c = 0; c < channels; c++) {
 		for (int j = 0; j < height; j++) {
 			for (int i = 0; i < width; i++) {
-				float2 center = float2(bounds.position.x + (i + 0.5f) * scale,
-						bounds.position.y + (j + 0.5f) * scale);
+				float2 center = float2(bounds.position.x + (i + 0.5f+c*width) * scale+pscale*c, bounds.position.y + (j + 0.5f) * scale);
 				Neuron& n = neurons(i, j, c);
-				if (lineWidth > 0.1f && selected.x != -1
+				if (	   lineWidth > 0.1f && selected.x != -1
 						&& std::abs(i - selected.x) <= selectionRadius
-						&& std::abs(j - selected.y) <= selectionRadius) {
+						&& std::abs(j - selected.y) <= selectionRadius
+						&& selected.z==c) {
 					int N = (int) n.weights.size();
 					nvgLineCap(nvg, NVG_SQUARE);
 					for (int i = 0; i < N; i++) {
@@ -301,9 +304,7 @@ void NeuralLayerRegion::draw(AlloyContext* context) {
 						nvgLineTo(nvg, wx, wy);
 						nvgStrokeWidth(nvg, 3 * lineWidth);
 						nvgStroke(nvg);
-
 					}
-
 					nvgStrokeWidth(nvg, 2.0f * lineWidth);
 					nvgStrokeColor(nvg, Color(200, 200, 200));
 					nvgBeginPath(nvg);
@@ -314,7 +315,7 @@ void NeuralLayerRegion::draw(AlloyContext* context) {
 					nvgCircle(nvg, center.x, center.y, rInner - lineWidth);
 					nvgStroke(nvg);
 				}
-				if (n.active || (selected.x == i && selected.y == j)) {
+				if (n.active || (selected.x == i && selected.y == j && selected.z == c)) {
 					nvgStrokeWidth(nvg, 2.0f);
 					nvgStrokeColor(nvg, Color(200, 200, 200));
 					nvgBeginPath(nvg);
@@ -335,8 +336,7 @@ bool NeuralLayerRegion::onEventHandler(AlloyContext* context,
 		return true;
 
 	bool over = context->isMouseOver(this, true);
-	if (e.type == InputType::MouseButton && e.button == GLFW_MOUSE_BUTTON_LEFT
-			&& e.isDown() && over) {
+	if (e.type == InputType::MouseButton && e.button == GLFW_MOUSE_BUTTON_LEFT&& e.isDown() && over) {
 		dynamic_cast<Composite*>(this->parent)->putLast(this);
 	}
 	if (over) {
@@ -366,37 +366,34 @@ bool NeuralLayerRegion::isFocused(bool recurse) const {
 	return false;
 }
 float NeuralLayerRegion::setSize(float w) {
-	/*
-	 //AlloyContext* context = AlloyApplicationContext().get();
-	 pixel2 padding = getPadding();
-	 float aspectRatio = layer->width / (float)layer->height;
-	 pixel2 newBounds = aly::round(pixel2(w, w / aspectRatio) + padding);
-	 scale = 1.0f;
-	 bounds.dimensions = newBounds;
-	 dimensions = CoordPX(bounds.dimensions);
-	 setDragOffset(pixel2(0, 0));
-	 return newBounds.y;
-	 */
+	//AlloyContext* context = AlloyApplicationContext().get();
+	pixel2 padding = getPadding();
+	float aspectRatio = layer->getAspect();
+	pixel2 newBounds = aly::round(pixel2(w, w / aspectRatio) + padding);
+	scale = 1.0f;
+	bounds.dimensions = newBounds;
+	dimensions = CoordPX(bounds.dimensions);
+	setDragOffset(pixel2(0, 0));
+	return newBounds.y;
 	return 0;
 }
 void NeuralLayerRegion::setScale(float s, pixel2 cursor) {
-	/*
-	 //AlloyContext* context = AlloyApplicationContext().get();
-	 box2px bounds = getBounds(false);
-	 float lastScale = scale;
-	 scale = clamp(scale * (1.0f + s * 0.1f), 0.1f, 10.0f);
-	 float scaling = scale / lastScale;
-	 pixel2 padding = getPadding();
-	 float aspectRatio = layer->height / (float)layer->width;
-	 pixel2 newBounds = aly::round(pixel2(bounds.dimensions.x, bounds.dimensions.x*aspectRatio)*scaling + padding);
-	 pixel2 relPos = (cursor - bounds.position) / bounds.dimensions;
-	 pixel2 newPos = cursor - relPos*newBounds;
-	 bounds.position = aly::round(newPos);
-	 bounds.dimensions = newBounds;
-	 setDragOffset(pixel2(0, 0));
-	 position = CoordPX(bounds.position - parent->getBoundsPosition());
-	 dimensions = CoordPX(bounds.dimensions);
-	 */
+	//AlloyContext* context = AlloyApplicationContext().get();
+	box2px bounds = getBounds(false);
+	float lastScale = scale;
+	scale = clamp(scale * (1.0f + s * 0.1f), 0.1f, 10.0f);
+	float scaling = scale / lastScale;
+	pixel2 padding = getPadding();
+	float aspectRatio = 1.0f/layer->getAspect();
+	pixel2 newBounds = aly::round(pixel2(bounds.dimensions.x, bounds.dimensions.x * aspectRatio) * scaling + padding);
+	pixel2 relPos = (cursor - bounds.position) / bounds.dimensions;
+	pixel2 newPos = cursor - relPos * newBounds;
+	bounds.position = aly::round(newPos);
+	bounds.dimensions = newBounds;
+	setDragOffset(pixel2(0, 0));
+	position = CoordPX(bounds.position - parent->getBoundsPosition());
+	dimensions = CoordPX(bounds.dimensions);
+
 }
 
 }

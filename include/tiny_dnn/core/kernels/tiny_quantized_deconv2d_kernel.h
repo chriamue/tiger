@@ -23,8 +23,8 @@ inline void tiny_quantized_deconv2d_kernel(const deconv_params &params,
   // image quantization
   float_t min_input(in[0]);
   float_t max_input(in[0]);
-  for (serial_size_t inc = 0; inc < params.in.depth_; inc++) {
-    for (serial_size_t ins = 0; ins < params.in.height_ * params.in.height_;
+  for (serial_size_t inc = 0; inc < params.in.depth; inc++) {
+    for (serial_size_t ins = 0; ins < params.in.height * params.in.height;
          ins++) {
       serial_size_t idx = params.in.get_index(0, 0, inc);
       min_input         = std::min(min_input, (&in[idx])[ins]);
@@ -36,9 +36,9 @@ inline void tiny_quantized_deconv2d_kernel(const deconv_params &params,
   // filter quantization
   float_t min_filter(W[0]);
   float_t max_filter(W[0]);
-  for (serial_size_t inc = 0; inc < params.in.depth_; inc++) {
+  for (serial_size_t inc = 0; inc < params.in.depth; inc++) {
     for (serial_size_t ins = 0;
-         ins < params.weight.height_ * params.weight.height_; ins++) {
+         ins < params.weight.height * params.weight.height; ins++) {
       serial_size_t idx = params.in.get_index(0, 0, inc);
       min_filter        = std::min(min_filter, (&W[idx])[ins]);
       max_filter        = std::max(max_filter, (&W[idx])[ins]);
@@ -55,7 +55,7 @@ inline void tiny_quantized_deconv2d_kernel(const deconv_params &params,
   float_t max_bias(0);
   std::vector<uint8_t> bias_quantized;
   if (params.has_bias) {
-    for (serial_size_t inc = 0; inc < params.out.depth_; inc++) {
+    for (serial_size_t inc = 0; inc < params.out.depth; inc++) {
       min_bias = std::min(min_bias, bias[inc]);
       max_bias = std::max(max_bias, bias[inc]);
     }
@@ -84,12 +84,12 @@ inline void tiny_quantized_deconv2d_kernel(const deconv_params &params,
   const int32_t zero_in_total_space = int64_to_int32(
     float_to_quantized<int32_t>(0.0f, min_output_value, max_output_value));
 
-  for_i(layer_parallelize, params.out.depth_, [&](int o) {
-    for (serial_size_t inc = 0; inc < params.in.depth_; inc++) {
-      if (!params.tbl.is_connected(o, inc)) continue;
+  for_i(layer_parallelize, params.out.depth, [&](int o) {
+    for (serial_size_t inc = 0; inc < params.in.depth; inc++) {
+      if (!params.tbl.isConnected(o, inc)) continue;
 
       serial_size_t idx = 0;
-      idx               = params.in.depth_ * o + inc;
+      idx               = params.in.depth * o + inc;
       idx               = params.weight.get_index(0, 0, idx);
       const uint8_t *pw = &W_quantized[idx];
 
@@ -99,16 +99,16 @@ inline void tiny_quantized_deconv2d_kernel(const deconv_params &params,
       idx                     = params.out.get_index(0, 0, o);
       int32_t *pout_quantized = &out_quantized[idx];
 
-      for (serial_size_t y = 0; y < params.in.height_; y++) {
-        for (serial_size_t x = 0; x < params.in.width_; x++) {
+      for (serial_size_t y = 0; y < params.in.height; y++) {
+        for (serial_size_t x = 0; x < params.in.width; x++) {
           const uint8_t *ppw = pw;
-          const uint8_t *ppi = pi + y * params.in.width_ + x;
+          const uint8_t *ppi = pi + y * params.in.width + x;
           // should be optimized for small kernel(3x3,5x5)
-          for (serial_size_t wy = 0; wy < params.weight.height_; wy++) {
-            for (serial_size_t wx = 0; wx < params.weight.width_; wx++) {
-              pout_quantized[(y * params.h_stride + wy) * params.out.width_ +
+          for (serial_size_t wy = 0; wy < params.weight.height; wy++) {
+            for (serial_size_t wx = 0; wx < params.weight.width; wx++) {
+              pout_quantized[(y * params.h_stride + wy) * params.out.width +
                              (x * params.w_stride + wx)] +=
-                static_cast<int32_t>(ppw[wy * params.weight.width_ + wx] -
+                static_cast<int32_t>(ppw[wy * params.weight.width + wx] -
                                      offset_filter) *
                 static_cast<int32_t>(*ppi - offset_input);
             }
@@ -119,7 +119,7 @@ inline void tiny_quantized_deconv2d_kernel(const deconv_params &params,
     if (params.has_bias) {
       int32_t *pout_quantized = &out_quantized[params.out.get_index(0, 0, o)];
       int32_t *ppout_quantized =
-        pout_quantized + params.out.width_ * params.out.height_;
+        pout_quantized + params.out.width * params.out.height;
       std::for_each(pout_quantized, ppout_quantized, [&](int32_t &f) {
         f += (bias_quantized[o] - zero_in_total_space);
       });
@@ -152,8 +152,8 @@ inline void tiny_quantized_deconv2d_back_kernel(const deconv_params &params,
   // previous output quantization
   float_t min_prev_out(prev_out[0]);
   float_t max_prev_out(prev_out[0]);
-  for (serial_size_t inc = 0; inc < params.in.depth_; inc++) {
-    for (serial_size_t ins = 0; ins < params.in.height_ * params.in.height_;
+  for (serial_size_t inc = 0; inc < params.in.depth; inc++) {
+    for (serial_size_t ins = 0; ins < params.in.height * params.in.height;
          ins++) {
       serial_size_t idx = params.in.get_index(0, 0, inc);
       min_prev_out      = std::min(min_prev_out, (&prev_out[idx])[ins]);
@@ -166,9 +166,9 @@ inline void tiny_quantized_deconv2d_back_kernel(const deconv_params &params,
   // filter quantization
   float_t min_filter(W[0]);
   float_t max_filter(W[0]);
-  for (serial_size_t inc = 0; inc < params.in.depth_; inc++) {
+  for (serial_size_t inc = 0; inc < params.in.depth; inc++) {
     for (serial_size_t ins = 0;
-         ins < params.weight.height_ * params.weight.height_; ins++) {
+         ins < params.weight.height * params.weight.height; ins++) {
       serial_size_t idx = params.in.get_index(0, 0, inc);
       min_filter        = std::min(min_filter, (&W[idx])[ins]);
       max_filter        = std::max(max_filter, (&W[idx])[ins]);
@@ -184,8 +184,8 @@ inline void tiny_quantized_deconv2d_back_kernel(const deconv_params &params,
   // current delta quantization
   float_t min_curr_delta(curr_delta[0]);
   float_t max_curr_delta(curr_delta[0]);
-  for (serial_size_t inc = 0; inc < params.out.depth_; inc++) {
-    for (serial_size_t ins = 0; ins < params.out.height_ * params.out.height_;
+  for (serial_size_t inc = 0; inc < params.out.depth; inc++) {
+    for (serial_size_t ins = 0; ins < params.out.height * params.out.height;
          ins++) {
       serial_size_t idx = params.out.get_index(0, 0, inc);
       min_curr_delta    = std::min(min_curr_delta, (&curr_delta[idx])[ins]);
@@ -229,12 +229,12 @@ inline void tiny_quantized_deconv2d_back_kernel(const deconv_params &params,
   //    max_prev_delta_value);
 
   // propagate delta to previous layer
-  for_i(params.in.depth_, [&](int inc) {
-    for (serial_size_t outc = 0; outc < params.out.depth_; outc++) {
-      if (!params.tbl.is_connected(outc, inc)) continue;
+  for_i(params.in.depth, [&](int inc) {
+    for (serial_size_t outc = 0; outc < params.out.depth; outc++) {
+      if (!params.tbl.isConnected(outc, inc)) continue;
 
       serial_size_t idx = 0;
-      idx               = params.in.depth_ * outc + inc;
+      idx               = params.in.depth * outc + inc;
       idx               = params.weight.get_index(0, 0, idx);
       const uint8_t *pw = &W_quantized[idx];
 
@@ -244,20 +244,20 @@ inline void tiny_quantized_deconv2d_back_kernel(const deconv_params &params,
       idx                           = params.in.get_index(0, 0, inc);
       int32_t *pdelta_quantized_dst = &(prev_delta_quantized)[idx];
 
-      for (serial_size_t y = 0; y < params.in.height_; y++) {
-        for (serial_size_t x = 0; x < params.in.width_; x++) {
+      for (serial_size_t y = 0; y < params.in.height; y++) {
+        for (serial_size_t x = 0; x < params.in.width; x++) {
           const uint8_t *ppw = pw;
           int32_t *ppdelta_quantized_dst =
-            pdelta_quantized_dst + y * params.in.width_ + x;
+            pdelta_quantized_dst + y * params.in.width + x;
           int32_t sum = int32_t(0);
 
-          for (serial_size_t wy = 0; wy < params.weight.height_; wy++) {
-            for (serial_size_t wx = 0; wx < params.weight.width_; wx++) {
+          for (serial_size_t wy = 0; wy < params.weight.height; wy++) {
+            for (serial_size_t wx = 0; wx < params.weight.width; wx++) {
               sum +=
-                static_cast<int32_t>(ppw[wy * params.weight.width_ + wx] -
+                static_cast<int32_t>(ppw[wy * params.weight.width + wx] -
                                      offset_filter) *
                 static_cast<int32_t>(
-                  pdelta_src[(y * params.h_stride + wy) * params.out.width_ +
+                  pdelta_src[(y * params.h_stride + wy) * params.out.width +
                              (x * params.w_stride + wx)] -
                   offset_curr_delta);
             }
@@ -287,12 +287,12 @@ inline void tiny_quantized_deconv2d_back_kernel(const deconv_params &params,
   prev_delta = &prev_delta_vec;
 
   // Accumulate dw
-  for_i(params.in.depth_, [&](int inc) {
-    for (serial_size_t outc = 0; outc < params.out.depth_; outc++) {
-      if (!params.tbl.is_connected(outc, inc)) continue;
+  for_i(params.in.depth, [&](int inc) {
+    for (serial_size_t outc = 0; outc < params.out.depth; outc++) {
+      if (!params.tbl.isConnected(outc, inc)) continue;
 
-      for (serial_size_t wy = 0; wy < params.weight.height_; wy++) {
-        for (serial_size_t wx = 0; wx < params.weight.width_; wx++) {
+      for (serial_size_t wy = 0; wy < params.weight.height; wy++) {
+        for (serial_size_t wx = 0; wx < params.weight.width; wx++) {
           int32_t dst = int32_t(0);
 
           serial_size_t idx    = 0;
@@ -302,17 +302,17 @@ inline void tiny_quantized_deconv2d_back_kernel(const deconv_params &params,
           idx                  = params.out.get_index(wx, wy, outc);
           const uint8_t *delta = &curr_delta_quantized[idx];
 
-          for (serial_size_t y = 0; y < params.in.height_; y++) {
-            for (serial_size_t x = 0; x < params.in.width_; x++) {
+          for (serial_size_t y = 0; y < params.in.height; y++) {
+            for (serial_size_t x = 0; x < params.in.width; x++) {
               dst +=
-                (static_cast<int32_t>(*(prevo + y * params.in.width_ + x)) -
+                (static_cast<int32_t>(*(prevo + y * params.in.width + x)) -
                  offset_prev_out) *
-                (static_cast<int32_t>(*(delta + y * params.out.width_ + x)) -
+                (static_cast<int32_t>(*(delta + y * params.out.width + x)) -
                  offset_curr_delta);
             }
           }
 
-          idx = params.in.depth_ * outc + inc;
+          idx = params.in.depth * outc + inc;
           dW_quantized[params.weight.get_index(wx, wy, idx)] += dst;
         }
       }
@@ -338,10 +338,10 @@ inline void tiny_quantized_deconv2d_back_kernel(const deconv_params &params,
   if (params.has_bias) {
     // vec_t& db = *in_grad[2];
 
-    for (serial_size_t outc = 0; outc < params.out.depth_; outc++) {
+    for (serial_size_t outc = 0; outc < params.out.depth; outc++) {
       serial_size_t idx     = params.out.get_index(0, 0, outc);
       const float_t *delta  = &curr_delta[idx];
-      const float_t *deltaa = delta + params.out.width_ * params.out.height_;
+      const float_t *deltaa = delta + params.out.width * params.out.height;
       db[outc] += std::accumulate(delta, deltaa, float_t{0});
     }
   }
@@ -401,12 +401,12 @@ inline void tiny_quantized_deconv2d_kernel(const deconv_params &params,
   const int32_t zero_in_total_space = int64_to_int32(
     float_to_quantized<int32_t>(0.0f, min_output_value, max_output_value));
 
-  for_i(layer_parallelize, params.out.depth_, [&](int o) {
-    for (serial_size_t inc = 0; inc < params.in.depth_; inc++) {
-      if (!params.tbl.is_connected(o, inc)) continue;
+  for_i(layer_parallelize, params.out.depth, [&](int o) {
+    for (serial_size_t inc = 0; inc < params.in.depth; inc++) {
+      if (!params.tbl.isConnected(o, inc)) continue;
 
       serial_size_t idx = 0;
-      idx               = params.in.depth_ * o + inc;
+      idx               = params.in.depth * o + inc;
       idx               = params.weight.get_index(0, 0, idx);
       const uint8_t *pw = &W_quantized[idx];
 
@@ -416,16 +416,16 @@ inline void tiny_quantized_deconv2d_kernel(const deconv_params &params,
       idx                     = params.out.get_index(0, 0, o);
       int32_t *pout_quantized = &out_quantized[idx];
 
-      for (serial_size_t y = 0; y < params.in.height_; y++) {
-        for (serial_size_t x = 0; x < params.in.width_; x++) {
+      for (serial_size_t y = 0; y < params.in.height; y++) {
+        for (serial_size_t x = 0; x < params.in.width; x++) {
           const uint8_t *ppw = pw;
-          const uint8_t *ppi = pi + y * params.in.width_ + x;
+          const uint8_t *ppi = pi + y * params.in.width + x;
           // should be optimized for small kernel(3x3,5x5)
-          for (serial_size_t wy = 0; wy < params.weight.height_; wy++) {
-            for (serial_size_t wx = 0; wx < params.weight.width_; wx++) {
-              pout_quantized[(y * params.h_stride + wy) * params.out.width_ +
+          for (serial_size_t wy = 0; wy < params.weight.height; wy++) {
+            for (serial_size_t wx = 0; wx < params.weight.width; wx++) {
+              pout_quantized[(y * params.h_stride + wy) * params.out.width +
                              (x * params.w_stride + wx)] +=
-                static_cast<int32_t>(ppw[wy * params.weight.width_ + wx] -
+                static_cast<int32_t>(ppw[wy * params.weight.width + wx] -
                                      offset_filter) *
                 static_cast<int32_t>(*ppi - offset_input);
             }
@@ -436,7 +436,7 @@ inline void tiny_quantized_deconv2d_kernel(const deconv_params &params,
     if (params.has_bias) {
       int32_t *pout_quantized = &out_quantized[params.out.get_index(0, 0, o)];
       int32_t *poutout_quantized =
-        pout_quantized + params.out.width_ * params.out.height_;
+        pout_quantized + params.out.width * params.out.height;
       std::for_each(pout_quantized, poutout_quantized, [&](int32_t &f) {
         f += static_cast<int32_t>((bias[o] - zero_in_total_space));
       });

@@ -25,7 +25,8 @@
 #include <AlloyExpandTree.h>
 #include <AlloyWidget.h>
 #include <AlloyGraphPane.h>
-#include <NeuralSignal.h>
+#include "NeuralSignal.h"
+#include "NeuralOptimizer.h"
 #include "NeuralLayerRegion.h"
 #include "NeuralKnowledge.h"
 #include "Neuron.h"
@@ -114,6 +115,7 @@ public:
 	tiny_dnn::Device* device() const {
 		return device_ptr_;
 	}
+	virtual void setContext(const NetPhase& ctx) { }
 	void clearGradients();
 	inline aly::dim3 getOutputDimensions(size_t idx) const {
 		return getOutputDimensions()[idx];
@@ -121,29 +123,18 @@ public:
 	inline aly::dim3 getInputDimensions(size_t idx) const {
 		return getInputDimensions()[idx];
 	}
+	size_t getOutputDataSize() const;
+	size_t getInputDataSize() const;
 	size_t getOutputDimensionSize() const {
 		return getOutputDimensions().size();
 	}
 	size_t getInputDimensionSize() const {
 		return getInputDimensions().size();
 	}
+	aly::float2 getOutputRange() const {return aly::float2(0.0f,1.0f);}
 	float getAspect();
-	SignalPtr getInput(size_t i) {
-		if (inputs[i].get() == nullptr) {
-			inputs[i] = SignalPtr(
-					new NeuralSignal(nullptr, getInputDimensions(i),
-							inputTypes[i]));
-		}
-		return inputs[i];
-	}
-	SignalPtr getOutput(size_t i) {
-		if (outputs[i].get() == nullptr) {
-			outputs[i] = SignalPtr(
-					new NeuralSignal(this, getOutputDimensions(i),
-							outputTypes[i]));
-		}
-		return outputs[i];
-	}
+	SignalPtr getInput(size_t i);
+	SignalPtr getOutput(size_t i);
 	SignalPtr getInput(size_t i) const {
 		return inputs[i];
 	}
@@ -173,17 +164,21 @@ public:
 	}
 	std::vector<const Storage*> getInputWeights() const;
 	std::vector<const Storage*> getOutputWeights() const;
-	std::vector<const Storage*> getInputGradient() const;
-	std::vector<const Storage*> getOutputGradient() const;
+	std::vector<const Tensor*> getInputGradient() const;
+	std::vector<const Tensor*> getOutputGradient() const;
+
+	std::vector<Storage*> getInputWeights();
+	std::vector<Storage*> getOutputWeights();
+	std::vector<Tensor*> getInputGradient();
+	std::vector<Tensor*> getOutputGradient();
 	virtual void forwardPropagation(const std::vector<Tensor*>&in_data,
 			std::vector<Tensor*> &out_data) = 0;
 	virtual void backwardPropagation(const std::vector<Tensor*> &in_data,
 			const std::vector<Tensor*> &out_data,
 			std::vector<Tensor*> &out_grad, std::vector<Tensor*> &in_grad) = 0;
 	virtual void setSampleCount(size_t sample_count);
-
 	void updateWeights(
-			const std::function<void(Storage& dW, Storage& W, bool parallel)>& optimizer,
+			NeuralOptimizer& optimizer,
 			int batch_size);
 	bool hasSameWeights(const NeuralLayer &rhs, float_t eps) const;
 	void initializeWeights();
@@ -191,6 +186,17 @@ public:
 	void setOutputGradients(
 			const std::vector<std::vector<const Storage*>>& grad);
 	void setInputData(const std::vector<std::vector<const Storage*>>& data);
+
+	void setInputData(const Tensor& data);
+	void setInputData(const aly::Image1f& data);
+	void setInputData(const aly::Image3f& data);
+	void setInputData(const aly::Image4f& data);
+
+	void setOutputData(const Tensor& data);
+	void setOutputData(const aly::Image1f& data);
+	void setOutputData(const aly::Image3f& data);
+	void setOutputData(const aly::Image4f& data);
+
 	void getOutput(std::vector<Tensor*>& out) const;
 	void getOutput(std::vector<const Tensor*>& out) const;
 	std::vector<std::shared_ptr<NeuralLayer>> getOutputLayers() const;
@@ -269,15 +275,9 @@ public:
 	const std::vector<std::shared_ptr<NeuralSignal>>& getOutputSignals() const {
 		return outputs;
 	}
-	virtual void getStencilInput(const aly::int3& pos,std::vector<aly::int3>& stencil) const {
-		stencil = std::vector<aly::int3> { pos };
-	}
-	virtual void getStencilWeight(const aly::int3& pos,std::vector<aly::int3>& stencil) const {
-		stencil = std::vector<aly::int3> { pos };
-	}
-	virtual bool getStencilBias(const aly::int3& pos,aly::int3& stencil) const {
-		stencil = aly::int3(0, 0, pos.z);
-	}
+	virtual void getStencilInput(const aly::int3& pos,std::vector<aly::int3>& stencil) const =0;
+	virtual void getStencilWeight(const aly::int3& pos,std::vector<aly::int3>& stencil) const =0;
+	virtual bool getStencilBias(const aly::int3& pos,aly::int3& stencil) const =0;
 	void getNeuron(const aly::int3& pos, Neuron& neuron);
 	bool isRoot() const;
 	bool isLeaf() const;

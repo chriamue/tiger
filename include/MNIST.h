@@ -29,6 +29,7 @@
 #include <fstream>
 #include <cstdint>
 #include <AlloyImage.h>
+#include <NeuralSignal.h>
 namespace tgr {
 	struct mnist_header {
 		uint32_t magic_number;
@@ -62,8 +63,7 @@ namespace tgr {
 	 * @param label_file [in]  filename of database (i.e.train-labels-idx1-ubyte)
 	 * @param labels     [out] parsed label data
 	 **/
-	void parse_mnist_labels(const std::string& label_file, std::vector<uint8_t>& labels);
-
+	void parse_mnist_labels(const std::string& label_file, std::vector<int>& labels);
 	/**
 	 * parse MNIST database format images with rescaling/resizing
 	 * http://yann.lecun.com/exdb/mnist/
@@ -87,7 +87,7 @@ namespace tgr {
 	 *
 	 **/
 	void parse_mnist_images(const std::string& image_file,
-		std::vector<aly::Image1f>& images,
+		std::vector<Tensor>& images,
 		float scale_min = 0.0f,
 		float scale_max = 1.0f,
 		int x_padding = 0,

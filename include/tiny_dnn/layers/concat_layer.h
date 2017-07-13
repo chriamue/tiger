@@ -50,7 +50,7 @@ class concat_layer : public layer {
     for (size_t i = 1; i < in_shapes_.size(); i++) {
       if (in_shapes_[i].area() != out_shape_.area())
         throw nn_error("each input shapes to concat must have same WxH size");
-      out_shape_.depth_ += in_shapes_[i].depth_;
+      out_shape_.depth += in_shapes_[i].depth;
     }
   }
 

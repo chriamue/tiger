@@ -36,41 +36,31 @@ bool Terminal::operator >(const Terminal & r) const {
 			< std::make_tuple(r.x, r.y, (layer) ? layer->getId() : -1));
 }
 bool isTrainableWeight(ChannelType vtype) {
-	return (static_cast<int>(vtype) & static_cast<int>(ChannelType::weight) == static_cast<int>(ChannelType::weight));
-}
-size_t ShapeVolume(aly::int3 dims) {
-	return (size_t) dims.x * (size_t) dims.y * (size_t) dims.z;
+	return (static_cast<int>(vtype)
+			& static_cast<int>(ChannelType::weight)
+					== static_cast<int>(ChannelType::weight));
 }
 float* NeuralSignal::getValuePtr(const aly::int3& pos) {
-	if(pos.z>value.size())return nullptr;
-	if(value[pos.z].size()==0)return nullptr;
-	return &value[pos.z][aly::clamp(pos.x,0, dimensions.x - 1)
-			+ dimensions.x * aly::clamp(pos.y, 0, dimensions.y - 1)];
+	return &(value[0][dimensions(pos)]);
 }
 float* NeuralSignal::getChangePtr(const aly::int3& pos) {
-	if(pos.z>value.size())return nullptr;
-	if(value[pos.z].size()==0)return nullptr;
-	return &change[pos.z][aly::clamp(pos.x,
-			0, dimensions.x - 1)
-			+ dimensions.x * aly::clamp(pos.y, 0, dimensions.y - 1)];
+	return &(change[0][dimensions(pos)]);
 }
 float NeuralSignal::getValue(const aly::int3& pos) {
-	return value[aly::clamp(pos.z, 0, dimensions.z - 1)][aly::clamp(pos.x,
-			0, dimensions.x - 1)
-			+ dimensions.x * aly::clamp(pos.y, 0, dimensions.y - 1)];
+	return value[0][dimensions(pos)];
 }
 float NeuralSignal::getChange(const aly::int3& pos) {
-	return change[aly::clamp(pos.z, 0, dimensions.z - 1)][aly::clamp(pos.x,
-			0, dimensions.x - 1)
-			+ dimensions.x * aly::clamp(pos.y, 0, dimensions.y - 1)];
+	return change[0][dimensions(pos)];
 }
-NeuralSignal::NeuralSignal(NeuralLayer* input, aly::int3 dimensions, ChannelType type) :
-		type(type), id(-1), value( { Storage(ShapeVolume(dimensions)) }), change(
-				{ Storage(ShapeVolume(dimensions)) }), input(input) {
+NeuralSignal::NeuralSignal(NeuralLayer* input, aly::dim3 dimensions,
+		ChannelType type) :
+		type(type), id(-1), dimensions(dimensions), value(
+				{ Storage(dimensions.volume(), 0.0f) }), change(
+				{ Storage(dimensions.volume(), 0.0f) }), input(input) {
 }
 void NeuralSignal::clearGradients() {
 	for (Storage& store : change) {
-		store.assign(store.size(),0.0f);
+		store.assign(store.size(), 0.0f);
 	}
 }
 void NeuralSignal::mergeGradients(Storage& dst) {
@@ -86,6 +76,63 @@ void NeuralSignal::mergeGradients(Storage& dst) {
 		}
 	}
 }
+void NeuralSignal::setValue(const aly::Image1f& data) {
+	value[0].assign(data.data.begin(), data.data.end());
+}
+void NeuralSignal::setValue(const aly::Image4f& data) {
+	size_t a=dimensions.area();
+	for(size_t idx=0;idx<data.size();idx++){
+		for(int c=0;c<data.channels;c++){
+			value[0][idx+a*c]=data[idx][c];
+		}
+	}
+}
+void NeuralSignal::setValue(const aly::Image3f& data) {
+	size_t a=dimensions.area();
+	for(size_t idx=0;idx<data.size();idx++){
+		for(int c=0;c<data.channels;c++){
+			value[0][idx+a*c]=data[idx][c];
+		}
+	}
+}
+void NeuralSignal::setValue(const aly::Vector1f& data) {
+	value[0].assign(data.data.begin(), data.data.end());
+}
+void NeuralSignal::setValue(const std::vector<float>& data) {
+	value[0].assign(data.begin(), data.end());
+}
+
+void NeuralSignal::getValue(aly::Image1f& data) {
+	data.resize(dimensions.x, dimensions.y);
+	data.data.assign(value[0].begin(),value[0].end());
+}
+void NeuralSignal::getValue(aly::Image3f& data) {
+	data.resize(dimensions.x, dimensions.y);
+	size_t a=dimensions.area();
+	for(size_t idx=0;idx<data.size();idx++){
+		for(int c=0;c<data.channels;c++){
+			data[idx][c]=value[0][idx+a*c];
+		}
+	}
+}
+void NeuralSignal::getValue(aly::Image4f& data) {
+	data.resize(dimensions.x, dimensions.y);
+	size_t a=dimensions.area();
+	for(size_t idx=0;idx<data.size();idx++){
+		for(int c=0;c<data.channels;c++){
+			data[idx][c]=value[0][idx+a*c];
+		}
+	}
+}
+void NeuralSignal::getValue(aly::Vector1f& data) {
+	data.resize(dimensions.volume());
+	data.data.assign(value[0].begin(), value[0].end());
+}
+void NeuralSignal::getValue(std::vector<float>& data) {
+	data.resize(dimensions.volume());
+	data.assign(value[0].begin(), value[0].end());
+}
+
 void NeuralSignal::addOutput(const NeuralLayerPtr& output) {
 	outputs.push_back(output);
 }

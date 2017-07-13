@@ -33,11 +33,14 @@ public:
 			const std::vector<Tensor *> &out_data,
 			std::vector<Tensor *> &out_grad, std::vector<Tensor *> &in_grad)
 					override;
+	virtual void getStencilInput(const aly::int3& pos,std::vector<aly::int3>& stencil) const override;
+	virtual void getStencilWeight(const aly::int3& pos,std::vector<aly::int3>& stencil) const override;
+	virtual bool getStencilBias(const aly::int3& pos,aly::int3& stencil) const override;
 private:
-	int stride_;
-	aly::dim3 in_;
-	aly::dim3 out_;
-	aly::dim3 w_;
+	int stride;
+	aly::dim3 in_dim;
+	aly::dim3 out_dim;
+	aly::dim3 w_dim;
 	static int unpool_out_dim(int in_size, int pooling_size, int stride);
 	void init_connection(int pooling_size);
 	void connect_kernel(int pooling_size, int x, int y, int inc);

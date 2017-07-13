@@ -49,9 +49,9 @@ class max_pooling_layer : public layer {
                     serial_size_t pooling_size,
                     serial_size_t stride,
                     backend_t backend_type = core::default_engine())
-    : max_pooling_layer(in_shape.width_,
-                        in_shape.height_,
-                        in_shape.depth_,
+    : max_pooling_layer(in_shape.width,
+                        in_shape.height,
+                        in_shape.depth,
                         pooling_size,
                         stride,
                         backend_type) {}
@@ -186,11 +186,11 @@ class max_pooling_layer : public layer {
                       serial_size_t c) {
     serial_size_t dxmax = static_cast<serial_size_t>(
       std::min(static_cast<serial_size_t>(pooling_size_x),
-               params_.in.width_ - outx * params_.stride_x));
+               params_.in.width - outx * params_.stride_x));
 
     serial_size_t dymax = static_cast<serial_size_t>(
       std::min(static_cast<serial_size_t>(pooling_size_y),
-               params_.in.height_ - outy * params_.stride_y));
+               params_.in.height - outy * params_.stride_y));
 
     for (serial_size_t dy = 0; dy < dymax; dy++) {
       for (serial_size_t dx = 0; dx < dxmax; dx++) {
@@ -215,9 +215,9 @@ class max_pooling_layer : public layer {
     params_.in2out.resize(params_.in.size());
     params_.out2in.resize(params_.out.size());
 
-    for (serial_size_t c = 0; c < params_.in.depth_; ++c) {
-      for (serial_size_t y = 0; y < params_.out.height_; ++y) {
-        for (serial_size_t x = 0; x < params_.out.width_; ++x) {
+    for (serial_size_t c = 0; c < params_.in.depth; ++c) {
+      for (serial_size_t y = 0; y < params_.out.height; ++y) {
+        for (serial_size_t x = 0; x < params_.out.width; ++x) {
           connect_kernel(params_.pool_size_x, params_.pool_size_y, x, y, c);
         }
       }

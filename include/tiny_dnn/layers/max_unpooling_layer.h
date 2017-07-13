@@ -38,11 +38,11 @@ class max_unpooling_layer : public layer {
   max_unpooling_layer(const shape3d &in_size,
                       serial_size_t unpooling_size,
                       serial_size_t stride)
-    : max_unpooling_layer(in_size.width_,
-                          in_size.height_,
-                          in_size.depth_,
+    : max_unpooling_layer(in_size.width,
+                          in_size.height,
+                          in_size.depth,
                           unpooling_size,
-                          (in_size.height_ == 1 ? 1 : unpooling_size)) {}
+                          (in_size.height == 1 ? 1 : unpooling_size)) {}
 
   /**
    * @param in_width     [in] width of input image
@@ -152,9 +152,9 @@ class max_unpooling_layer : public layer {
                       serial_size_t iny,
                       serial_size_t c) {
     serial_size_t dxmax = static_cast<serial_size_t>(
-      std::min(unpooling_size, inx * stride_ - out_.width_));
+      std::min(unpooling_size, inx * stride_ - out_.width));
     serial_size_t dymax = static_cast<serial_size_t>(
-      std::min(unpooling_size, iny * stride_ - out_.height_));
+      std::min(unpooling_size, iny * stride_ - out_.height));
 
     for (serial_size_t dy = 0; dy < dymax; dy++) {
       for (serial_size_t dx = 0; dx < dxmax; dx++) {
@@ -177,9 +177,9 @@ class max_unpooling_layer : public layer {
 
     worker_storage_.in2outmax_.resize(in_.size());
 
-    for (serial_size_t c = 0; c < in_.depth_; ++c)
-      for (serial_size_t y = 0; y < in_.height_; ++y)
-        for (serial_size_t x = 0; x < in_.width_; ++x)
+    for (serial_size_t c = 0; c < in_.depth; ++c)
+      for (serial_size_t y = 0; y < in_.height; ++y)
+        for (serial_size_t x = 0; x < in_.width; ++x)
           connect_kernel(static_cast<serial_size_t>(unpool_size_), x, y, c);
   }
 };

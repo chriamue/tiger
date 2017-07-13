@@ -46,8 +46,7 @@ void TigerApp::setSampleIndex(int idx) {
 	sampleIndex.setValue(idx);
 	tweenRegion->setValue(idx);
 	valueRegion->setNumberValue(sampleIndex);
-	//sys->getInput()->set(trainInputData[idx]);
-	//sys->evaluate();
+	sys->predict(trainInputData[idx]);
 }
 void TigerApp::setNeuralTime(int idx) {
 	auto elem = worker->getCache()->get(idx);
@@ -287,6 +286,7 @@ bool TigerApp::init(Composite& rootNode) {
 				}
 				return false;
 			};
+
 	stopButton->onMouseDown =
 			[this](AlloyContext* context, const InputEvent& e) {
 				if (e.button == GLFW_MOUSE_BUTTON_LEFT) {
@@ -518,8 +518,12 @@ bool TigerApp::onEventHandler(AlloyContext* context, const aly::InputEvent& e) {
  return false;
  }
  */
-void TigerApp::initialize() {
 
+void TigerApp::initialize() {
+	parse_mnist_images(trainFile, trainInputData, 0.0f, 1.0f, 2, 2);
+	parse_mnist_labels(trainLabelFile, trainOutputData);
+	trainInputData.erase(trainInputData.begin() + 100, trainInputData.end());
+	trainOutputData.erase(trainOutputData.begin() + 100, trainOutputData.end());
 	sys.reset(new NeuralSystem("LaNet5", flowRegion));
 	InputLayerPtr i1 = MakeShared<InputLayer>(dim3(32, 32, 1));
 	ConvolutionLayerPtr c1 = MakeShared<ConvolutionLayer>(32, 32, 5, 1, 6);
@@ -527,7 +531,7 @@ void TigerApp::initialize() {
 	AveragePoolingLayerPtr p1 = MakeShared<AveragePoolingLayer>(28, 28, 6, 2);
 	TanhLayerPtr p1_tanh = MakeShared<TanhLayer>(14, 14, 6);
 	DeconvolutionLayerPtr d1 = MakeShared<DeconvolutionLayer>(14, 14, 5, 6, 16,
-			connection_table(MNIST_TABLE, 6, 16));
+			ConnectionTable(MNIST_TABLE, 6, 16));
 	TanhLayerPtr d1_tanh = MakeShared<TanhLayer>(18, 18, 16);
 	AveragePoolingLayerPtr p2 = MakeShared<AveragePoolingLayer>(18, 18, 16, 2);
 	TanhLayerPtr p2_tanh = MakeShared<TanhLayer>(9, 9, 16);
@@ -535,58 +539,13 @@ void TigerApp::initialize() {
 	TanhLayerPtr c2_tanh = MakeShared<TanhLayer>(1, 1, 120);
 	FullyConnectedLayerPtr fc1 = MakeShared<FullyConnectedLayer>(120, 10);
 	TanhLayerPtr fc1_tanh = MakeShared<TanhLayer>(10);
-	i1 << c1 << c1_tanh << p1 << p1_tanh << d1 << d1_tanh << p2 << p2_tanh << c2
-			<< c2_tanh << fc1 << fc1_tanh;
+	i1 << c1 << c1_tanh << p1 << p1_tanh << d1 << d1_tanh << p2 << p2_tanh << c2 << c2_tanh << fc1 << fc1_tanh;
 	sys->build(i1, fc1_tanh);
-
-	/*
-	 {
-	 using namespace tiny_dnn;
-	 using namespace tiny_dnn::core;
-
-	 network<graph> nn;
-	 // declare nodes
-	 input_layer i1(shape3d(32, 32, 1));
-	 convolutional_layer c1(32, 32, 5, 1, 6);
-	 tanh_layer c1_tanh(28, 28, 6);
-	 average_pooling_layer p1(28, 28, 6, 2);
-	 tanh_layer p1_tanh(14, 14, 6);
-	 deconvolutional_layer d1(14, 14, 5, 6, 16,
-	 connection_table(MNIST_TABLE, 6, 16));
-	 tanh_layer d1_tanh(18, 18, 16);
-	 average_pooling_layer p2(18, 18, 16, 2);
-	 tanh_layer p2_tanh(9, 9, 16);
-	 convolutional_layer c2(9, 9, 9, 16, 120);
-	 tanh_layer c2_tanh(1, 1, 120);
-	 fully_connected_layer fc1(120, 10);
-	 tanh_layer fc1_tanh(10);
-
-	 // connecting activation layers behind other layers
-	 c1 << c1_tanh;
-	 p1 << p1_tanh;
-	 d1 << d1_tanh;
-	 c2 << c2_tanh;
-	 p2 << p2_tanh;
-	 fc1 << fc1_tanh;
-
-	 // connect them to graph
-	 i1 << c1 << p1 << d1 << p2 << c2 << fc1;
-	 construct_graph(nn, { &i1 }, { &fc1 });
-	 }
-	 */
 	worker.reset(new NeuralRuntime(sys));
-	worker->inputSampler = [this](const NeuralLayerPtr& input, int idx) {
-		//aly::Image1f& inputData = trainInputData[idx];
-		//input->set(inputData);
-		};
-	worker->outputSampler = [this](std::vector<float>& outputData, int idx) {
-		//int out = trainOutputData[idx];
-		//outputData.resize(10);
-		//for (int i = 0; i <(int)outputData.size(); i++) {
-		//outputData[i] = (out == i) ? 1.0f : 0.0f;
-		//}
-		};
 	sys->initialize(expandTree);
+	setSampleRange(0, (int)trainInputData.size() - 1);
+	setSampleIndex(1);
+	worker->setSelectedSamples(0, 5);
 }
 void TigerApp::draw(AlloyContext* context) {
 	if (running) {

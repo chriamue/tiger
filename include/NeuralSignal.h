@@ -21,6 +21,8 @@
 #ifndef NEURALSIGNAL_H_
 #define NEURALSIGNAL_H_
 #include <AlloyMath.h>
+#include <AlloyImage.h>
+#include <AlloyVector.h>
 #include <AlloyOptimizationMath.h>
 #include <memory>
 #include <map>
@@ -59,7 +61,12 @@ inline std::ostream &operator<<(std::ostream &os, ChannelType type) {
 enum class Padding {
 	Valid = tiny_dnn::padding::valid, Same = tiny_dnn::padding::same
 };
-
+enum class NetPhase {
+	Test=tiny_dnn::net_phase::test, Train=tiny_dnn::net_phase::train
+};
+enum class GradientCheck{
+	All=0, Random=1
+};
 inline std::vector<ChannelType> ChannelOrder(bool has_bias) {
 	if (has_bias) {
 		return {ChannelType::data, ChannelType::weight, ChannelType::bias};
@@ -71,7 +78,7 @@ enum class BackendType {
 	internal = 0, nnpack = 1, libdnn = 2, avx = 3, opencl = 4
 };
 inline aly::dim3 Convert(const tiny_dnn::shape3d& s) {
-	return aly::dim3(s.width_, s.height_, s.depth_);
+	return aly::dim3(s.width, s.height, s.depth);
 }
 inline tiny_dnn::shape3d Convert(const aly::dim3& d) {
 	return tiny_dnn::shape3d(d.x, d.y, d.z);
@@ -81,7 +88,7 @@ inline std::vector<aly::dim3> Convert(
 	std::vector<aly::dim3> out(shapes.size());
 	for (int i = 0; i < out.size(); i++) {
 		tiny_dnn::shape3d s = shapes[i];
-		out[i] = aly::dim3(s.width_, s.height_, s.depth_);
+		out[i] = aly::dim3(s.width, s.height, s.depth);
 	}
 	return out;
 }
@@ -139,23 +146,20 @@ struct Terminal {
 	NeuralLayer* layer;
 	Terminal(int x = 0, int y = 0, NeuralLayer* l = nullptr) :
 			x(x), y(y), layer(l) {
-
 	}
 	Terminal(int x = 0, int y = 0, const std::shared_ptr<NeuralLayer>& l =
 			nullptr) :
 			x(x), y(y), layer(l.get()) {
-
 	}
 	bool operator ==(const Terminal & r) const;
 	bool operator !=(const Terminal & r) const;
 	bool operator <(const Terminal & r) const;
 	bool operator >(const Terminal & r) const;
 };
-size_t ShapeVolume(aly::int3 dims);
 class NeuralSignal {
 public:
 	ChannelType type;
-	aly::int3 dimensions;
+	aly::dim3 dimensions;
 	int64_t id;
 	Tensor value;
 	Tensor change;
@@ -165,18 +169,72 @@ public:
 	float* getChangePtr(const aly::int3& pos);
 	inline float getValue(const aly::int3& pos);
 	inline float getChange(const aly::int3& pos);
-	NeuralSignal(NeuralLayer* input, aly::int3 dimensions, ChannelType type);
+	NeuralSignal(NeuralLayer* input, aly::dim3 dimensions, ChannelType type);
 	inline bool hasInput() const {
 		return (input != nullptr);
 	}
 	inline bool hasOutput() const {
 		return (outputs.size() != 0);
 	}
+	void setValue(const aly::Image1f& data);
+	void setValue(const aly::Image3f& data);
+	void setValue(const aly::Image4f& data);
+
+	void setValue(const aly::Vector1f& data);
+	void setValue(const std::vector<float>& data);
+
+	void getValue(aly::Image1f& data);
+	void getValue(aly::Image3f& data);
+	void getValue(aly::Image4f& data);
+
+	void getValue(aly::Vector1f& data);
+	void getValue(std::vector<float>& data);
+
 	void clearGradients();
 	void mergeGradients(Storage& dst);
 	void addOutput(const std::shared_ptr<NeuralLayer>& output);
 	NeuralSignal& operator=(const NeuralSignal& other);
 };
+
+inline void foreach(std::function<void(size_t i)>& f, size_t size, bool parallelize=true) {
+	if(parallelize){
+#pragma omp parallel for
+		for (size_t i = 0; i < size; ++i) {
+			f(i);
+		}
+	} else {
+		for (size_t i = 0; i < size; ++i) {
+			f(i);
+		}
+	}
+}
+
+inline void foreach(std::function<void(int i)>& f, int size, bool parallelize=true) {
+	if(parallelize){
+#pragma omp parallel for
+		for (size_t i = 0; i < size; ++i) {
+			f(i);
+		}
+	} else {
+		for (size_t i = 0; i < size; ++i) {
+			f(i);
+		}
+	}
+}
+
+inline void foreach(std::function<void(int i)>& f, size_t size, bool parallelize=true) {
+	if(parallelize){
+#pragma omp parallel for
+		for (size_t i = 0; i < size; ++i) {
+			f(i);
+		}
+	} else {
+		for (size_t i = 0; i < size; ++i) {
+			f(i);
+		}
+	}
+}
+
 typedef std::shared_ptr<NeuralSignal> SignalPtr;
 }
 #endif

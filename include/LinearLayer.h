@@ -33,9 +33,21 @@ public:
 			const std::vector<Tensor *> &out_data,
 			std::vector<Tensor *> &out_grad, std::vector<Tensor *> &in_grad)
 					override;
+	virtual void getStencilInput(const aly::int3& pos,
+			std::vector<aly::int3>& stencil) const override {
+		stencil = std::vector<aly::int3> { pos };
+	}
+	virtual void getStencilWeight(const aly::int3& pos,
+			std::vector<aly::int3>& stencil) const override {
+		stencil.clear();
+	}
+	virtual bool getStencilBias(const aly::int3& pos, aly::int3& stencil) const
+			override {
+		return false;
+	}
 protected:
 	int dim_;
-	float scale_, bias_;
+	float scale, bias;
 };
 typedef std::shared_ptr<LinearLayer> LineraLayerPtr;
 }

@@ -29,21 +29,18 @@ using namespace tiny_dnn::activation;
 // clang-format on
 #undef O
 #undef X
-
 void deconv_lanet(network<graph> &nn,
                   std::vector<label_t> train_labels,
                   std::vector<label_t> test_labels,
                   std::vector<vec_t> train_images,
                   std::vector<vec_t> test_images) {
-
-
   // declare nodes
   input_layer i1(shape3d(32, 32, 1));
   convolutional_layer c1(32, 32, 5, 1, 6);
   tanh_layer c1_tanh(28, 28, 6);
   average_pooling_layer p1(28, 28, 6, 2);
   tanh_layer p1_tanh(14, 14, 6);
-  deconvolutional_layer d1(14, 14, 5, 6, 16, connection_table(tbl, 6, 16));
+  deconvolutional_layer d1(14, 14, 5, 6, 16, ConnectionTable(tbl, 6, 16));
   tanh_layer d1_tanh(18, 18, 16);
   average_pooling_layer p2(18, 18, 16, 2);
   tanh_layer p2_tanh(9, 9, 16);
@@ -79,7 +76,6 @@ void deconv_lanet(network<graph> &nn,
     std::cout << t.elapsed() << "s elapsed." << std::endl;
     tiny_dnn::result res = nn.test(test_images, test_labels);
     std::cout << res.num_success << "/" << res.num_total << std::endl;
-
     disp.restart((unsigned long)train_images.size());
     t.restart();
   };

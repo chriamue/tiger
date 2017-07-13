@@ -134,7 +134,7 @@ inline std::shared_ptr<layer> create_max_pool(layer_size_t pool_size_w,
                                               shape_t *top_shape) {
   using max_pool = max_pooling_layer;
   auto mp        = std::make_shared<max_pool>(
-    bottom_shape.width_, bottom_shape.height_, bottom_shape.depth_, pool_size_w,
+    bottom_shape.width, bottom_shape.height, bottom_shape.depth, pool_size_w,
     pool_size_h, stride_w, stride_h, pad_type);
 
   *top_shape = mp->out_shape()[0];
@@ -152,7 +152,7 @@ inline std::shared_ptr<layer> create_ave_pool(layer_size_t pool_size_w,
                                               shape_t *top_shape) {
   using ave_pool = average_pooling_layer;
   auto ap        = std::make_shared<ave_pool>(
-    bottom_shape.width_, bottom_shape.height_, bottom_shape.depth_, pool_size_w,
+    bottom_shape.width, bottom_shape.height, bottom_shape.depth, pool_size_w,
     pool_size_h, stride_w, stride_h, pad_type);
 
   // tiny-dnn has trainable parameter in average-pooling layer
@@ -315,7 +315,7 @@ inline std::shared_ptr<layer> create_batchnorm(
     }
   }
 
-  auto bn = std::make_shared<bn_layer>(bottom_shape.area(), bottom_shape.depth_,
+  auto bn = std::make_shared<bn_layer>(bottom_shape.area(), bottom_shape.depth,
                                        eps, momentum, net_phase::test);
 
   // weight
@@ -327,8 +327,8 @@ inline std::shared_ptr<layer> create_batchnorm(
 
     float_t scale_factor =
       global_stats.Get(2).data(0) == 0 ? 0 : 1 / global_stats.Get(2).data(0);
-    vec_t mean(bottom_shape.depth_);
-    vec_t variance(bottom_shape.depth_);
+    vec_t mean(bottom_shape.depth);
+    vec_t variance(bottom_shape.depth);
 
     for (size_t i = 0; i < mean.size(); i++) {
       mean[i]     = global_stats.Get(0).data(i) * scale_factor;
@@ -425,19 +425,19 @@ inline void load_weights_conv(const caffe::LayerParameter &src, layer *dst) {
   auto weights = src.blobs(0);
 
   // TODO: check if it works
-  // int out_channels = dst->out_shape().depth_;
-  // int in_channels = dst->in_shape().depth_;
-  int out_channels = dst->out_data_shape()[0].depth_;
-  int in_channels  = dst->in_data_shape()[0].depth_;
+  // int out_channels = dst->out_shape().depth;
+  // int in_channels = dst->in_shape().depth;
+  int out_channels = dst->out_data_shape()[0].depth;
+  int in_channels  = dst->in_data_shape()[0].depth;
 
-  connection_table table;
+  ConnectionTable table;
   auto conv_param = src.convolution_param();
   int dst_idx     = 0;
   int src_idx     = 0;
   int window_size = get_kernel_size_2d(conv_param);
 
   if (conv_param.has_group()) {
-    table = connection_table(conv_param.group(), in_channels, out_channels);
+    table = ConnectionTable(conv_param.group(), in_channels, out_channels);
   }
 
   vec_t &w = *dst->weights()[0];
@@ -446,7 +446,7 @@ inline void load_weights_conv(const caffe::LayerParameter &src, layer *dst) {
   // fill weights
   for (int o = 0; o < out_channels; o++) {
     for (int i = 0; i < in_channels; i++) {
-      if (!table.is_connected(o, i)) {
+      if (!table.isConnected(o, i)) {
         dst_idx += window_size * window_size;
         continue;
       }
@@ -483,7 +483,7 @@ inline void load_weights_batchnorm(const caffe::LayerParameter &src,
     float_t scale_factor =
       global_stats.Get(2).data(0) == 0 ? 0 : 1 / global_stats.Get(2).data(0);
 
-    int in_channels = dst->in_shape().at(0).depth_;
+    int in_channels = dst->in_shape().at(0).depth;
     vec_t mean(in_channels);
     vec_t variance(in_channels);
 
@@ -562,7 +562,7 @@ inline std::shared_ptr<layer> create_lrn(const caffe::LayerParameter &layer,
   }
 
   auto lrn = std::make_shared<lrn_layer>(
-    bottom_shape.width_, bottom_shape.height_, local_size, bottom_shape.depth_,
+    bottom_shape.width, bottom_shape.height, local_size, bottom_shape.depth,
     alpha, beta, region);
   return lrn;
 }
@@ -601,15 +601,15 @@ inline std::shared_ptr<layer> create_convlayer(
   layer_size_t w_stride = 1, h_stride = 1;
   bool has_bias    = true;
   padding pad_type = padding::valid;
-  connection_table table;
+  ConnectionTable table;
 
   auto conv_param = layer.convolution_param();
 
   // shape
   out_channels = conv_param.num_output();
-  in_channels  = bottom_shape.depth_;
-  in_width     = bottom_shape.width_;
-  in_height    = bottom_shape.height_;
+  in_channels  = bottom_shape.depth;
+  in_width     = bottom_shape.width;
+  in_height    = bottom_shape.height;
   has_bias     = conv_param.bias_term();
   window_size  = get_kernel_size_2d(conv_param);
 
@@ -649,7 +649,7 @@ inline std::shared_ptr<layer> create_convlayer(
 
   // group
   if (conv_param.has_group()) {
-    table = connection_table(conv_param.group(), in_channels, out_channels);
+    table = ConnectionTable(conv_param.group(), in_channels, out_channels);
   }
 
   auto conv = std::make_shared<conv_layer>(
@@ -689,15 +689,15 @@ inline std::shared_ptr<layer> create_deconvlayer(
   layer_size_t w_stride = 1, h_stride = 1;
   bool has_bias    = true;
   padding pad_type = padding::valid;
-  connection_table table;
+  ConnectionTable table;
 
   auto deconv_param = layer.convolution_param();
 
   // shape
   out_channels = deconv_param.num_output();
-  in_channels  = bottom_shape.depth_;
-  in_width     = bottom_shape.width_;
-  in_height    = bottom_shape.height_;
+  in_channels  = bottom_shape.depth;
+  in_width     = bottom_shape.width;
+  in_height    = bottom_shape.height;
   has_bias     = deconv_param.bias_term();
   window_size  = get_kernel_size_2d(deconv_param);
 
@@ -737,7 +737,7 @@ inline std::shared_ptr<layer> create_deconvlayer(
 
   // group
   if (deconv_param.has_group()) {
-    table = connection_table(deconv_param.group(), in_channels, out_channels);
+    table = ConnectionTable(deconv_param.group(), in_channels, out_channels);
   }
 
   auto deconv = std::make_shared<deconv_layer>(

@@ -26,17 +26,21 @@ public:
 					override;
 	virtual int getFanInSize() const override;
 	virtual int getFanOutSize() const override;
+	virtual void getStencilInput(const aly::int3& pos,std::vector<aly::int3>& stencil) const =0;
+	virtual void getStencilWeight(const aly::int3& pos,std::vector<aly::int3>& stencil) const =0;
+	virtual bool getStencilBias(const aly::int3& pos,aly::int3& stencil) const =0;
+
 private:
 	size_t param_size() const;
 protected:
 	void connect_weight(int input_index, int output_index, int weight_index);
 	void connect_bias(int bias_index, int output_index);
-	std::vector<io_connections> weight2io_;  // weight_id -> [(in_id, out_id)]
-	std::vector<wi_connections> out2wi_;     // out_id -> [(weight_id, in_id)]
-	std::vector<wo_connections> in2wo_;      // in_id -> [(weight_id, out_id)]
-	std::vector<std::vector<int>> bias2out_;
-	std::vector<size_t> out2bias_;
-	float_t scale_factor_;
+	std::vector<io_connections> weight2io;  // weight_id -> [(in_id, out_id)]
+	std::vector<wi_connections> out2wi;     // out_id -> [(weight_id, in_id)]
+	std::vector<wo_connections> in2wo;      // in_id -> [(weight_id, out_id)]
+	std::vector<std::vector<int>> bias2out;
+	std::vector<size_t> out2bias;
+	float scale_factor;
 };
 typedef std::shared_ptr<PartialConnectedLayer> PartialConnectedLayerPtr;
 }

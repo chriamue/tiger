@@ -187,16 +187,16 @@ class Conv2dLibDNNForwardOp : public core::OpKernel {
 
     // NCHW shape setups
 
-    const float_t dy = params.in_padded.height_ - params.in.height_;
-    const float_t dx = params.in_padded.width_ - params.in.width_;
+    const float_t dy = params.in_padded.height - params.in.height;
+    const float_t dx = params.in_padded.width - params.in.width;
 
-    std::vector<int32_t> in_shape = {1, params.in.depth_, params.in.height_,
-                                     params.in.width_};
+    std::vector<int32_t> in_shape = {1, params.in.depth, params.in.height,
+                                     params.in.width};
 
-    std::vector<int32_t> out_shape = {1, params.out.depth_, params.out.height_,
-                                      params.out.width_};
+    std::vector<int32_t> out_shape = {1, params.out.depth, params.out.height,
+                                      params.out.width};
 
-    std::vector<int32_t> kernel = {params.weight.height_, params.weight.width_};
+    std::vector<int32_t> kernel = {params.weight.height, params.weight.width};
 
     std::vector<int32_t> pad = {dy / 2, dx / 2};
 
