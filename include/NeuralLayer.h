@@ -86,7 +86,6 @@ protected:
 	BackendType backendType;
 	NeuralSystem* sys;
 	aly::NeuralLayerRegionPtr layerRegion;
-	aly::GraphDataPtr graph;
 	std::function<void(Storage& data, int fanIn, int fanOut)> weightInitFunc;
 	std::function<void(Storage& data, int fanIn, int fanOut)> biasInitFunc;
 	Storage weightDifference;
@@ -233,11 +232,8 @@ public:
 	}
 	void setId(int id);
 	std::shared_ptr<aly::NeuralFlowPane> getFlow() const;
-	aly::GraphDataPtr getGraph() const {
-		return graph;
-	}
+
 	void expand();
-	double accumulate(double r);
 	bool hasChildren() const {
 		return (outputs.size() != 0);
 	}

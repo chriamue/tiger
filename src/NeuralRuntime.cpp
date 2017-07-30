@@ -39,8 +39,7 @@ void NeuralRuntime::trainOnce(NeuralOptimizer &optimizer,
 		const NeuralLossFunction& loss, const Tensor* in, const Tensor* t,
 		int size, const int nbThreads, const Tensor *t_cost) {
 	if (size == 1) {
-		sys->bprop(loss, sys->fprop(in[0]), t[0],
-				t_cost ? t_cost[0] : Tensor());
+		sys->bprop(loss, sys->fprop(in[0]), t[0],t_cost ? t_cost[0] : Tensor());
 		sys->updateWeights(optimizer, 1);
 	} else {
 		trainOneBatch(optimizer, loss, in, t, size, nbThreads, t_cost);
@@ -58,27 +57,41 @@ void NeuralRuntime::trainOneBatch(NeuralOptimizer &optimizer,
 		const NeuralLossFunction& loss, const Tensor *in, const Tensor *t,
 		int batch_size, const int num_tasks, const Tensor *t_cost) {
 	CNN_UNREFERENCED_PARAMETER(num_tasks);
+	in_batch.resize(batch_size);
+	t_batch.resize(batch_size);
 	std::copy(&in[0], &in[0] + batch_size, &in_batch[0]);
 	std::copy(&t[0], &t[0] + batch_size, &t_batch[0]);
 	std::vector<Tensor> t_cost_batch =
 			t_cost ?
 					std::vector<Tensor>(&t_cost[0], &t_cost[0] + batch_size) :
 					std::vector<Tensor>();
-	//Perform forward cand backward pass on in_batch
+	//Perform forward and backward pass on in_batch
 	sys->bprop(loss, sys->fprop(in_batch), t_batch, t_cost_batch);
 	sys->updateWeights(optimizer, batch_size);
 }
+float NeuralRuntime::getLoss(const NeuralLossFunction& loss) {
+	return sys->getLoss(loss, inputs, desiredOutputs);
+}
+
 void NeuralRuntime::setData(const std::vector<Tensor>& inputs,
 		std::vector<Tensor>& desiredOutputs,
 		const std::vector<Tensor> &t_cost) {
 	this->inputs = inputs;
 	this->desiredOutputs = desiredOutputs;
-	this->t_costs = t_costs;
+	this->t_costs = t_cost;
 }
 void NeuralRuntime::setData(const std::vector<Storage> &inputs,
 		const std::vector<int> &class_labels,
 		const std::vector<Storage>& t_cost) {
 	sys->normalize(inputs, this->inputs);
+	sys->normalize(class_labels, this->desiredOutputs);
+	if (!t_cost.empty())
+		sys->normalize(t_cost, this->t_costs);
+}
+void NeuralRuntime::setData(const std::vector<Tensor> &inputs,
+		const std::vector<int> &class_labels,
+		const std::vector<Storage>& t_cost) {
+	this->inputs = inputs;
 	sys->normalize(class_labels, this->desiredOutputs);
 	if (!t_cost.empty())
 		sys->normalize(t_cost, this->t_costs);
@@ -96,49 +109,44 @@ bool NeuralRuntime::init(bool reset_weights) {
 	lastResidual = 1E30f;
 	if (optimizationMethod >= 0) {
 		switch (optimizationMethod) {
-		case 0:
-		{
+		case 0: {
 			GradientDescentOptimizer g = GradientDescentOptimizer();
 			g.alpha = learningRateDelta.toFloat();
 			g.lambda = weightDecay.toFloat();
 			optimizer = g;
 		}
 			break;
-		case 1:
-		{
-			MomentumOptimizer m=MomentumOptimizer();
+		case 1: {
+			MomentumOptimizer m = MomentumOptimizer();
 			m.mu = momentum.toFloat();
 			m.alpha = learningRateDelta.toFloat();
 			m.lambda = weightDecay.toFloat();
-			optimizer =m;
+			optimizer = m;
 		}
 			break;
-		case 2:
-		{
+		case 2: {
 			AdamOptimizer ad = AdamOptimizer();
 			ad.alpha = learningRateDelta.toFloat();
 			optimizer = ad;
 		}
 			break;
-		case 3:
-		{
+		case 3: {
 			AdagradOptimizer ag = AdagradOptimizer();
 			ag.alpha = learningRateDelta.toFloat();
 			optimizer = ag;
 		}
 			break;
-		case 4:
-		{
+		case 4: {
 			RMSpropOptimizer ro = RMSpropOptimizer();
 			ro.alpha = learningRateDelta.toFloat();
 			optimizer = ro;
 		}
 			break;
 		default:
+			throw std::runtime_error("No optimizer specified.");
 			break;
 		}
 	}
-
 	if (lossFunction >= 0) {
 		switch (lossFunction) {
 		case 0:
@@ -157,13 +165,11 @@ bool NeuralRuntime::init(bool reset_weights) {
 			loss = CrossEntropyMultiClassLossFunction();
 			break;
 		default:
+			throw std::runtime_error("No loss function specified.");
 			break;
 		}
 	}
-
-	for (NeuralLayerPtr layer : sys->getLayers()) {
-		layer->getGraph()->points.clear();
-	}
+	sys->getGraph()->points.clear();
 	sys->setPhase(NetPhase::Train);
 	sys->setup(reset_weights);
 	for (auto n : sys->getLayers()) {
@@ -175,12 +181,6 @@ bool NeuralRuntime::init(bool reset_weights) {
 	in_batch.resize(batch_size);
 	t_batch.resize(batch_size);
 	iteration = 0;
-	//cache->clear();
-	//NeuralKnowledge& k = sys->getKnowledge();
-	//k.setFile(MakeString() << GetDesktopDirectory() << ALY_PATH_SEPARATOR<< "tiger" <<std::setw(5)<<std::setfill('0')<< iteration << ".bin");
-	//k.setName("tiger");
-	//cache->set(iteration, k);
-
 	return true;
 }
 void NeuralRuntime::cleanup() {
@@ -224,24 +224,31 @@ bool NeuralRuntime::step() {
 	bool ret = true;
 	double res = 0;
 	int batch_size = batchSize.toInteger();
-	for (size_t i = 0; i < inputs.size() && running; i += batch_size) {
-		trainOnce(optimizer, loss, &inputs[i], &desiredOutputs[i],
-				static_cast<int>(std::min(batch_size, (int) (inputs.size() - i))),
-				threads, get_target_cost_sample_pointer(t_costs, i));
-		if (onBatchEnumerate)
-			onBatchEnumerate();
+	for (size_t i = lowerSample.toInteger(); i <= upperSample.toInteger() && running; i += batch_size) {
+		int sz = std::min(batch_size,(int) (upperSample.toInteger() + 1 - i));
+		if (sz > 0) {
+			trainOnce(optimizer, loss, &inputs[i], &desiredOutputs[i], sz, threads, get_target_cost_sample_pointer(t_costs, i));
+			if (onBatchEnumerate)
+				onBatchEnumerate();
+		}
 	}
+	std::cout<<"Evaluate"<<std::endl;
+	float err = getLoss(loss);
+	sys->getGraph()->points.push_back(float2(iteration, err));
+	std::cout << "Error Loss " << err << std::endl;
+	ret=(iter<getMaxIteration()-1);
 	if (onEpochEnumerate)
 		onEpochEnumerate();
 	if (onUpdate) {
-		onUpdate(iter, !ret);
+		onUpdate(iter,!ret);
 	}
 	iteration++;
-	sys->updateKnowledge();
-	NeuralKnowledge& k = sys->getKnowledge();
-	k.setFile(MakeString() << GetDesktopDirectory() << ALY_PATH_SEPARATOR<< "tiger" << std::setw(5) << std::setfill('0') << iteration << ".bin");
-	k.setName("tiger");
-	cache->set(iteration, k);
+	//sys->updateKnowledge();
+	//NeuralKnowledge& k = sys->getKnowledge();
+	//k.setFile(MakeString() << GetDesktopDirectory() << ALY_PATH_SEPARATOR<< "tiger" << std::setw(5) << std::setfill('0') << iteration << ".bin");
+	//k.setName("tiger");
+	//cache->set(iteration, k);
+	std::cout<<iteration<<"/"<<getMaxIteration()<<" "<<ret<<std::endl;
 	return ret;
 }
 NeuralRuntime::NeuralRuntime(const std::shared_ptr<tgr::NeuralSystem>& system) :

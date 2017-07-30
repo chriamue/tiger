@@ -73,14 +73,10 @@ protected:
 	NeuralLossFunction loss;
 	const Tensor* get_target_cost_sample_pointer(
 			const std::vector<Tensor> &t_cost, size_t i);
-	void trainOnce(NeuralOptimizer &optimizer, const NeuralLossFunction& loss,
-			const Tensor *in, const Tensor *t, int size, const int nbThreads,
-			const Tensor *t_cost);
-	void trainOneBatch(NeuralOptimizer &optimizer,
-			const NeuralLossFunction& loss, const Tensor *in, const Tensor *t,
-			int batch_size, const int num_tasks, const Tensor *t_cost);
-
+	void trainOnce(NeuralOptimizer &optimizer, const NeuralLossFunction& loss,const Tensor *in, const Tensor *t, int size, const int nbThreads,const Tensor *t_cost);
+	void trainOneBatch(NeuralOptimizer &optimizer,const NeuralLossFunction& loss, const Tensor *in, const Tensor *t,int batch_size, const int num_tasks, const Tensor *t_cost);
 public:
+	float getLoss(const NeuralLossFunction& loss);
 	std::function<void(int iteration, bool lastIteration)> onUpdate;
 	std::function<void()> onBatchEnumerate;
 	std::function<void()> onEpochEnumerate;
@@ -94,6 +90,9 @@ public:
 			std::vector<Tensor>& desiredOutputs,
 			const std::vector<Tensor> &t_cost = std::vector<Tensor>());
 	void setData(const std::vector<Storage> &inputs,
+			const std::vector<int> &class_labels,
+			const std::vector<Storage>& t_cost = std::vector<Storage>());
+	void setData(const std::vector<Tensor> &inputs,
 			const std::vector<int> &class_labels,
 			const std::vector<Storage>& t_cost = std::vector<Storage>());
 	void setLossFunction(const NeuralLossFunction& loss) {
