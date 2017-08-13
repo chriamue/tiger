@@ -2,7 +2,10 @@ cmake_minimum_required(VERSION 3.0 FATAL_ERROR)
 project(tiger C CXX)
 
 find_package(OpenCL REQUIRED)
+find_package(OpenGL REQUIRED)
+find_package(GLEW REQUIRED)
 find_package(TBB QUIET)
+find_package(OpenMP QUIET)
 
 option(USE_SSE        "Build tiny-dnn with SSE library support"     ON)
 option(USE_AVX        "Build tiny-dnn with AVX library support"     ON)
@@ -25,6 +28,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 message(STATUS "C++14 support has been enabled by default.")
 
 add_subdirectory(ext)
+link_directories("${CMAKE_BINARAY_DIR}/ext/alloy/" "${CMAKE_BINARAY_DIR}/ext/alloy/ext_build/glfw/src/")
 
 # Unix
 if(CMAKE_COMPILER_IS_GNUCXX OR MINGW OR
@@ -84,7 +88,7 @@ endif()
 
 ####
 # Set compiler options
-set(CMAKE_CXX_FLAGS         "${CMAKE_CXX_FLAGS} ${EXTRA_C_FLAGS}")
+set(CMAKE_CXX_FLAGS         "${CMAKE_CXX_FLAGS} ${EXTRA_C_FLAGS} ${OpenMP_CXX_FLAGS}")
 
 file(GLOB_RECURSE headers
     "include/*.h"
@@ -99,6 +103,8 @@ add_executable(tiger
     ${headers}
 )
 
+add_dependencies(tiger alloy)
+
 target_include_directories(tiger
     PRIVATE
     ${OpenCL_INCLUDE_DIRS}
@@ -106,10 +112,14 @@ target_include_directories(tiger
     ${CMAKE_SOURCE_DIR}/ext/alloy/include
     ${CMAKE_SOURCE_DIR}/ext/alloy/include/core
 )
-
+message (status "libs"${ALLOY_EXTRA_LIBS} )
 target_link_libraries(tiger
     PRIVATE
-    ${OpenCL_LIBRARY} ${TBB_LIBRARIES} Alloy pthread stdc++ m X11
+    PUBLIC
+    alloy  stdc++ gcc gomp Xext ${TBB_LIBRARIES}
+    /home/chriamue/workspace/tiger/build/ext/alloy/ext_build/glfw/src/libglfw3.a
+    ${OpenCL_LIBRARY} ${OPENGL_LIBRARIES} ${GLEW_LIBRARIES} 
+    gomp Xi Xrandr X11 Xxf86vm Xinerama Xcursor Xdamage pthread m dl
 )
 
 # MSVC compiler options
