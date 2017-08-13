@@ -24,10 +24,9 @@
 using namespace aly;
 namespace tgr {
 
-NeuralSystem::NeuralSystem(const std::string& name,
-		const std::shared_ptr<aly::NeuralFlowPane>& pane) :
+NeuralSystem::NeuralSystem(const std::string& name,const std::shared_ptr<aly::NeuralFlowPane>& pane) :
 		name(name), initialized(false), flowPane(pane) {
-
+	graph = GraphDataPtr(new GraphData(name));
 }
 
 NeuralKnowledge& NeuralSystem::updateKnowledge() {
@@ -69,6 +68,9 @@ void NeuralSystem::reorderForLayerwiseProcessing(
 		output[i].resize(sample_count);
 	}
 	for (size_t sample = 0; sample < sample_count; ++sample) {
+		if(input[sample].size() != channel_count){
+			std::cout<<"Sample "<<input[sample].size()<<" "<<channel_count<<" "<<sample_count<<std::endl;
+		}
 		assert(input[sample].size() == channel_count);
 		for (size_t channel = 0; channel < channel_count; ++channel) {
 			output[channel][sample] = &input[sample][channel];
@@ -103,9 +105,7 @@ std::vector<Tensor> NeuralSystem::mergeOutputs() {
 			assert(merged.empty());
 			merged.resize(sample_count, Tensor(output_channel_count));
 		}
-
 		assert(merged.size() == sample_count);
-
 		for (size_t sample = 0; sample < sample_count; ++sample) {
 			merged[sample][output_channel] = (*out[0])[sample];
 		}
@@ -427,7 +427,9 @@ void NeuralSystem::updateWeights(NeuralOptimizer& opt, int batch_size) {
 		l->updateWeights(opt, batch_size);
 	}
 }
-
+void NeuralSystem::reset(){
+	std::cout<<"Reset"<<std::endl;
+}
 void NeuralSystem::initialize() {
 	setup(true);
 }

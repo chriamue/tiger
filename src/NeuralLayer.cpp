@@ -115,7 +115,6 @@ NeuralLayer::NeuralLayer(const std::string& name,
 		}
 	};
 	backendType = BackendType::internal;
-	graph = GraphDataPtr(new GraphData(name));
 }
 void NeuralLayer::setId(int i) {
 	id = i;

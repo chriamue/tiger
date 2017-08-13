@@ -278,6 +278,7 @@ bool TigerApp::init(Composite& rootNode) {
 					timelineSlider->setTimeValue(0);
 					timelineSlider->setMinorTick(worker->getIterationsPerStep());
 					timelineSlider->setMajorTick(worker->getIterationsPerEpoch());
+					std::cout<<"Max Size "<<worker->getMaxIteration()<<std::endl;
 					timelineSlider->setMaxValue((int)worker->getMaxIteration());
 					timelineSlider->setVisible(true);
 					worker->init();
@@ -386,21 +387,24 @@ bool TigerApp::init(Composite& rootNode) {
 					running = false;
 					stopButton->setVisible(false);
 					playButton->setVisible(true);
+					std::cout<<"On Update"<<std::endl;
+					/*
 					AlloyApplicationContext()->addDeferredTask([this]() {
 								setSampleIndex(sampleIndex.toInteger());
-							});
+					});
+					*/
 				}
 				AlloyApplicationContext()->addDeferredTask([this]() {
 							timelineSlider->setUpperValue((int)worker->getIteration());
 							timelineSlider->setTimeValue((int)worker->getIteration());
-						});
+				});
 			};
 	worker->setup(controls);
 	timelineSlider->setTimeValue(0);
 	timelineSlider->setMinorTick(worker->getIterationsPerStep());
 	timelineSlider->setMajorTick(worker->getIterationsPerEpoch());
 	timelineSlider->setMaxValue((int) worker->getMaxIteration());
-	graphRegion->add(sys->getOutputLayers().front()->getGraph());
+	graphRegion->add(sys->getGraph());
 	return true;
 }
 void TigerApp::setSelectedLayer(tgr::NeuralLayer* layer) {
@@ -522,8 +526,9 @@ bool TigerApp::onEventHandler(AlloyContext* context, const aly::InputEvent& e) {
 void TigerApp::initialize() {
 	parse_mnist_images(trainFile, trainInputData, 0.0f, 1.0f, 2, 2);
 	parse_mnist_labels(trainLabelFile, trainOutputData);
-	trainInputData.erase(trainInputData.begin() + 100, trainInputData.end());
-	trainOutputData.erase(trainOutputData.begin() + 100, trainOutputData.end());
+	trainInputData.erase(trainInputData.begin() + 10, trainInputData.end());
+	trainOutputData.erase(trainOutputData.begin() + 10, trainOutputData.end());
+	//std::cout<<"Data "<<trainInputData.size()<<" "<<trainOutputData.size()<<std::endl;
 	sys.reset(new NeuralSystem("LaNet5", flowRegion));
 	InputLayerPtr i1 = MakeShared<InputLayer>(dim3(32, 32, 1));
 	ConvolutionLayerPtr c1 = MakeShared<ConvolutionLayer>(32, 32, 5, 1, 6);
@@ -541,10 +546,12 @@ void TigerApp::initialize() {
 	TanhLayerPtr fc1_tanh = MakeShared<TanhLayer>(10);
 	i1 << c1 << c1_tanh << p1 << p1_tanh << d1 << d1_tanh << p2 << p2_tanh << c2 << c2_tanh << fc1 << fc1_tanh;
 	sys->build(i1, fc1_tanh);
-	worker.reset(new NeuralRuntime(sys));
+	NeuralRuntime* runtime=new NeuralRuntime(sys);
+	worker.reset(runtime);
+	runtime->setData(trainInputData,trainOutputData);
 	sys->initialize(expandTree);
 	setSampleRange(0, (int)trainInputData.size() - 1);
-	setSampleIndex(1);
+	setSampleIndex(0);
 	worker->setSelectedSamples(0, 5);
 }
 void TigerApp::draw(AlloyContext* context) {
